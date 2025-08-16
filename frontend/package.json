@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "clean": "rimraf dist/",
-    "build": "npm run clean && tsc",
-    "watch": "tsc --watch"
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "live-server --port=3000 --open=index.html"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "live-server": "^1.2.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2"
   }
