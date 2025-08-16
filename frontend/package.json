@@ -7,12 +7,14 @@
     "clean": "rimraf dist/",
     "build": "tsc",
     "watch": "tsc --watch",
-    "start": "live-server --port=3000 --open=index.html"
+    "start": "live-server --port=3000 --open=index.html",
+    "dev": "concurrently \"npm run watch\" \"npm start\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "concurrently": "^9.2.0",
     "live-server": "^1.2.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2"
