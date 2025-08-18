@@ -1,3 +1,4 @@
+import { SignUpForm } from './ui/SingUpForm';
 class App {
     private signInButton: HTMLElement | null;
     private registerButton: HTMLElement | null;
@@ -30,8 +31,14 @@ class App {
 
      private handleRegister(event: Event): void {
         event.preventDefault();
-        console.log('Register clicked - Show registration form');
-         // TODO: Implement Google OAuth logic
+        const authFormContainer = document.querySelector('..w-full.max-w-md.px-6');
+        if(authFormContainer) {
+            const signUpForm = new SignUpForm();
+            authFormContainer.innerHTML = ''; // Clear existing content
+            authFormContainer.appendChild(signUpForm.render());
+            // Optionally, you can scroll to the top of the form
+        }
+
     }
 
     private handleGoogleSignIn(event: Event): void {
