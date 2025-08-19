@@ -61,7 +61,8 @@ export class SignUpForm {
             { id: 'length', text: 'At least 10 characters' },
             { id: 'uppercase', text: 'Contains uppercase letter' },
             { id: 'lowercase', text: 'Contains lowercase letter' },
-            { id: 'number', text: 'Contains number' }
+            { id: 'number', text: 'Contains number' },
+            { id: 'match', text: 'Passwords match' }
         ];
 
         validationRules.forEach(rule => {
@@ -135,11 +136,18 @@ export class SignUpForm {
             this.updateValidationStatus('uppercase', /[A-Z]/.test(password));
             this.updateValidationStatus('lowercase', /[a-z]/.test(password));
             this.updateValidationStatus('number', /[0-9]/.test(password));
+            this.updateValidationStatus('match', password === this.confirmPasswordField.value && password.length > 0);
         });
 
         // Prevent paste in confirm password
         this.confirmPasswordField.addEventListener('paste', (e) => {
             e.preventDefault();
+        });
+
+        this.confirmPasswordField.addEventListener('input', () => {
+            const password = this.passwordField.value;
+            const confirmPassword = this.confirmPasswordField.value;
+            this.updateValidationStatus('match', password === confirmPassword && password.length > 0);
         });
     }
 
