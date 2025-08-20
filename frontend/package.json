@@ -6,7 +6,8 @@
   "scripts": {
     "clean": "rimraf dist/",
     "build": "npm run clean && tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "dev": "concurrently \"npm run watch\" \"npx live-server --port=3000 --open=index.html --host=0.0.0.0\""
   },
   "keywords": [],
   "author": "",
