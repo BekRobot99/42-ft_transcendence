@@ -1,4 +1,5 @@
 import { SignUpForm } from './ui/SingUpForm';
+import { ConnectForm } from './ui/ConnectForm';
 
 class App {
     private pageContentElement: HTMLElement | null;
@@ -121,19 +122,8 @@ class App {
             this.pageContentElement.appendChild(backButton);
 
         } else if (path === '/signin') {
-            // Placeholder for sign-in view
-            const signInContainer = document.createElement('div');
-            const signInTitle = document.createElement('h2');
-            signInTitle.className = 'text-2xl font-bold text-gray-800 text-center mb-6';
-            signInTitle.textContent = 'Sign In';
-            
-            const signInText = document.createElement('p');
-            signInText.className = 'text-center text-gray-600';
-            signInText.textContent = 'Sign-in form will be implemented here.';
-
-            signInContainer.appendChild(signInTitle);
-            signInContainer.appendChild(signInText);
-            this.pageContentElement.appendChild(signInContainer);
+            const signInForm = new ConnectForm();
+            this.pageContentElement.appendChild(signInForm.render());
 
             const backButton = document.createElement('button');
             backButton.textContent = '‹ Back to Home';
