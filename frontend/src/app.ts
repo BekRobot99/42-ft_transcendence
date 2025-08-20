@@ -1,4 +1,5 @@
 import { SignUpForm } from './ui/SingUpForm';
+
 class App {
     private pageContentElement: HTMLElement | null;
 
@@ -6,10 +7,10 @@ class App {
     private googleSignInButton: HTMLElement | null = null;
     private signInButton: HTMLElement | null = null;
     private registerButton: HTMLElement | null = null;
-    
-    
+
     constructor() {
         this.pageContentElement = document.getElementById('page-content');
+
         this.init();
     }
 
@@ -115,7 +116,7 @@ class App {
 
             const backButton = document.createElement('button');
             backButton.textContent = '‹ Back to Home';
-            backButton.className = 'block w-full text-center mt-4 text-sm text-blue-600 hover:text-blue-800 hover:underline';
+            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/'));
             this.pageContentElement.appendChild(backButton);
 
@@ -136,11 +137,11 @@ class App {
 
             const backButton = document.createElement('button');
             backButton.textContent = '‹ Back to Home';
-            backButton.className = 'block w-full text-center mt-4 text-sm text-blue-600 hover:text-blue-800 hover:underline';
+            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/'));
             this.pageContentElement.appendChild(backButton);
 
-        }  else { // Default to home view
+        } else { // Default to home view
             this.renderHomeView(this.pageContentElement);
             // Re-attach event listeners for the home view buttons
             this.attachHomeViewListeners();
@@ -156,18 +157,20 @@ class App {
             this.googleSignInButton.addEventListener('click', this.handleGoogleSignIn.bind(this));
         }
         if (this.signInButton) {
-           this.signInButton.addEventListener('click', (e) => this.navigateTo('/signin', e));
+            this.signInButton.addEventListener('click', (e) => this.navigateTo('/signin', e));
         }
         if (this.registerButton) {
-          this.registerButton.addEventListener('click', (e) => this.navigateTo('/register', e));
-    }
+            this.registerButton.addEventListener('click', (e) => this.navigateTo('/register', e));
+        }
     }
 
     private handleGoogleSignIn(event: Event): void {
         event.preventDefault();
         console.log('Google Sign In clicked - functionality to be implemented');
     }
-   // init app when the DOM is fully loaded 
 }
 
-
+// Initialize app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new App();
+});
