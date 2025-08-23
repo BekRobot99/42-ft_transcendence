@@ -4,60 +4,67 @@ export class SignUpForm {
     private passwordField!: HTMLInputElement;
     private confirmPasswordField!: HTMLInputElement;
     private validationInfo!: HTMLElement;
-    private errorMessage!: HTMLElement;
+    private clientErrorMessage!: HTMLElement;    // For client-side validation errors
+    private serverErrorMessage!: HTMLElement;    // For backend error responses
+    private successMessage!: HTMLElement;        // For backend success responses
+    private submitButton!: HTMLButtonElement;
 
     // SVG paths for validation icons
-    private readonly validIconPath = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>`;
-    private readonly invalidIconPath = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>`;
+    private readonly checkIconPath = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>`;
+    private readonly crossIconPath = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>`;
 
     constructor() {
         this.formContainer = document.createElement('div');
         this.formContainer.className = 'w-full space-y-4';
-        this.initializeForm();
+        this.buildForm();
     }
 
-    // Initializes the form with all necessary fields and validation
-    private initializeForm(): void {
+    /** Build all form elements */
+    private buildForm(): void {
         // Username field
-        const usernameSection = document.createElement('div');
-        usernameSection.className = 'space-y-2';
-        
+        const usernameGroup = document.createElement('div');
+        usernameGroup.className = 'space-y-2';
+
         const usernameLabel = document.createElement('label');
         usernameLabel.className = 'block text-sm font-medium text-gray-700';
-        usernameLabel.htmlFor = 'username';
+        usernameLabel.htmlFor = 'signup-username';
         usernameLabel.textContent = 'Username';
-        
+
         this.usernameField = document.createElement('input');
         this.usernameField.type = 'text';
-        this.usernameField.id = 'username';
-        this.usernameField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.usernameField.id = 'signup-username';
+        this.usernameField.className =
+            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
         this.usernameField.maxLength = 16;
-        
-        this.errorMessage = document.createElement('p');
-        this.errorMessage.className = 'text-red-600 text-sm hidden';
-        
-        usernameSection.appendChild(usernameLabel);
-        usernameSection.appendChild(this.usernameField);
-        usernameSection.appendChild(this.errorMessage);
+        this.usernameField.autocomplete = 'username';
+
+        this.clientErrorMessage = document.createElement('p');
+        this.clientErrorMessage.className = 'text-red-600 text-sm hidden';
+
+        usernameGroup.appendChild(usernameLabel);
+        usernameGroup.appendChild(this.usernameField);
+        usernameGroup.appendChild(this.clientErrorMessage);
 
         // Password field
-        const passwordSection = document.createElement('div');
-        passwordSection.className = 'space-y-2';
-        
+        const passwordGroup = document.createElement('div');
+        passwordGroup.className = 'space-y-2';
+
         const passwordLabel = document.createElement('label');
         passwordLabel.className = 'block text-sm font-medium text-gray-700';
-        passwordLabel.htmlFor = 'password';
+        passwordLabel.htmlFor = 'signup-password';
         passwordLabel.textContent = 'Password';
-        
+
         this.passwordField = document.createElement('input');
         this.passwordField.type = 'password';
-        this.passwordField.id = 'password';
-        this.passwordField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
-        
+        this.passwordField.id = 'signup-password';
+        this.passwordField.className =
+            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.passwordField.autocomplete = 'new-password';
+
         this.validationInfo = document.createElement('div');
         this.validationInfo.className = 'space-y-1 mt-2';
 
-        const validationRules = [
+        const validations = [
             { id: 'length', text: 'At least 10 characters' },
             { id: 'uppercase', text: 'Contains uppercase letter' },
             { id: 'lowercase', text: 'Contains lowercase letter' },
@@ -65,103 +72,181 @@ export class SignUpForm {
             { id: 'match', text: 'Passwords match' }
         ];
 
-        validationRules.forEach(rule => {
-            const ruleElement = document.createElement('div');
-            ruleElement.className = 'flex items-center space-x-2';
-            ruleElement.innerHTML = `
-                <svg class="w-4 h-4 text-gray-400" id="${rule.id}-indicator" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    ${this.invalidIconPath}
+        validations.forEach(rule => {
+            const validationItem = document.createElement('div');
+            validationItem.className = 'flex items-center space-x-2';
+            validationItem.innerHTML = `
+                <svg class="w-4 h-4 text-gray-400" id="${rule.id}-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    ${this.crossIconPath}
                 </svg>
                 <span class="text-sm text-gray-600">${rule.text}</span>
             `;
-            this.validationInfo.appendChild(ruleElement);
+            this.validationInfo.appendChild(validationItem);
         });
 
-        passwordSection.appendChild(passwordLabel);
-        passwordSection.appendChild(this.passwordField);
+        passwordGroup.appendChild(passwordLabel);
+        passwordGroup.appendChild(this.passwordField);
 
         // Confirm Password field
-        const confirmPasswordSection = document.createElement('div');
-        confirmPasswordSection.className = 'space-y-2';
-        
+        const confirmPasswordGroup = document.createElement('div');
+        confirmPasswordGroup.className = 'space-y-2';
+
         const confirmPasswordLabel = document.createElement('label');
         confirmPasswordLabel.className = 'block text-sm font-medium text-gray-700';
-        confirmPasswordLabel.htmlFor = 'confirmPassword';
+        confirmPasswordLabel.htmlFor = 'signup-confirm-password';
         confirmPasswordLabel.textContent = 'Confirm Password';
-        
+
         this.confirmPasswordField = document.createElement('input');
         this.confirmPasswordField.type = 'password';
-        this.confirmPasswordField.id = 'confirmPassword';
-        this.confirmPasswordField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
-        
-        confirmPasswordSection.appendChild(confirmPasswordLabel);
-        confirmPasswordSection.appendChild(this.confirmPasswordField);
+        this.confirmPasswordField.id = 'signup-confirm-password';
+        this.confirmPasswordField.className =
+            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.confirmPasswordField.autocomplete = 'new-password';
+
+        confirmPasswordGroup.appendChild(confirmPasswordLabel);
+        confirmPasswordGroup.appendChild(this.confirmPasswordField);
 
         // Submit button
-        const submitButton = document.createElement('button');
-        submitButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-        submitButton.textContent = 'Sign Up';
+        this.submitButton = document.createElement('button');
+        this.submitButton.className =
+            'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+        this.submitButton.textContent = 'Register';
+        this.submitButton.type = 'submit';
 
-        // Add all elements to the container
-        this.formContainer.appendChild(usernameSection);
-        this.formContainer.appendChild(passwordSection);
-        this.formContainer.appendChild(confirmPasswordSection);
-        this.formContainer.appendChild(this.validationInfo);
-        this.formContainer.appendChild(submitButton);
+        // Server messages
+        this.serverErrorMessage = document.createElement('p');
+        this.serverErrorMessage.className = 'text-red-600 text-sm hidden mt-2 text-center';
 
-        this.setupEventHandlers();
+        this.successMessage = document.createElement('p');
+        this.successMessage.className = 'text-green-600 text-sm hidden mt-2 text-center';
+
+        // Wrap everything in a form
+        const form = document.createElement('form');
+        form.className = 'space-y-4';
+        form.addEventListener('submit', this.onRegister.bind(this));
+
+        form.appendChild(usernameGroup);
+        form.appendChild(passwordGroup);
+        form.appendChild(confirmPasswordGroup);
+        form.appendChild(this.validationInfo);
+        form.appendChild(this.submitButton);
+        form.appendChild(this.serverErrorMessage);
+        form.appendChild(this.successMessage);
+
+        this.formContainer.appendChild(form);
+        this.addFieldListeners();
     }
 
-    // Sets up event handlers for validation and form submission
-    private setupEventHandlers(): void {
-        // Username validation
+    /** Add event listeners */
+    private addFieldListeners(): void {
         this.usernameField.addEventListener('input', () => {
-            const username = this.usernameField.value;
-            this.usernameField.value = username.toLowerCase();
-            
-            const isValid = /^[a-z0-9._-]*$/.test(this.usernameField.value);
-            
-            if (!isValid && this.usernameField.value.length > 0) {
-                this.errorMessage.textContent = 'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)';
-                this.errorMessage.classList.remove('hidden');
-            } else {
-                this.errorMessage.classList.add('hidden');
+            const normalized = this.usernameField.value.toLowerCase();
+            if (this.usernameField.value !== normalized) {
+                this.usernameField.value = normalized;
             }
+
+            const isValid = /^[a-z0-9._-]*$/.test(this.usernameField.value);
+
+            if (!isValid && this.usernameField.value.length > 0) {
+                this.clientErrorMessage.textContent =
+                    'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)';
+                this.clientErrorMessage.classList.remove('hidden');
+            } else {
+                this.clientErrorMessage.classList.add('hidden');
+            }
+            this.resetServerMessages();
         });
 
-        // Password validation
         this.passwordField.addEventListener('input', () => {
             const password = this.passwordField.value;
-            this.updateValidationStatus('length', password.length >= 10);
-            this.updateValidationStatus('uppercase', /[A-Z]/.test(password));
-            this.updateValidationStatus('lowercase', /[a-z]/.test(password));
-            this.updateValidationStatus('number', /[0-9]/.test(password));
-            this.updateValidationStatus('match', password === this.confirmPasswordField.value && password.length > 0);
+
+            this.updateValidation('length', password.length >= 10);
+            this.updateValidation('uppercase', /[A-Z]/.test(password));
+            this.updateValidation('lowercase', /[a-z]/.test(password));
+            this.updateValidation('number', /[0-9]/.test(password));
+            this.updateValidation('match', password === this.confirmPasswordField.value && password.length > 0);
+
+            this.resetServerMessages();
         });
 
-        // Prevent paste in confirm password
-        this.confirmPasswordField.addEventListener('paste', (e) => {
-            e.preventDefault();
-        });
+        this.confirmPasswordField.addEventListener('paste', e => e.preventDefault());
 
         this.confirmPasswordField.addEventListener('input', () => {
             const password = this.passwordField.value;
-            const confirmPassword = this.confirmPasswordField.value;
-            this.updateValidationStatus('match', password === confirmPassword && password.length > 0);
+            const confirm = this.confirmPasswordField.value;
+            this.updateValidation('match', password === confirm && password.length > 0);
+            this.resetServerMessages();
         });
     }
 
-    private updateValidationStatus(ruleId: string, isValid: boolean): void {
-        const iconElement = document.getElementById(`${ruleId}-indicator`) as unknown as SVGSVGElement | null;
-        if (iconElement) {
-            if (isValid) {
-                iconElement.innerHTML = this.validIconPath;
-                iconElement.classList.remove('text-gray-400', 'text-red-500');
-                iconElement.classList.add('text-green-500');
+    /** Clear backend messages */
+    private resetServerMessages(): void {
+        this.serverErrorMessage.classList.add('hidden');
+        this.serverErrorMessage.textContent = '';
+        this.successMessage.classList.add('hidden');
+        this.successMessage.textContent = '';
+    }
+
+    /** Handle register submit */
+    private async onRegister(event: Event): Promise<void> {
+        event.preventDefault();
+        this.resetServerMessages();
+        this.submitButton.disabled = true;
+        this.submitButton.textContent = 'Registering...';
+
+        const username = this.usernameField.value;
+        const password = this.passwordField.value;
+        const confirmPassword = this.confirmPasswordField.value;
+
+        if (password !== confirmPassword) {
+            this.serverErrorMessage.textContent = 'Passwords do not match.';
+            this.serverErrorMessage.classList.remove('hidden');
+            this.submitButton.disabled = false;
+            this.submitButton.textContent = 'Register';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.successMessage.textContent = data.message || 'Registration successful!';
+                this.successMessage.classList.remove('hidden');
+                this.usernameField.value = '';
+                this.passwordField.value = '';
+                this.confirmPasswordField.value = '';
             } else {
-                iconElement.innerHTML = this.invalidIconPath;
-                iconElement.classList.remove('text-green-500');
-                iconElement.classList.add('text-gray-400');
+                this.serverErrorMessage.textContent = data.message || 'Registration failed.';
+                this.serverErrorMessage.classList.remove('hidden');
+            }
+        } catch (err) {
+            console.error('Registration error:', err);
+            this.serverErrorMessage.textContent = 'An unexpected error occurred. Please try again.';
+            this.serverErrorMessage.classList.remove('hidden');
+        } finally {
+            this.submitButton.disabled = false;
+            this.submitButton.textContent = 'Register';
+        }
+    }
+
+    /** Update validation icons */
+    private updateValidation(id: string, isValid: boolean): void {
+        const iconSvgElement = document.getElementById(`${id}-check`) as SVGSVGElement | null;
+        if (iconSvgElement) {
+            if (isValid) {
+                iconSvgElement.innerHTML = this.checkIconPath;
+                iconSvgElement.classList.remove('text-gray-400', 'text-red-500');
+                iconSvgElement.classList.add('text-green-500');
+            } else {
+                iconSvgElement.innerHTML = this.crossIconPath;
+                iconSvgElement.classList.remove('text-green-500');
+                iconSvgElement.classList.add('text-gray-400');
             }
         }
     }

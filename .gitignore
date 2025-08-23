@@ -13,3 +13,7 @@ vendor/
 
 # Frontend dependencies
 frontend/dist/
+
+backend/database/
+nginx.key
+backend/dist/

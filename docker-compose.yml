@@ -1,10 +1,32 @@
-version: "3.9"
-
+version: '3.8' # Specifies the version of the Docker Compose file format
 services:
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: . # Build context is the root directory for the frontend Dockerfile
+      dockerfile: Dockerfile # Specifies the frontend Dockerfile
     ports:
-      - "8080:80"
-    restart: always
+      - "8080:443" # Exposes Nginx HTTPS port
+      - "8000:80"  # Optionally expose HTTP for redirection
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro # Mount SSL certificates
+    container_name: ft_transcendence_nginx
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend # Build context is the backend directory
+      dockerfile: Dockerfile # Specifies the backend Dockerfile
+    # ports: # Not strictly needed to expose if only Nginx talks to it
+      # - "3000:3000" 
+    volumes:
+      - ./backend/database:/app/database # Persist SQLite database
+    container_name: ft_transcendence_backend
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  database_data: # We can define a named volume if prefered, instead of bind mount

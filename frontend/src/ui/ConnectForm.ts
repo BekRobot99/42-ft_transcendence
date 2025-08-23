@@ -2,116 +2,174 @@ export class ConnectForm {
     private formContainer: HTMLElement;
     private usernameField!: HTMLInputElement;
     private passwordField!: HTMLInputElement;
-    private errorMessage!: HTMLElement;
+    private clientErrorMessage!: HTMLElement;  // For client-side validation
+    private serverErrorMessage!: HTMLElement;  // For backend error responses
+    private successMessage!: HTMLElement;      // For backend success responses
+    private submitButton!: HTMLButtonElement;
 
     constructor() {
         this.formContainer = document.createElement('div');
         this.formContainer.className = 'w-full space-y-4';
-        this.buildFormElements();
+        this.buildForm();
     }
 
-    private buildFormElements(): void {
-        // Username input
+    /** Build and initialize form structure */
+    private buildForm(): void {
+        // Username field
         const usernameGroup = document.createElement('div');
         usernameGroup.className = 'space-y-2';
 
         const usernameLabel = document.createElement('label');
         usernameLabel.className = 'block text-sm font-medium text-gray-700';
-        usernameLabel.htmlFor = 'username-signin';
+        usernameLabel.htmlFor = 'signin-username';
         usernameLabel.textContent = 'Username';
 
         this.usernameField = document.createElement('input');
         this.usernameField.type = 'text';
-        this.usernameField.id = 'username-signin';
-        this.usernameField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.usernameField.id = 'signin-username';
+        this.usernameField.className =
+            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
         this.usernameField.maxLength = 16;
+        this.usernameField.autocomplete = 'username';
 
-        this.errorMessage = document.createElement('p');
-        this.errorMessage.className = 'text-red-600 text-sm hidden';
+        this.clientErrorMessage = document.createElement('p');
+        this.clientErrorMessage.className = 'text-red-600 text-sm hidden';
 
         usernameGroup.appendChild(usernameLabel);
         usernameGroup.appendChild(this.usernameField);
-        usernameGroup.appendChild(this.errorMessage);
+        usernameGroup.appendChild(this.clientErrorMessage);
 
-        // Password input
+        // Password field
         const passwordGroup = document.createElement('div');
         passwordGroup.className = 'space-y-2';
 
         const passwordLabel = document.createElement('label');
         passwordLabel.className = 'block text-sm font-medium text-gray-700';
-        passwordLabel.htmlFor = 'password-signin';
+        passwordLabel.htmlFor = 'signin-password';
         passwordLabel.textContent = 'Password';
 
         this.passwordField = document.createElement('input');
         this.passwordField.type = 'password';
-        this.passwordField.id = 'password-signin';
-        this.passwordField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.passwordField.id = 'signin-password';
+        this.passwordField.className =
+            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.passwordField.autocomplete = 'current-password';
 
         passwordGroup.appendChild(passwordLabel);
         passwordGroup.appendChild(this.passwordField);
 
-        // Sign In button
-        const signInButton = document.createElement('button');
-        signInButton.className = 'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-        signInButton.textContent = 'Sign In';
-        // TODO: replace with actual sign-in logic
-        signInButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            const username = this.usernameField.value;
-            const password = this.passwordField.value;
-            if (!username || !password) {
-                this.errorMessage.textContent = 'Username and password are required.';
-                this.errorMessage.classList.remove('hidden');
-            } else {
-                this.errorMessage.classList.add('hidden');
-                console.log('Sign In attempt with:', username);
-            }
-        });
+        // Submit button
+        this.submitButton = document.createElement('button');
+        this.submitButton.className =
+            'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+        this.submitButton.textContent = 'Sign In';
+        this.submitButton.type = 'submit';
 
-        // Add everything to the container
-        this.formContainer.appendChild(usernameGroup);
-        this.formContainer.appendChild(passwordGroup);
-        this.formContainer.appendChild(signInButton);
+        // Messages
+        this.serverErrorMessage = document.createElement('p');
+        this.serverErrorMessage.className = 'text-red-600 text-sm hidden mt-2 text-center';
 
-        this.addFieldValidation();
+        this.successMessage = document.createElement('p');
+        this.successMessage.className = 'text-green-600 text-sm hidden mt-2 text-center';
+
+        // Form wrapper
+        const form = document.createElement('form');
+        form.className = 'space-y-4';
+        form.addEventListener('submit', this.onSubmit.bind(this));
+
+        form.appendChild(usernameGroup);
+        form.appendChild(passwordGroup);
+        form.appendChild(this.submitButton);
+        form.appendChild(this.serverErrorMessage);
+        form.appendChild(this.successMessage);
+
+        this.formContainer.appendChild(form);
+        this.addFieldListeners();
     }
 
-    private addFieldValidation(): void {
-        // Username validation
+    /** Add field-specific listeners */
+    private addFieldListeners(): void {
         this.usernameField.addEventListener('input', () => {
-            const username = this.usernameField.value;
-            // Force lowercase
-            this.usernameField.value = username.toLowerCase();
+            const normalized = this.usernameField.value.toLowerCase();
+            if (this.usernameField.value !== normalized) {
+                this.usernameField.value = normalized;
+            }
 
             const isValid = /^[a-z0-9._-]*$/.test(this.usernameField.value);
 
             if (!isValid && this.usernameField.value.length > 0) {
-                this.errorMessage.textContent = 'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)';
-                this.errorMessage.classList.remove('hidden');
+                this.clientErrorMessage.textContent =
+                    'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)';
+                this.clientErrorMessage.classList.remove('hidden');
             } else {
-                // Clear specific username validation error if input is valid or empty
-                if (this.errorMessage.textContent === 'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)') {
-                    this.errorMessage.classList.add('hidden');
-                    this.errorMessage.textContent = ''; // Clear the message
-                }
-                // Also, if both fields now have content (and username is valid), ensure general error is hidden
-                if (this.usernameField.value.length > 0 && this.passwordField.value.length > 0 && this.errorMessage.textContent === 'Username and password are required.') {
-                    this.errorMessage.classList.add('hidden');
-                    this.errorMessage.textContent = ''; // Clear the message
-                }
+                this.clientErrorMessage.classList.add('hidden');
             }
+            this.resetServerMessages();
         });
 
         this.passwordField.addEventListener('input', () => {
-            // Clear general "Username and password are required" error if user starts typing in password field
-            // and username field also has content.
-            if (this.usernameField.value.length > 0 && this.passwordField.value.length > 0 && this.errorMessage.textContent === 'Username and password are required.') {
-                this.errorMessage.classList.add('hidden');
-                this.errorMessage.textContent = ''; // Clear the message
-            }
+            this.resetServerMessages();
         });
     }
 
+    /** Clear server-side messages */
+    private resetServerMessages(): void {
+        this.serverErrorMessage.classList.add('hidden');
+        this.serverErrorMessage.textContent = '';
+        this.successMessage.classList.add('hidden');
+        this.successMessage.textContent = '';
+    }
+
+    /** Handle form submit */
+    private async onSubmit(event: Event): Promise<void> {
+        event.preventDefault();
+        this.resetServerMessages();
+        this.submitButton.disabled = true;
+        this.submitButton.textContent = 'Signing In...';
+
+        const username = this.usernameField.value;
+        const password = this.passwordField.value;
+
+        if (!username || !password) {
+            this.serverErrorMessage.textContent = 'Username and password are required.';
+            this.serverErrorMessage.classList.remove('hidden');
+            this.submitButton.disabled = false;
+            this.submitButton.textContent = 'Sign In';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/signin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.successMessage.textContent = data.message || 'Sign-in successful!';
+                this.successMessage.classList.remove('hidden');
+                console.log('Signed in user:', data.user);
+
+                this.usernameField.value = '';
+                this.passwordField.value = '';
+            } else {
+                this.serverErrorMessage.textContent = data.message || 'Sign-in failed.';
+                this.serverErrorMessage.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Sign-in error:', error);
+            this.serverErrorMessage.textContent =
+                'An unexpected error occurred. Please try again.';
+            this.serverErrorMessage.classList.remove('hidden');
+        } finally {
+            this.submitButton.disabled = false;
+            this.submitButton.textContent = 'Sign In';
+        }
+    }
+
+    /** Public accessor */
     public render(): HTMLElement {
         return this.formContainer;
     }
