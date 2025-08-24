@@ -9,3 +9,4 @@ export const encryptPassword = async (password: string): Promise<string> => {
 export const verifyPassword = async (password: string, hash: string): Promise<boolean> => {
     return bcrypt.compare(password, hash);
 };
+

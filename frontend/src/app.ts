@@ -122,12 +122,15 @@ class App {
         // Check authentication status
         this.isAuthenticated = await this.checkAuth();
 
-        // Redirect logic
-        if (this.isAuthenticated && path !== '/game') {
+        // Only redirect to /game if authenticated and trying to access a public page
+        const publicPaths = ['/', '/signin', '/register'];
+        if (this.isAuthenticated && publicPaths.includes(path)) {
             history.replaceState({ path: '/game' }, '', '/game');
             return this.renderView('/game');
         }
-        if (!this.isAuthenticated && path === '/game') {
+        // Only redirect to / if not authenticated and trying to access a protected page
+        const protectedPaths = ['/game', '/settings'];
+        if (!this.isAuthenticated && protectedPaths.includes(path)) {
             history.replaceState({ path: '/' }, '', '/');
             return this.renderView('/');
         }
