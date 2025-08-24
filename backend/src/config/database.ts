@@ -24,6 +24,7 @@ export const setupDatabase = (): Promise<void> => {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                display_name TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `, (err) => {

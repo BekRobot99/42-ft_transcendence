@@ -13,13 +13,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.0.0",
+    "@fastify/jwt": "^9.1.0",
     "bcrypt": "^5.1.1",
-    "fastify": "^4.28.1",
-    "@fastify/cors": "^9.0.1",
+    "dotenv": "^16.5.0",
+    "fastify": "^5.0.0",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.14.10",
     "@types/sqlite3": "^3.1.11",
     "ts-node": "^10.9.2",
