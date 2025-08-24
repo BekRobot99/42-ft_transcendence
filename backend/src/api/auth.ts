@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import databaseConnection from '../config/database';
-import { verifyPassword, encryptPassword } from '../services/pass_service';
+import { comparePassword, hashPassword } from '../services/pass_service';
 
 interface AuthRequestBody {
     username?: string;
@@ -84,7 +84,7 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
                         .send({ message: 'Username already exists.' });
                 }
 
-                const hashedPassword = await encryptPassword(password);
+                const hashedPassword = await hashPassword(password);
 
                 await new Promise<void>((resolve, reject) => {
                     databaseConnection.run(
@@ -97,9 +97,26 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
                     );
                 });
 
-                reply
-                    .status(201)
-                    .send({ message: 'User registered successfully.' });
+                // Fetch the new user's id
+            const newUser = await new Promise<{ id: number, username: string }>((resolve, reject) => {
+                databaseConnection.get('SELECT id, username FROM users WHERE username = ?', [username.toLowerCase()], (err, row) => {
+                    if (err) return reject(err);
+                    resolve(row as { id: number, username: string });
+                });
+            });
+
+            // Issue JWT token in HTTP-only, Secure cookie
+            const token = app.jwt.sign({ id: newUser.id, username: newUser.username });
+            reply
+                .setCookie('token', token, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    path: '/',
+                    maxAge: 60 * 60 * 24 * 7 // 7 days
+                })
+                .status(201)
+                .send({ message: 'User registered successfully.' });
             } catch (error) {
                 app.log.error(error);
                 reply.status(500).send({ message: 'Internal server error.' });
@@ -155,7 +172,7 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
                         .send({ message: 'Invalid username or password.' });
                 }
 
-                const passwordIsCorrect = await verifyPassword(
+                const passwordIsCorrect = await comparePassword(
                     password,
                     user.password_hash
                 );

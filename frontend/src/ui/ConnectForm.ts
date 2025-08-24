@@ -154,6 +154,10 @@ export class ConnectForm {
 
                 this.usernameField.value = '';
                 this.passwordField.value = '';
+                // has to be checked after
+                setTimeout(() => {
+                    window.location.href = '/game';
+                }, 1000);
             } else {
                 this.serverErrorMessage.textContent = data.message || 'Sign-in failed.';
                 this.serverErrorMessage.classList.remove('hidden');
