@@ -1,13 +1,12 @@
-import { SignUpForm } from './ui/SingUpForm';
-import { ConnectForm } from './ui/ConnectForm';
+import { SignUpForm } from './ui/SingUpForm.js';
+import { ConnectForm } from './ui/ConnectForm.js';
 
 class App {
     private pageContentElement: HTMLElement | null;
-
-    // To keep track of elements for re-attaching listeners when rendering the home view
     private googleSignInButton: HTMLElement | null = null;
     private signInButton: HTMLElement | null = null;
     private registerButton: HTMLElement | null = null;
+    private isAuthenticated: boolean = false;
 
     constructor() {
         this.pageContentElement = document.getElementById('page-content');
@@ -106,8 +105,32 @@ class App {
         container.appendChild(homeContentWrapper);
     }
 
-    private renderView(path: string): void {
+    private async checkAuth(): Promise<boolean> {
+        try {
+            const res = await fetch('/api/me', { credentials: 'include' });
+            if (!res.ok) return false;
+            const data = await res.json();
+            return !!data.user;
+        } catch {
+            return false;
+        }
+    }
+
+    private async renderView(path: string): Promise<void> {
         if (!this.pageContentElement) return;
+
+        // Check authentication status
+        this.isAuthenticated = await this.checkAuth();
+
+        // Redirect logic
+        if (this.isAuthenticated && path !== '/game') {
+            history.replaceState({ path: '/game' }, '', '/game');
+            return this.renderView('/game');
+        }
+        if (!this.isAuthenticated && path === '/game') {
+            history.replaceState({ path: '/' }, '', '/');
+            return this.renderView('/');
+        }
 
         this.pageContentElement.innerHTML = ''; // Clear existing content
 
@@ -131,11 +154,36 @@ class App {
             backButton.addEventListener('click', () => this.navigateTo('/'));
             this.pageContentElement.appendChild(backButton);
 
+        } else if (path === '/game') {
+            this.renderGameView(this.pageContentElement);
+
         } else { // Default to home view
             this.renderHomeView(this.pageContentElement);
             // Re-attach event listeners for the home view buttons
             this.attachHomeViewListeners();
         }
+    }
+
+    private renderGameView(container: HTMLElement): void {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bg-white rounded-lg shadow-lg p-8 text-center';
+
+        const title = document.createElement('h2');
+        title.className = 'text-2xl font-bold mb-4';
+        title.textContent = 'Welcome to Pong!';
+
+        const logoutButton = document.createElement('button');
+        logoutButton.className = 'bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+        logoutButton.textContent = 'Log Out';
+        logoutButton.addEventListener('click', async () => {
+            await fetch('/api/signout', { method: 'POST', credentials: 'include' });
+            history.replaceState({ path: '/' }, '', '/');
+            this.renderView('/');
+        });
+
+        wrapper.appendChild(title);
+        wrapper.appendChild(logoutButton);
+        container.appendChild(wrapper);
     }
 
     private attachHomeViewListeners(): void {
