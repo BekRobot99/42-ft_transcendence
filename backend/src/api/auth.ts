@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import databaseConnection from '../config/database';
-import { comparePassword, hashPassword } from '../services/pass_service';
+import { verifyPassword, encryptPassword } from '../services/pass_service';
 
 interface AuthRequestBody {
     username?: string;
@@ -84,7 +84,7 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
                         .send({ message: 'Username already exists.' });
                 }
 
-                const hashedPassword = await hashPassword(password);
+                const hashedPassword = await encryptPassword(password);
 
                 await new Promise<void>((resolve, reject) => {
                     databaseConnection.run(
@@ -172,7 +172,7 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
                         .send({ message: 'Invalid username or password.' });
                 }
 
-                const passwordIsCorrect = await comparePassword(
+                const passwordIsCorrect = await verifyPassword(
                     password,
                     user.password_hash
                 );
