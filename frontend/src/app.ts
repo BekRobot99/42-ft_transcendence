@@ -160,6 +160,14 @@ class App {
         } else if (path === '/game') {
             this.renderGameView(this.pageContentElement);
 
+        } else if (path === '/settings') {
+            await this.renderSettingsView(this.pageContentElement);
+            const backButton = document.createElement('button');
+            backButton.textContent = '‹ Back to Games';
+            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
+            backButton.addEventListener('click', () => this.navigateTo('/game'));
+            this.pageContentElement.appendChild(backButton);
+
         } else { // Default to home view
             this.renderHomeView(this.pageContentElement);
             // Re-attach event listeners for the home view buttons
@@ -175,6 +183,14 @@ class App {
         title.className = 'text-2xl font-bold mb-4';
         title.textContent = 'Welcome to Pong!';
 
+        // Settings button
+        const settingsButton = document.createElement('button');
+        settingsButton.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out mr-4';
+        settingsButton.textContent = 'Settings';
+        settingsButton.addEventListener('click', () => {
+            this.navigateTo('/settings');
+        });
+
         const logoutButton = document.createElement('button');
         logoutButton.className = 'bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
         logoutButton.textContent = 'Log Out';
@@ -185,6 +201,7 @@ class App {
         });
 
         wrapper.appendChild(title);
+        wrapper.appendChild(settingsButton);
         wrapper.appendChild(logoutButton);
         container.appendChild(wrapper);
     }
@@ -208,6 +225,132 @@ class App {
     private handleGoogleSignIn(event: Event): void {
         event.preventDefault();
         console.log('Google Sign In clicked - functionality to be implemented');
+    }
+
+    private async renderSettingsView(container: HTMLElement): Promise<void> {
+        container.innerHTML = '';
+        // Fetch current user info
+        let user;
+        try {
+            const res = await fetch('/api/me', { credentials: 'include' });
+            if (!res.ok) throw new Error('Failed to fetch user');
+            const data = await res.json();
+            user = data.user;
+        } catch {
+            container.innerHTML = '<p class="text-red-600">Failed to load user info.</p>';
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bg-white rounded-lg shadow-lg p-8';
+
+        const title = document.createElement('h2');
+        title.className = 'text-2xl font-bold mb-4';
+        title.textContent = 'Settings';
+
+        // Username
+        const usernameGroup = document.createElement('div');
+        usernameGroup.className = 'mb-4';
+        const usernameLabel = document.createElement('label');
+        usernameLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+        usernameLabel.textContent = 'Username';
+        const usernameInput = document.createElement('input');
+        usernameInput.type = 'text';
+        usernameInput.value = user.username;
+        usernameInput.maxLength = 16;
+        usernameInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        usernameInput.autocomplete = 'off';
+        usernameGroup.appendChild(usernameLabel);
+        usernameGroup.appendChild(usernameInput);
+
+        // Display name
+        const displayNameGroup = document.createElement('div');
+        displayNameGroup.className = 'mb-4';
+        const displayNameLabel = document.createElement('label');
+        displayNameLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+        displayNameLabel.textContent = 'Display Name';
+        const displayNameInput = document.createElement('input');
+        displayNameInput.type = 'text';
+        displayNameInput.value = user.display_name || '';
+        displayNameInput.maxLength = 32;
+        displayNameInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        displayNameInput.autocomplete = 'off';
+        displayNameGroup.appendChild(displayNameLabel);
+        displayNameGroup.appendChild(displayNameInput);
+
+        // Error and success messages
+        const errorMsg = document.createElement('p');
+        errorMsg.className = 'text-red-600 text-sm hidden mb-2';
+        const successMsg = document.createElement('p');
+        successMsg.className = 'text-green-600 text-sm hidden mb-2';
+
+        // Save button
+        const saveButton = document.createElement('button');
+        saveButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+        saveButton.textContent = 'Save Changes';
+
+        // Form
+        const form = document.createElement('form');
+        form.appendChild(usernameGroup);
+        form.appendChild(displayNameGroup);
+        form.appendChild(errorMsg);
+        form.appendChild(successMsg);
+        form.appendChild(saveButton);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.classList.add('hidden');
+            successMsg.classList.add('hidden');
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+
+            // Validation
+            const username = usernameInput.value.trim().toLowerCase();
+            const displayName = displayNameInput.value.trim();
+
+            if (!/^[a-z0-9._-]{3,16}$/.test(username)) {
+                errorMsg.textContent = 'Username must be 3-16 chars, lowercase, and only a-z, 0-9, ., _, -';
+                errorMsg.classList.remove('hidden');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+                return;
+            }
+            if (displayName.length < 1 || displayName.length > 32 || /<|>/.test(displayName)) {
+                errorMsg.textContent = 'Display name must be 1-32 characters and not contain < or >';
+                errorMsg.classList.remove('hidden');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+                return;
+            }
+
+            // Send update
+            try {
+                const res = await fetch('/api/me', {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, displayName }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    successMsg.textContent = 'Profile updated!';
+                    successMsg.classList.remove('hidden');
+                } else {
+                    errorMsg.textContent = data.message || 'Failed to update profile.';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch {
+                errorMsg.textContent = 'Unexpected error. Please try again.';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+            }
+        });
+
+        wrapper.appendChild(title);
+        wrapper.appendChild(form);
+        container.appendChild(wrapper);
     }
 }
 
