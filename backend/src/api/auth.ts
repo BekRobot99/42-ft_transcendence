@@ -87,14 +87,14 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
                 const hashedPassword = await encryptPassword(password);
 
                 await new Promise<void>((resolve, reject) => {
-                    databaseConnection.run(
-                        'INSERT INTO users (username, password_hash) VALUES (?, ?)',
-                        [username.toLowerCase(), hashedPassword],
-                        function (err) {
-                            if (err) return reject(err);
-                            resolve();
-                        }
-                    );
+                   databaseConnection.run(
+                    'INSERT INTO users (username, password_hash, display_name) VALUES (?, ?, ?)',
+                    [username.toLowerCase(), hashedPassword, username],
+                    function (err) {
+                        if (err) return reject(err);
+                        resolve();
+                    }
+                );
                 });
 
                 // Fetch the new user's id
