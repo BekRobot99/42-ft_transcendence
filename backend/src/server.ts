@@ -33,6 +33,11 @@ app.register(import('@fastify/cookie'));
 app.decorate("authenticate", async function(request: any, reply: any) {
     try {
         await request.jwtVerify();
+        // A user is only fully authenticated if they have passed all steps, including 2FA if enabled.
+        // The 'tfa' claim in the token must be 'complete'.
+        if (request.user.tfa !== 'complete') {
+            throw new Error('Authentication incomplete, 2FA may be required.');
+        }
     } catch (err) {
         reply.status(401).send({ message: 'Unauthorized' });
     }

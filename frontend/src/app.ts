@@ -278,6 +278,145 @@ class App {
         displayNameGroup.appendChild(displayNameLabel);
         displayNameGroup.appendChild(displayNameInput);
 
+               // 2FA Section
+        const mfaWrapper = document.createElement('div');
+        mfaWrapper.className = 'mb-4';
+
+        const mfaTitle = document.createElement('h3');
+        mfaTitle.className = 'text-lg font-semibold mb-2';
+        mfaTitle.textContent = 'Multi-Factor Authentication (MFA)';
+
+        const mfaStatus = document.createElement('p');
+        mfaStatus.className = 'mb-2';
+        mfaStatus.textContent = user.mfa_enabled ? 'MFA is enabled.' : 'MFA is not enabled.';
+
+        const mfaButton = document.createElement('button');
+        mfaButton.type = 'button'; // Add this line
+        mfaButton.className = 'bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out mb-2';
+        mfaButton.textContent = user.mfa_enabled ? 'Disable MFA' : 'Enable MFA';
+
+        const mfaContainer = document.createElement('div'); // For QR code and input
+
+        mfaButton.addEventListener('click', async () => {
+            mfaContainer.innerHTML = '';
+            if (!user.mfa_enabled) {
+                // Enable flow: get QR code
+                const res = await fetch('/api/2fa/setup', { method: 'POST', credentials: 'include' });
+                const data = await res.json();
+                if (!res.ok) {
+                    mfaContainer.innerHTML = `<p class="text-red-600">${data.message || 'Failed to start MFA setup.'}</p>`;
+                    return;
+                }
+                // Show QR code and input
+                const qrImg = document.createElement('img');
+                qrImg.src = data.qr;
+                qrImg.alt = '2FA QR Code';
+                qrImg.className = 'mx-auto mb-2';
+                const secretText = document.createElement('p');
+                secretText.className = 'text-xs text-gray-500 mb-2 break-all';
+                secretText.textContent = `Secret: ${data.secret}`;
+                const codeInput = document.createElement('input');
+                codeInput.type = 'text';
+                codeInput.placeholder = 'Enter 6-digit code';
+                codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
+                codeInput.maxLength = 6;
+                const verifyBtn = document.createElement('button');
+                verifyBtn.textContent = 'Verify & Enable';
+                verifyBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
+                const msg = document.createElement('p');
+                msg.className = 'text-sm mt-2';
+
+                verifyBtn.addEventListener('click', async () => {
+                    msg.textContent = '';
+                    verifyBtn.disabled = true;
+                    const code = codeInput.value.trim();
+                    if (!/^\d{6}$/.test(code)) {
+                        msg.textContent = 'Enter a valid 6-digit code.';
+                        msg.className = 'text-red-600 text-sm mt-2';
+                        verifyBtn.disabled = false;
+                        return;
+                    }
+                    const res2 = await fetch('/api/2fa/enable', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code }),
+                    });
+                    const data2 = await res2.json();
+                    if (res2.ok) {
+                        msg.textContent = '2FA enabled!';
+                        msg.className = 'text-green-600 text-sm mt-2';
+                        mfaStatus.textContent = 'MFA is enabled.';
+                        mfaButton.textContent = 'Disable MFA';
+                        user.mfa_enabled = 1;
+                        setTimeout(() => { mfaContainer.innerHTML = ''; }, 1500);
+                    } else {
+                        msg.textContent = data2.message || 'Failed to enable 2FA.';
+                        msg.className = 'text-red-600 text-sm mt-2';
+                    }
+                    verifyBtn.disabled = false;
+                });
+
+                mfaContainer.appendChild(qrImg);
+                mfaContainer.appendChild(secretText);
+                mfaContainer.appendChild(codeInput);
+                mfaContainer.appendChild(verifyBtn);
+                mfaContainer.appendChild(msg);
+            } else {
+                // Disable flow
+                const codeInput = document.createElement('input');
+                codeInput.type = 'text';
+                codeInput.placeholder = 'Enter 2FA code to disable';
+                codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
+                codeInput.maxLength = 6;
+                const disableBtn = document.createElement('button');
+                disableBtn.textContent = 'Disable 2FA';
+                disableBtn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
+                const msg = document.createElement('p');
+                msg.className = 'text-sm mt-2';
+
+                disableBtn.addEventListener('click', async () => {
+                    msg.textContent = '';
+                    disableBtn.disabled = true;
+                    const code = codeInput.value.trim();
+                    if (!/^\d{6}$/.test(code)) {
+                        msg.textContent = 'Enter a valid 6-digit code.';
+                        msg.className = 'text-red-600 text-sm mt-2';
+                        disableBtn.disabled = false;
+                        return;
+                    }
+                    const res2 = await fetch('/api/2fa/disable', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code }),
+                    });
+                    const data2 = await res2.json();
+                    if (res2.ok) {
+                        msg.textContent = '2FA disabled!';
+                        msg.className = 'text-green-600 text-sm mt-2';
+                        mfaStatus.textContent = '2FA is not enabled.';
+                        mfaButton.textContent = 'Enable 2FA';
+                        user.mfa_enabled = 0;
+                        setTimeout(() => { mfaContainer.innerHTML = ''; }, 1500);
+                    } else {
+                        msg.textContent = data2.message || 'Failed to disable 2FA.';
+                        msg.className = 'text-red-600 text-sm mt-2';
+                    }
+                    disableBtn.disabled = false;
+                });
+
+                mfaContainer.appendChild(codeInput);
+                mfaContainer.appendChild(disableBtn);
+                mfaContainer.appendChild(msg);
+            }
+        });
+
+        mfaWrapper.appendChild(mfaTitle);
+        mfaWrapper.appendChild(mfaStatus);
+        mfaWrapper.appendChild(mfaButton);
+        mfaWrapper.appendChild(mfaContainer);
+
         // Error and success messages
         const errorMsg = document.createElement('p');
         errorMsg.className = 'text-red-600 text-sm hidden mb-2';
@@ -293,6 +432,7 @@ class App {
         const form = document.createElement('form');
         form.appendChild(usernameGroup);
         form.appendChild(displayNameGroup);
+        form.appendChild(mfaWrapper);
         form.appendChild(errorMsg);
         form.appendChild(successMsg);
         form.appendChild(saveButton);

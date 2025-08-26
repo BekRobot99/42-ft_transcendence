@@ -1,11 +1,13 @@
 export class ConnectForm {
-    private formContainer: HTMLElement;
-    private usernameField!: HTMLInputElement;
-    private passwordField!: HTMLInputElement;
+    private formContainer: HTMLElement; // For form container
+    private usernameField!: HTMLInputElement; // For username input field
+    private passwordField!: HTMLInputElement; // For password input field
     private clientErrorMessage!: HTMLElement;  // For client-side validation
     private serverErrorMessage!: HTMLElement;  // For backend error responses
     private successMessage!: HTMLElement;      // For backend success responses
-    private submitButton!: HTMLButtonElement;
+    private submitButton!: HTMLButtonElement; // For submit button
+    private mfaInputWrapper!: HTMLElement;   // For MFA input wrapper
+    private mfaInput!: HTMLInputElement;     // For MFA input field
 
     constructor() {
         this.formContainer = document.createElement('div');
@@ -58,6 +60,22 @@ export class ConnectForm {
         passwordGroup.appendChild(passwordLabel);
         passwordGroup.appendChild(this.passwordField);
 
+        // 2FA input (hidden by default)
+        this.mfaInputWrapper = document.createElement('div');
+        this.mfaInputWrapper.className = 'space-y-2 hidden';
+        const twofaLabel = document.createElement('label');
+        twofaLabel.className = 'block text-sm font-medium text-gray-700';
+        twofaLabel.htmlFor = 'twofa-signin';
+        twofaLabel.textContent = '2FA Code';
+        this.mfaInput = document.createElement('input');
+        this.mfaInput.type = 'text';
+        this.mfaInput.id = 'twofa-signin';
+        this.mfaInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.mfaInput.autocomplete = 'one-time-code';
+        this.mfaInput.maxLength = 6;
+        this.mfaInputWrapper.appendChild(twofaLabel);
+        this.mfaInputWrapper.appendChild(this.mfaInput);
+
         // Submit button
         this.submitButton = document.createElement('button');
         this.submitButton.className =
@@ -80,6 +98,7 @@ export class ConnectForm {
         form.appendChild(usernameGroup);
         form.appendChild(passwordGroup);
         form.appendChild(this.submitButton);
+        form.appendChild(this.mfaInputWrapper);
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
 
@@ -110,6 +129,10 @@ export class ConnectForm {
         this.passwordField.addEventListener('input', () => {
             this.resetServerMessages();
         });
+
+        this.mfaInput.addEventListener('input', () => {
+            this.resetServerMessages();
+        });
     }
 
     /** Clear server-side messages */
@@ -129,6 +152,7 @@ export class ConnectForm {
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
+        const mfaCode = this.mfaInput.value;
 
         if (!username || !password) {
             this.serverErrorMessage.textContent = 'Username and password are required.';
@@ -142,25 +166,40 @@ export class ConnectForm {
             const response = await fetch('/api/signin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password, mfaCode: mfaCode || undefined }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                this.successMessage.textContent = data.message || 'Sign-in successful!';
-                this.successMessage.classList.remove('hidden');
-                console.log('Signed in user:', data.user);
-
-                this.usernameField.value = '';
-                this.passwordField.value = '';
-                // has to be checked after
-                setTimeout(() => {
+                // The first step of 2FA (password correct) will return 200 OK with twofaRequired: true
+                if (data.twofaRequired) {
+                    this.mfaInputWrapper.classList.remove('hidden');
+                    this.serverErrorMessage.textContent = data.message; // "2FA code required."
+                    this.serverErrorMessage.classList.remove('hidden');
+                    this.mfaInput.focus();
+                } else {
+                    // This is a successful sign-in (either 2FA was off, or the code was correct)
+                    this.successMessage.textContent = data.message || 'Sign-in successful!';
+                    this.successMessage.classList.remove('hidden');
+                    // Redirect to /game after successful sign-in
                     window.location.href = '/game';
-                }, 1000);
+                };
             } else {
-                this.serverErrorMessage.textContent = data.message || 'Sign-in failed.';
-                this.serverErrorMessage.classList.remove('hidden');
+                 // Handle non-OK responses (e.g., 401 for bad password or bad 2FA code)
+                if (data.twofaRequired) {
+                    // This case handles an invalid 2FA code attempt
+                    this.mfaInputWrapper.classList.remove('hidden');
+                    this.serverErrorMessage.textContent = data.message;
+                    this.serverErrorMessage.classList.remove('hidden');
+                    this.mfaInput.focus();
+                } else {
+                    this.serverErrorMessage.textContent = data.message || 'Sign-in failed.';
+                    this.serverErrorMessage.classList.remove('hidden');
+                    // Hide 2FA input if it was visible from a previous attempt
+                    this.mfaInputWrapper.classList.add('hidden');
+                    this.mfaInput.value = '';
+                }
             }
         } catch (error) {
             console.error('Sign-in error:', error);
