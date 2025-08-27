@@ -1,11 +1,27 @@
 import fastifyCors from '@fastify/cors';
+import fastifyMultipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import 'dotenv/config';
 import Fastify from 'fastify';
+import fs from 'fs';
+import path from 'path';
 import { setupDatabase } from './config/database';
 import authRoutes from './api/auth';
 
 const app = Fastify({
     logger: true,
+});
+
+// Create uploads directory if it doesn't exist
+const avatarUploadPath = path.join(process.cwd(), 'uploads', 'avatars');
+if (!fs.existsSync(avatarUploadPath)) {
+    fs.mkdirSync(avatarUploadPath, { recursive: true });
+}
+
+// Serve static files from the uploads directory
+app.register(fastifyStatic, {
+    root: path.join(process.cwd(), 'uploads'),
+    prefix: '/uploads/',
 });
 
 // Register CORS plugin
@@ -28,6 +44,13 @@ app.register(async (instance) => {
 
 // Register cookie parser (for JWT in cookies)
 app.register(import('@fastify/cookie'));
+
+// Register multipart plugin for file uploads
+app.register(fastifyMultipart, {
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+});
 
 // Decorate request with JWT verify
 app.decorate("authenticate", async function(request: any, reply: any) {

@@ -245,8 +245,82 @@ class App {
         wrapper.className = 'bg-white rounded-lg shadow-lg p-8';
 
         const title = document.createElement('h2');
-        title.className = 'text-2xl font-bold mb-4';
+        title.className = 'text-2xl font-bold mb-6';
         title.textContent = 'Settings';
+
+         // --- Avatar Section ---
+        const avatarSection = document.createElement('div');
+        avatarSection.className = 'mb-6 text-center';
+
+        const avatarImage = document.createElement('img');
+        avatarImage.id = 'avatar-preview';
+        avatarImage.className = 'w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-gray-200';
+        avatarImage.src = user.avatar_path ? `${user.avatar_path}?t=${new Date().getTime()}` : '/assets/def_avatar.jpg';
+        avatarImage.alt = 'User Avatar';
+        avatarImage.onerror = () => { avatarImage.src = '/assets/def_avatar.jpg'; };
+
+        const avatarLabel = document.createElement('label');
+        avatarLabel.htmlFor = 'avatar-input';
+        avatarLabel.className = 'cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+        avatarLabel.textContent = 'Change Avatar';
+
+        const avatarInput = document.createElement('input');
+        avatarInput.type = 'file';
+        avatarInput.id = 'avatar-input';
+        avatarInput.accept = 'image/png, image/jpeg';
+        avatarInput.className = 'hidden';
+
+        const avatarErrorMsg = document.createElement('p');
+        avatarErrorMsg.className = 'text-red-600 text-sm mt-2 hidden';
+
+        avatarSection.appendChild(avatarImage);
+        const avatarForm = document.createElement('form');
+        avatarForm.appendChild(avatarLabel);
+        avatarForm.appendChild(avatarInput);
+        avatarSection.appendChild(avatarForm);
+        avatarSection.appendChild(avatarErrorMsg);
+
+        avatarInput.addEventListener('change', async () => {
+            avatarErrorMsg.classList.add('hidden');
+            const file = avatarInput.files?.[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                avatarErrorMsg.textContent = 'File is too large (max 5MB).';
+                avatarErrorMsg.classList.remove('hidden');
+                avatarInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => { avatarImage.src = e.target?.result as string; };
+            reader.readAsDataURL(file);
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const res = await fetch('/api/me/avatar', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Upload failed');
+                
+                avatarImage.src = `${data.avatarUrl}?t=${new Date().getTime()}`;
+                user.avatar_path = data.avatarUrl;
+            } catch (error: any) {
+                avatarErrorMsg.textContent = error.message;
+                avatarErrorMsg.classList.remove('hidden');
+                avatarImage.src = user.avatar_path ? `${user.avatar_path}?t=${new Date().getTime()}` : '/assets/def_avatar.jpg';
+            } finally {
+                avatarInput.value = '';
+            }
+        });
+
+        // Form for user profile data
+        const form = document.createElement('form');
 
         // Username
         const usernameGroup = document.createElement('div');
@@ -280,7 +354,7 @@ class App {
 
                // 2FA Section
         const mfaWrapper = document.createElement('div');
-        mfaWrapper.className = 'mb-4';
+        mfaWrapper.className = 'mb-4 border-t pt-4 mt-4';
 
         const mfaTitle = document.createElement('h3');
         mfaTitle.className = 'text-lg font-semibold mb-2';
@@ -321,6 +395,7 @@ class App {
                 codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
                 codeInput.maxLength = 6;
                 const verifyBtn = document.createElement('button');
+                verifyBtn.type = 'button';
                 verifyBtn.textContent = 'Verify & Enable';
                 verifyBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
                 const msg = document.createElement('p');
@@ -370,6 +445,7 @@ class App {
                 codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
                 codeInput.maxLength = 6;
                 const disableBtn = document.createElement('button');
+                disableBtn.type = 'button';
                 disableBtn.textContent = 'Disable 2FA';
                 disableBtn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
                 const msg = document.createElement('p');
@@ -428,11 +504,8 @@ class App {
         saveButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
         saveButton.textContent = 'Save Changes';
 
-        // Form
-        const form = document.createElement('form');
         form.appendChild(usernameGroup);
         form.appendChild(displayNameGroup);
-        form.appendChild(mfaWrapper);
         form.appendChild(errorMsg);
         form.appendChild(successMsg);
         form.appendChild(saveButton);
@@ -489,7 +562,9 @@ class App {
         });
 
         wrapper.appendChild(title);
+        wrapper.appendChild(avatarSection);
         wrapper.appendChild(form);
+        wrapper.appendChild(mfaWrapper);
         container.appendChild(wrapper);
     }
 }

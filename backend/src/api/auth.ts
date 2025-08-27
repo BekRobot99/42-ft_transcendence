@@ -1,8 +1,13 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import databaseConnection from '../config/database';
+import fs from 'fs';
+import path from 'path';
+import { pipeline } from 'stream';
+import { promisify } from 'util';
 import { verifyPassword, encryptPassword } from '../services/pass_service';
 import { createMfaSecret, createMfaQrCode, validateMfaToken } from '../services/2fact';
 
+const streamPipeline = promisify(pipeline);
 interface AuthRequestBody {
     username?: string;
     password?: string;
@@ -199,12 +204,12 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
     });
 
     // Get current user info (protected)
-    app.get('/api/me', { preHandler: app.authenticate }, async (request: any, reply: FastifyReply) => {
+    app.get('/api/me', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
         const userId = request.user.id;
         try {
             const user = await new Promise((resolve, reject) => {
                 databaseConnection.get(
-                    'SELECT id, username, display_name, created_at, twofa_enabled FROM users WHERE id = ?',
+                    'SELECT id, username, display_name, created_at, twofa_enabled, avatar_path FROM users WHERE id = ?',
                     [userId],
                     (err, row) => {
                         if (err) return reject(err);
@@ -300,8 +305,80 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
         }
     });
 
+    // Upload avatar (protected)
+    app.post('/api/me/avatar', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
+        const userId = request.user.id;
+        const data = await request.file();
+
+        if (!data) {
+            return reply.status(400).send({ message: 'No file uploaded.' });
+        }
+
+        // Validate MIME type
+        const allowedMimeTypes = ['image/jpeg', 'image/png'];
+        if (!allowedMimeTypes.includes(data.mimetype)) {
+            return reply.status(400).send({ message: 'Invalid file type. Only JPEG and PNG are allowed.' });
+        }
+
+        try {
+            // Get current avatar to delete it later
+            const user = await new Promise<{ avatar_path: string | null }>((resolve, reject) => {
+                databaseConnection.get('SELECT avatar_path FROM users WHERE id = ?', [userId], (err, row) => {
+                    if (err) return reject(err);
+                    resolve(row as { avatar_path: string | null });
+                });
+            });
+
+            if (!user) {
+                return reply.status(404).send({ message: 'User not found.' });
+            }
+
+            const oldAvatarPath = user.avatar_path;
+
+            // Generate a unique filename
+            const extension = path.extname(data.filename);
+            const filename = `${userId}-${Date.now()}${extension}`;
+            const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
+            const filePath = path.join(uploadsDir, filename);
+            const fileUrl = `/uploads/avatars/${filename}`;
+
+            // Save the new file
+            await streamPipeline(data.file, fs.createWriteStream(filePath));
+
+            // Update database
+            await new Promise<void>((resolve, reject) => {
+                databaseConnection.run('UPDATE users SET avatar_path = ? WHERE id = ?', [fileUrl, userId], (err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+
+            // Delete old avatar if it exists
+            if (oldAvatarPath) {
+                const oldFilePath = path.join(process.cwd(), oldAvatarPath.substring(1));
+                if (fs.existsSync(oldFilePath)) {
+                    fs.unlink(oldFilePath, (err) => {
+                        if (err) {
+                            app.log.error(`Failed to delete old avatar: ${oldFilePath}`, err);
+                        }
+                    });
+                }
+            }
+
+            reply.send({ message: 'Avatar updated successfully.', avatarUrl: fileUrl });
+
+        } catch (error: any) {
+            app.log.error(error);
+            if (error.code === 'FST_PARTS_LIMIT' || error.code === 'FST_FILES_LIMIT') {
+                return reply.status(413).send({ message: 'File size limit exceeded.' });
+            }
+            reply.status(500).send({ message: 'Internal server error during file upload.' });
+        }
+    });
+
+
     // 2FA: Step 1 - Generate secret and QR code for user to scan
-    app.post('/api/2fa/setup', { preHandler: app.authenticate }, async (request: any, reply: FastifyReply) => {
+    app.post('/api/2fa/setup', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
         const userId = request.user.id;
         try {
             // Generate new secret
@@ -333,7 +410,7 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
     });
 
     // 2FA: Step 2 - Enable 2FA after verifying code
-    app.post('/api/2fa/enable', { preHandler: app.authenticate }, async (request: any, reply: FastifyReply) => {
+    app.post('/api/2fa/enable', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
         const userId = request.user.id;
         const { code } = request.body as { code: string };
         if (!code) return reply.status(400).send({ message: '2FA code required.' });
@@ -366,7 +443,7 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
     });
 
     // MFA: Disable (requires valid code)
-    app.post('/api/2fa/disable', { preHandler: app.authenticate }, async (request: any, reply: FastifyReply) => {
+    app.post('/api/2fa/disable', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
         const userId = request.user.id;
         const { code } = request.body as { code: string };
         if (!code) return reply.status(400).send({ message: '2FA code required.' });

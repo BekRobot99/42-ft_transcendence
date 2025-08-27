@@ -25,6 +25,7 @@ export const setupDatabase = (): Promise<void> => {
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 display_name TEXT,
+                avatar_path TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 twofa_secret TEXT,
                 twofa_enabled INTEGER DEFAULT 0
