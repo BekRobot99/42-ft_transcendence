@@ -376,6 +376,55 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
         }
     });
 
+    // Delete avatar (protected)
+    app.delete('/api/me/avatar', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
+        const userId = request.user.id;
+
+        try {
+            // Get current avatar path from DB
+            const user = await new Promise<{ avatar_path: string | null }>((resolve, reject) => {
+                databaseConnection.get('SELECT avatar_path FROM users WHERE id = ?', [userId], (err, row) => {
+                    if (err) return reject(err);
+                    resolve(row as { avatar_path: string | null });
+                });
+            });
+
+            if (!user) {
+                return reply.status(404).send({ message: 'User not found.' });
+            }
+
+            const currentAvatarPath = user.avatar_path;
+
+            if (!currentAvatarPath) {
+                return reply.status(400).send({ message: 'No avatar to delete.' });
+            }
+
+            // Delete the file from the filesystem
+            const filePath = path.join(process.cwd(), currentAvatarPath.substring(1)); // remove leading '/'
+            if (fs.existsSync(filePath)) {
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        // Log the error but don't block the DB update
+                        app.log.error(`Failed to delete avatar file: ${filePath}`, err);
+                    }
+                });
+            }
+
+            // Update the database, setting avatar_path to NULL
+            await new Promise<void>((resolve, reject) => {
+                databaseConnection.run('UPDATE users SET avatar_path = NULL WHERE id = ?', [userId], (err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+
+            reply.send({ message: 'Avatar deleted successfully.' });
+
+        } catch (error: any) {
+            app.log.error(error);
+            reply.status(500).send({ message: 'Internal server error.' });
+        }
+    });
 
     // 2FA: Step 1 - Generate secret and QR code for user to scan
     app.post('/api/2fa/setup', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {

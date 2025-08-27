@@ -259,6 +259,9 @@ class App {
         avatarImage.alt = 'User Avatar';
         avatarImage.onerror = () => { avatarImage.src = '/assets/def_avatar.jpg'; };
 
+        const avatarButtonsContainer = document.createElement('div');
+        avatarButtonsContainer.className = 'flex justify-center items-center gap-4 mt-2';
+
         const avatarLabel = document.createElement('label');
         avatarLabel.htmlFor = 'avatar-input';
         avatarLabel.className = 'cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
@@ -270,6 +273,14 @@ class App {
         avatarInput.accept = 'image/png, image/jpeg';
         avatarInput.className = 'hidden';
 
+         const deleteAvatarButton = document.createElement('button');
+        deleteAvatarButton.id = 'delete-avatar-btn';
+        deleteAvatarButton.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+        deleteAvatarButton.textContent = 'Delete';
+        if (!user.avatar_path) {
+            deleteAvatarButton.classList.add('hidden');
+        }
+
         const avatarErrorMsg = document.createElement('p');
         avatarErrorMsg.className = 'text-red-600 text-sm mt-2 hidden';
 
@@ -277,7 +288,10 @@ class App {
         const avatarForm = document.createElement('form');
         avatarForm.appendChild(avatarLabel);
         avatarForm.appendChild(avatarInput);
-        avatarSection.appendChild(avatarForm);
+        avatarButtonsContainer.appendChild(avatarForm);
+        avatarButtonsContainer.appendChild(deleteAvatarButton);
+
+        avatarSection.appendChild(avatarButtonsContainer);
         avatarSection.appendChild(avatarErrorMsg);
 
         avatarInput.addEventListener('change', async () => {
@@ -310,12 +324,36 @@ class App {
                 
                 avatarImage.src = `${data.avatarUrl}?t=${new Date().getTime()}`;
                 user.avatar_path = data.avatarUrl;
+                deleteAvatarButton.classList.remove('hidden'); // Show delete button
             } catch (error: any) {
                 avatarErrorMsg.textContent = error.message;
                 avatarErrorMsg.classList.remove('hidden');
                 avatarImage.src = user.avatar_path ? `${user.avatar_path}?t=${new Date().getTime()}` : '/assets/def_avatar.jpg';
             } finally {
                 avatarInput.value = '';
+            }
+        });
+
+        deleteAvatarButton.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete your avatar?')) {
+                return;
+            }
+            avatarErrorMsg.classList.add('hidden');
+            try {
+                const res = await fetch('/api/me/avatar', {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || 'Failed to delete avatar.');
+                }
+                avatarImage.src = '/assets/default-avatar.jpg';
+                user.avatar_path = null;
+                deleteAvatarButton.classList.add('hidden');
+            } catch (error: any) {
+                avatarErrorMsg.textContent = error.message;
+                avatarErrorMsg.classList.remove('hidden');
             }
         });
 
