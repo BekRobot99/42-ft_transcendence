@@ -76,7 +76,4 @@ export function attachHomePageListeners(app: any): void {
     if (app.signInBtn) {
         app.signInBtn.addEventListener('click', (e: Event) => app.navigateTo('/signin', e));
     }
-    if (app.registerBtn) {
-        app.registerBtn.addEventListener('click', (e: Event) => app.navigateTo('/register', e));
-    }
 }

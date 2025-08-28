@@ -98,6 +98,34 @@ class App {
         } else if (path === '/signin') {
             const signInForm = new ConnectForm();
             this.pageContentElement.appendChild(signInForm.render());
+                // // Create Google Sign-In button container
+                // const googleButtonDiv = document.createElement('div');
+                // googleButtonDiv.id = 'google-signin-button';
+                // this.pageContentElement.appendChild(googleButtonDiv);
+                //
+                // // Load Google Identity Services script dynamically
+                // const existingScript = document.getElementById('google-identity-script');
+                // if (!existingScript) {
+                //     const script = document.createElement('script');
+                //     script.src = 'https://accounts.google.com/gsi/client';
+                //     script.async = true;
+                //     script.defer = true;
+                //     script.id = 'google-identity-script';
+                //     script.onload = () => {
+                //         // Initialize the Google Sign-In button after script loads
+                //         // @ts-ignore
+                //         google.accounts.id.initialize({
+                //             client_id: 'YOUR_GOOGLE_CLIENT_ID',
+                //             callback: this.handleGoogleCredentialResponse.bind(this),
+                //         });
+                //         // Render the button
+                //         // @ts-ignore
+                //         google.accounts.id.renderButton(
+                //             googleButtonDiv,
+                //             { theme: 'outline', size: 'large' }
+                //         );
+                //     };
+                //     document.head.appendChild(script);
 
             const backButton = document.createElement('button');
             backButton.textContent = '‹ Back to Home';
@@ -106,7 +134,7 @@ class App {
             this.pageContentElement.appendChild(backButton);
 
         } else if (path === '/game') {
-            renderGamePage(this.pageContentElement);
+            renderGamePage();
 
         } else if (path === '/settings') {
             await renderSettingsPage(this.pageContentElement);

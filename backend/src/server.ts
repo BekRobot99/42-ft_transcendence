@@ -1,49 +1,49 @@
-import fastifyCors from '@fastify/cors';
-import fastifyMultipart from '@fastify/multipart';
-import fastifyStatic from '@fastify/static';
-import 'dotenv/config';
-import Fastify from 'fastify';
-import fs from 'fs';
-import path from 'path';
-import { setupDatabase } from './config/database';
-import authRoutes from './api/auth';
+import fastifyCors from "@fastify/cors"; // Updated import
+import fastifyMultipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
+import "dotenv/config";
+import Fastify from "fastify";
+import fs from "fs";
+import path from "path";
+import { setupDatabase } from "./config/database";
+import authRoutes from "./api/auth";
 
 const app = Fastify({
     logger: true,
 });
 
 // Create uploads directory if it doesn't exist
-const avatarUploadPath = path.join(process.cwd(), 'uploads', 'avatars');
+const avatarUploadPath = path.join(process.cwd(), "uploads", "avatars");
 if (!fs.existsSync(avatarUploadPath)) {
     fs.mkdirSync(avatarUploadPath, { recursive: true });
 }
 
 // Serve static files from the uploads directory
 app.register(fastifyStatic, {
-    root: path.join(process.cwd(), 'uploads'),
-    prefix: '/uploads/',
+    root: path.join(process.cwd(), "uploads"),
+    prefix: "/uploads/",
 });
 
 // Register CORS plugin
 app.register(fastifyCors, { // Updated registration
     origin: '*', // Allow all origins (for now). If we want to host the project on a public domain, we should restrict
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 });
 
 // Register JWT plugin
 app.register(async (instance) => {
-    const fastifyJwt = (await import('@fastify/jwt')).default;
+    const fastifyJwt = (await import("@fastify/jwt")).default;
     instance.register(fastifyJwt, {
-        secret: process.env.JWT_SECRET || 'dev-secret',
+        secret: process.env.JWT_SECRET || "dev-secret",
         cookie: {
-            cookieName: 'authToken',
+            cookieName: "authToken",
             signed: false,
         },
     });
 });
 
 // Register cookie parser (for JWT in cookies)
-app.register(import('@fastify/cookie'));
+app.register(import("@fastify/cookie"));
 
 // Register multipart plugin for file uploads
 app.register(fastifyMultipart, {
@@ -58,11 +58,11 @@ app.decorate("authenticate", async function(request: any, reply: any) {
         await request.jwtVerify();
         // A user is only fully authenticated if they have passed all steps, including 2FA if enabled.
         // The 'tfa' claim in the token must be 'complete'.
-        if (request.user.tfa !== 'complete') {
-            throw new Error('Authentication incomplete, 2FA may be required.');
+        if (request.user.tfa !== "complete") {
+            throw new Error("Authentication incomplete, 2FA may be required.");
         }
     } catch (err) {
-        reply.status(401).send({ message: 'Unauthorized' });
+        reply.status(401).send({ message: "Unauthorized" });
     }
 });
 

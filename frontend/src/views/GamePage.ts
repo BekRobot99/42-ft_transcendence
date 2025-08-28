@@ -1,13 +1,42 @@
-export function renderGamePage(container: HTMLElement): void {
-    const gameWrapper = document.createElement('div');
-    gameWrapper.className = 'bg-white rounded-lg shadow-lg p-8 text-center';
-
-    const gameTitle = document.createElement('h2');
-    gameTitle.className = 'text-2xl font-bold mb-4';
-    gameTitle.textContent = 'Welcome to Pong!';
-
-    // TODO: add game content here
-
-    gameWrapper.appendChild(gameTitle);
-    container.appendChild(gameWrapper);
+// GAME HOMEPAGE
+function createGameGreeting(name: string): HTMLHeadingElement {
+  const heading = document.createElement("h1");
+  heading.textContent = `Hello, ${name}!`;
+  heading.className = "text-2xl font-bold text-center mb-6";
+  return heading;
 }
+
+function handlePlayButtonClick(): void {
+  alert("The Play button was clicked!");
+}
+
+function createGamePlayButton(): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.textContent = "Play";
+  button.className =
+    "w-full py-3 px-6 text-white bg-blue-600 rounded-lg text-xl hover:bg-blue-700 transition";
+
+  button.addEventListener("click", handlePlayButtonClick);
+
+  return button;
+}
+// end GAME HOMEPAGE
+
+export function renderGamePage(): void {
+  const gameContainer = document.getElementById("page-content");
+  if (!gameContainer) {
+    console.error("Could not find #page-content");
+    return;
+  }
+
+  const gameWrapper = document.createElement("div");
+  gameWrapper.className = "flex flex-col items-center justify-center gap-4";
+
+  const greeting = createGameGreeting("{DB_NAME}");
+  const playButton = createGamePlayButton();
+
+  gameWrapper.appendChild(greeting);
+  gameWrapper.appendChild(playButton);
+  gameContainer.appendChild(gameWrapper);
+}
+
