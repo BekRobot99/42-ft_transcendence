@@ -34,13 +34,14 @@ app.register(fastifyCors, { // Updated registration
 app.register(async (instance) => {
     const fastifyJwt = (await import("@fastify/jwt")).default;
     instance.register(fastifyJwt, {
-        secret: process.env.JWT_SECRET || "dev-secret",
+        secret: process.env.JWT_SECRET ?? "default_jwt_secret",
         cookie: {
             cookieName: "authToken",
             signed: false,
         },
     });
 });
+
 
 // Register cookie parser (for JWT in cookies)
 app.register(import("@fastify/cookie"));
