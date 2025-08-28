@@ -2,17 +2,8 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import databaseConnection from '../config/database';
 import { verifyPassword } from '../services/pass_service';
 import { validateMfaToken } from '../services/2fact';
-
-interface AuthRequestBody {
-    username?: string;
-    password?: string;
-    mfaCode?: string;
-}
-
-// Username validation (alphanumeric, dot, underscore, hyphen)
-const validateUsername = (username: string): boolean => {
-    return /^[a-z0-9._-]{3,16}$/.test(username);
-};
+import { validateUsername } from '../services/validators';
+import { AuthRequestBody } from '../interfaces/auth';
 
 export default async function signinRoutes(app: FastifyInstance) {
      app.post('/api/signin', async (request: FastifyRequest<{ Body: AuthRequestBody }>, reply: FastifyReply) => {

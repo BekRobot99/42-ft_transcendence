@@ -1,20 +1,7 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import databaseConnection from '../config/database';
-
-interface UserUpdateRequestBody {
-    username?: string;
-    displayName?: string;
-}
-
-// Username validation (alphanumeric, dot, underscore, hyphen)
-const validateUsername = (username: string): boolean => {
-    return /^[a-z0-9._-]{3,16}$/.test(username);
-};
-
-// Display name validation (example: 1-32 chars, no script tags)
-const validateDisplayName = (name: string): boolean => {
-    return typeof name === 'string' && name.length >= 1 && name.length <= 32 && !/<|>/.test(name);
-};
+import { UserUpdateRequestBody } from '../interfaces/auth';
+import { validateDisplayName, validateUsername } from '../services/validators';
 
 export default async function userRoutes(app: FastifyInstance) {
     // Get current user info (protected)

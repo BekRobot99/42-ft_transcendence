@@ -1,26 +1,8 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import databaseConnection from '../config/database';
 import { encryptPassword } from '../services/pass_service';
-
-interface AuthRequestBody {
-    username?: string;
-    password?: string;
-    mfaCode?: string;
-}
-
-// Username validation (alphanumeric, dot, underscore, hyphen)
-const validateUsername = (username: string): boolean => {
-    return /^[a-z0-9._-]{3,16}$/.test(username);
-};
-
-
-// Password validation (min 10 chars, upper, lower, number)
-const validatePassword = (password: string): boolean => {
-    return password.length >= 10 &&
-           /[A-Z]/.test(password) &&
-           /[a-z]/.test(password) &&
-           /[0-9]/.test(password);
-};
+import { AuthRequestBody } from '../interfaces/auth';
+import { validateUsername, validatePassword } from '../services/validators';
 
 export default async function registerRoutes(app: FastifyInstance) {
     app.post('/api/register', async (request: FastifyRequest<{ Body: AuthRequestBody }>, reply: FastifyReply) => {
