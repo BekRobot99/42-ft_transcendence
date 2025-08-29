@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   ts-watcher: # Frontend TypeScript watcher
     image: node:lts-alpine
