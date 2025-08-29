@@ -36,7 +36,7 @@ export function renderNavigationBar(app: any): void {
 
     // Log out button
     const logoutButton = document.createElement('button');
-    logoutButton.className = 'bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+   logoutButton.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
     logoutButton.textContent = 'Log Out';
     logoutButton.addEventListener('click', async () => {
         await fetch('/api/signout', { method: 'POST', credentials: 'include' });
