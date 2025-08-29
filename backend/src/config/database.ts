@@ -30,6 +30,16 @@ export const setupDatabase = (): Promise<void> => {
                 twofa_secret TEXT,
                 twofa_enabled INTEGER DEFAULT 0
             );
+            CREATE TABLE IF NOT EXISTS friend_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                requester_id INTEGER NOT NULL,
+                addressee_id INTEGER NOT NULL,
+                status TEXT NOT NULL CHECK(status IN ('pending', 'accepted', 'blocked')) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE,
+                UNIQUE(requester_id, addressee_id)
+            );
         `, (err) => {
             if (err) {
                 console.error('Error creating users table:', err.message);

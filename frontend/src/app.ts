@@ -1,6 +1,7 @@
 import { removeNavigationBar, renderNavigationBar } from './ui/NavigationBar.js';
 import { SignUpForm } from './ui/SingUpForm.js';
 import { ConnectForm } from './ui/ConnectForm.js';
+import { renderSocialView } from './views/socialView.js';
 import { renderGamePage } from './views/GamePage.js';
 import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
 import { renderSettingsPage } from './views/SettingsPage.js';
@@ -70,7 +71,7 @@ class App {
             return this.renderView('/game');
         }
         // Only redirect to / if not authenticated and trying to access a protected page
-        const protectedPaths = ['/game', '/settings'];
+        const protectedPaths = ['/game', '/settings', '/friends'];
         if (!this.isAuthenticated && protectedPaths.includes(path)) {
             history.replaceState({ path: '/' }, '', '/');
             return this.renderView('/');
@@ -144,6 +145,13 @@ class App {
             backButton.addEventListener('click', () => this.navigateTo('/game'));
             this.pageContentElement.appendChild(backButton);
 
+        } else if (path === '/friends') {
+            await renderSocialView(this.pageContentElement);
+            const backButton = document.createElement('button');
+            backButton.textContent = '‹ Back to Games';
+            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
+            backButton.addEventListener('click', () => this.navigateTo('/game'));
+            this.pageContentElement.appendChild(backButton);
         } else { // Default to home view
             renderHomePage(this.pageContentElement);
             // Re-attach event listeners for the home view buttons

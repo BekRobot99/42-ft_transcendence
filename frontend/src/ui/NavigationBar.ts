@@ -22,6 +22,12 @@ export function renderNavigationBar(app: any): void {
     const right = document.createElement('div');
     right.className = 'flex items-center gap-4';
 
+    // Friends button
+    const friendsButton = document.createElement('button');
+    friendsButton.className = 'bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+    friendsButton.textContent = 'Friends';
+    friendsButton.addEventListener('click', (e) => app.navigateTo('/friends', e));
+
     // Settings button
     const settingsButton = document.createElement('button');
     settingsButton.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
@@ -38,6 +44,7 @@ export function renderNavigationBar(app: any): void {
         app.renderView('/');
     });
 
+    right.appendChild(friendsButton);
     right.appendChild(settingsButton);
     right.appendChild(logoutButton);
 
