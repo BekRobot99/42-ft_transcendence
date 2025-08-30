@@ -6,7 +6,7 @@ export function renderNavigationBar(app: any): void {
 
     // Create nav bar
     const nav = document.createElement('nav');
-    nav.className = 'w-full bg-gray-900 text-white shadow-md fixed top-0 left-0 z-50';
+    nav.className = 'w-full bg-black text-white shadow-md fixed top-0 left-0 z-50';
     nav.style.height = '64px';
     nav.style.display = 'flex';
     nav.style.alignItems = 'center';
