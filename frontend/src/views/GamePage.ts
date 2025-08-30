@@ -1,7 +1,7 @@
 // GAME HOMEPAGE
-function createGameGreeting(name: string): HTMLHeadingElement {
+function createGameGreeting(): HTMLHeadingElement {
   const heading = document.createElement("h1");
-  heading.textContent = `Hello, ${name}!`;
+  heading.textContent = "Welcome to Pong!";
   heading.className = "text-2xl font-bold text-center mb-6";
   return heading;
 }
@@ -32,7 +32,7 @@ export function renderGamePage(): void {
   const gameWrapper = document.createElement("div");
   gameWrapper.className = "flex flex-col items-center justify-center gap-4";
 
-  const greeting = createGameGreeting("{DB_NAME}");
+  const greeting = createGameGreeting();
   const playButton = createGamePlayButton();
 
   gameWrapper.appendChild(greeting);
