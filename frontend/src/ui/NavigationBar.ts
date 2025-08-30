@@ -39,6 +39,10 @@ export function renderNavigationBar(app: any): void {
    logoutButton.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
     logoutButton.textContent = 'Log Out';
     logoutButton.addEventListener('click', async () => {
+         // Close WebSocket connection before logging out
+        if (app.disconnectWebSocket) {
+            app.disconnectWebSocket();
+        }
         await fetch('/api/signout', { method: 'POST', credentials: 'include' });
         history.replaceState({ path: '/' }, '', '/');
         app.renderView('/');

@@ -14,6 +14,7 @@ class App {
     private navBarElement: HTMLElement | null = null;
     private isAuthenticated: boolean = false;
     private webSocket: WebSocket | null = null;
+    private intentionalDisconnect: boolean = false;
 
     constructor() {
         this.pageContentElement = document.getElementById('page-content');
@@ -72,6 +73,7 @@ class App {
 
         this.webSocket.onopen = () => {
             console.log('WebSocket connection established.');
+            this.intentionalDisconnect = false;
         };
 
         this.webSocket.onmessage = (event) => {
@@ -93,12 +95,15 @@ class App {
         };
 
         this.webSocket.onclose = () => {
-            console.log('WebSocket connection closed. Attempting to reconnect in 5 seconds...');
+            console.log('WebSocket connection closed.');
             this.webSocket = null;
-            // Simple reconnect logic
-            setTimeout(() => this.checkAuth().then(isAuth => {
-                if (isAuth) this.connectWebSocket();
-            }), 5000);
+           // Only attempt to reconnect if this wasn't an intentional disconnect
+            if (!this.intentionalDisconnect) {
+                console.log('Attempting to reconnect in 5 seconds...');
+                setTimeout(() => this.checkAuth().then(isAuth => {
+                    if (isAuth && !this.intentionalDisconnect) this.connectWebSocket();
+                }), 5000);
+            }
         };
 
         this.webSocket.onerror = (error) => {
@@ -107,12 +112,12 @@ class App {
         };
     }
 
-    private disconnectWebSocket(): void {
+    public  disconnectWebSocket(): void {
         if (this.webSocket) {
-            this.webSocket.onclose = null; // Prevent reconnection logic from firing on manual disconnect
+            this.intentionalDisconnect = true;
             this.webSocket.close();
             this.webSocket = null;
-            console.log('WebSocket connection closed.');
+            console.log('WebSocket connection closed intentionally.');
         }
     }
 
