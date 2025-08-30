@@ -1,6 +1,7 @@
 
 import { FastifyInstance, FastifyReply } from 'fastify';
 import databaseConnection from '../config/database';
+import { activeUsers } from '../websocket';
 
 declare module 'fastify' {
     interface FastifyInstance {
@@ -97,7 +98,12 @@ export default async function friendsRoutes(app: FastifyInstance) {
                     resolve(rows);
                 });
             });
-            reply.send(friends);
+            const friendsWithStatus = friends.map(friend => ({
+                ...friend,
+                isOnline: activeUsers.has(friend.id)
+            }));
+
+            reply.send(friendsWithStatus);
         } catch (error) {
             app.log.error(error);
             reply.status(500).send({ message: 'Internal server error.' });

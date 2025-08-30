@@ -4,6 +4,7 @@
 function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElement {
     const card = document.createElement('div');
     card.className = 'flex items-center justify-between bg-gray-100 p-3 rounded-lg shadow-sm';
+    card.dataset.userId = user.id;
 
     const profileInfo = document.createElement('div');
     profileInfo.className = 'flex items-center gap-3';
@@ -18,6 +19,12 @@ function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElem
     const profileDisplayName = document.createElement('span');
     profileDisplayName.className = 'font-semibold text-gray-800';
     profileDisplayName.textContent = user.display_name || user.username;
+    
+    const statusIndicator = document.createElement('span');
+    statusIndicator.className = `status-indicator inline-block w-3 h-3 rounded-full ml-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`;
+    statusIndicator.title = user.isOnline ? 'Online' : 'Offline';
+    profileDisplayName.appendChild(statusIndicator);
+
     const profileUsername = document.createElement('span');
     profileUsername.className = 'text-sm text-gray-500';
     profileUsername.textContent = `@${user.username}`;

@@ -13,6 +13,7 @@ class App {
     private registerButton: HTMLElement | null = null;
     private navBarElement: HTMLElement | null = null;
     private isAuthenticated: boolean = false;
+    private webSocket: WebSocket | null = null;
 
     constructor() {
         this.pageContentElement = document.getElementById('page-content');
@@ -58,11 +59,76 @@ class App {
         }
     }
 
+    private connectWebSocket(): void {
+        if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
+            return; // Already connected
+        }
+
+        // Use wss for secure connections, ws for localhost dev
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/api/ws/status`;
+
+        this.webSocket = new WebSocket(wsUrl);
+
+        this.webSocket.onopen = () => {
+            console.log('WebSocket connection established.');
+        };
+
+        this.webSocket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'status_update') {
+                    const { userId, status } = data;
+                    // This query will only find something if the friends view is currently rendered
+                    const indicator = document.querySelector(`[data-user-id='${userId}'] .status-indicator`);
+                    if (indicator) {
+                        const isOnline = status === 'online';
+                        indicator.className = `status-indicator inline-block w-3 h-3 rounded-full ml-2 ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`;
+                        indicator.setAttribute('title', isOnline ? 'Online' : 'Offline');
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing WebSocket message:', error);
+            }
+        };
+
+        this.webSocket.onclose = () => {
+            console.log('WebSocket connection closed. Attempting to reconnect in 5 seconds...');
+            this.webSocket = null;
+            // Simple reconnect logic
+            setTimeout(() => this.checkAuth().then(isAuth => {
+                if (isAuth) this.connectWebSocket();
+            }), 5000);
+        };
+
+        this.webSocket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.webSocket?.close();
+        };
+    }
+
+    private disconnectWebSocket(): void {
+        if (this.webSocket) {
+            this.webSocket.onclose = null; // Prevent reconnection logic from firing on manual disconnect
+            this.webSocket.close();
+            this.webSocket = null;
+            console.log('WebSocket connection closed.');
+        }
+    }
+
     private async renderView(path: string): Promise<void> {
         if (!this.pageContentElement) return;
 
         // Check authentication status
         this.isAuthenticated = await this.checkAuth();
+
+
+        // Manage WebSocket connection based on auth state
+        if (this.isAuthenticated) {
+            this.connectWebSocket();
+        } else {
+            this.disconnectWebSocket();
+        }
 
         // Only redirect to /game if authenticated and trying to access a public page
         const publicPaths = ['/', '/signin', '/register'];

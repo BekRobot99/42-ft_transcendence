@@ -1,12 +1,14 @@
 import fastifyCors from "@fastify/cors"; // Updated import
 import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
+import fastifyWebsocket from '@fastify/websocket';
 import "dotenv/config";
 import Fastify from "fastify";
 import fs from "fs";
 import path from "path";
 import { setupDatabase } from "./config/database";
 import authRoutes from "./api/auth";
+import realtimeRoutes from './websocket';
 
 const app = Fastify({
     logger: true,
@@ -29,6 +31,9 @@ app.register(fastifyCors, { // Updated registration
     origin: '*', // Allow all origins (for now). If we want to host the project on a public domain, we should restrict
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 });
+
+// Register WebSocket plugin
+app.register(fastifyWebsocket);
 
 // Register JWT plugin
 app.register(async (instance) => {
@@ -69,6 +74,7 @@ app.decorate("authenticate", async function(request: any, reply: any) {
 
 // Register routes
 app.register(authRoutes);
+app.register(realtimeRoutes);
 
 const startServer  = async () => {
     try {
