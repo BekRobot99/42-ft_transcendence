@@ -160,19 +160,31 @@ export default async function friendsRoutes(app: FastifyInstance) {
         }
 
         try {
-            // Verify the request exists and the current user is the addressee
+            // Find the pending request by its ID first
             const requestDetails = await new Promise<any>((resolve, reject) => {
-                databaseConnection.get('SELECT * FROM friend_requests WHERE id = ? AND addressee_id = ? AND status = \'pending\'', [requestId, userId], (err, row) => {
+                databaseConnection.get('SELECT * FROM friend_requests WHERE id = ? AND status = \'pending\'', [requestId], (err, row) => {
                     if (err) return reject(err);
                     resolve(row);
                 });
             });
 
             if (!requestDetails) {
-                return reply.status(404).send({ message: 'Friend request not found or you are not authorized to respond.' });
+                    return reply.status(404).send({ message: 'Friend request not found.' });
+            }
+
+            const isRequester = requestDetails.requester_id === userId;
+            const isAddressee = requestDetails.addressee_id === userId;
+
+            // The current user must be either the sender or the receiver of the request
+            if (!isRequester && !isAddressee) {
+                return reply.status(403).send({ message: 'You are not authorized to modify this request.' });
             }
 
             if (action === 'accept') {
+                 // Only the addressee can accept the request
+                if (!isAddressee) {
+                    return reply.status(403).send({ message: 'Only the recipient can accept a friend request.' });
+                }
                 await new Promise<void>((resolve, reject) => {
                     databaseConnection.run('UPDATE friend_requests SET status = \'accepted\' WHERE id = ?', [requestId], (err) => {
                         if (err) return reject(err);
@@ -180,14 +192,16 @@ export default async function friendsRoutes(app: FastifyInstance) {
                     });
                 });
                 reply.send({ message: 'Friend request accepted.' });
-            } else { // decline
+
+             } else { // This handles both 'decline' for the addressee and 'cancel' for the requester
                 await new Promise<void>((resolve, reject) => {
                     databaseConnection.run('DELETE FROM friend_requests WHERE id = ?', [requestId], (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
                 });
-                reply.send({ message: 'Friend request declined.' });
+                const message = isRequester ? 'Friend request cancelled.' : 'Friend request declined.';
+                reply.send({ message });
             }
         } catch (error) {
             app.log.error(error);
