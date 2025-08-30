@@ -6,6 +6,7 @@ import { renderGamePage } from './views/GamePage.js';
 import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
 import { renderSettingsPage } from './views/SettingsPage.js';
 
+
 class App {
     private pageContentElement: HTMLElement | null;
     private googleSignInButton: HTMLElement | null = null;
@@ -15,6 +16,7 @@ class App {
     private isAuthenticated: boolean = false;
     private webSocket: WebSocket | null = null;
     private intentionalDisconnect: boolean = false;
+    private currentViewCleanup: (() => void) | null = null;
 
     constructor() {
         this.pageContentElement = document.getElementById('page-content');
@@ -155,6 +157,12 @@ class App {
             removeNavigationBar(this);
         }
 
+        // Call cleanup function for the previous view if it exists
+        if (this.currentViewCleanup) {
+            this.currentViewCleanup();
+            this.currentViewCleanup = null;
+        }
+
         this.pageContentElement.innerHTML = ''; // Clear existing content
 
         if (path === '/register') {
@@ -188,12 +196,12 @@ class App {
             this.pageContentElement.appendChild(backButton);
 
         } else if (path === '/game') {
-            renderGamePage();
+            this.currentViewCleanup = renderGamePage(this.pageContentElement);
 
         } else if (path === '/settings') {
             await renderSettingsPage(this.pageContentElement);
             const backButton = document.createElement('button');
-            backButton.textContent = '‹ Back to Games';
+            backButton.textContent = '‹ Back to Game';
             backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/game'));
             this.pageContentElement.appendChild(backButton);
@@ -201,7 +209,7 @@ class App {
         } else if (path === '/friends') {
             await renderSocialView(this.pageContentElement);
             const backButton = document.createElement('button');
-            backButton.textContent = '‹ Back to Games';
+            backButton.textContent = '‹ Back to Game';
             backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/game'));
             this.pageContentElement.appendChild(backButton);
