@@ -7,6 +7,7 @@ import { pipeline } from 'stream';
 import { promisify } from 'util';
 import db from '../config/database';
 import { IGoogleAuthBody } from '../interfaces/auth';
+import { validateMfaToken } from '../services/2fact';
 
 const pump = promisify(pipeline);
 
@@ -130,11 +131,27 @@ export default async function registerGoogleAuthRoutes(fastify: FastifyInstance)
                                 resolve({ lastID: this.lastID });
                             }
                         );
+                        
                     });
 
                     user = { id: result.lastID, username: username };
                 }
 
+                  if (user.twofa_enabled) {
+                // 2FA is enabled. Issue a pending token and prompt for code.
+                const pendingToken = fastify.jwt.sign(
+                    { id: user.id, username: user.username, tfa: 'pending' },
+                    { expiresIn: '5m' }
+                );
+                reply.setCookie('token', pendingToken, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    path: '/',
+                    maxAge: 5 * 60, // 5 minutes
+                });
+                return reply.status(200).send({ twofaRequired: true });
+            }
                 // Issue JWT token
                 const token = fastify.jwt.sign({ id: user.id, username: user.username, tfa: 'complete' });
                 reply
@@ -154,5 +171,57 @@ export default async function registerGoogleAuthRoutes(fastify: FastifyInstance)
                     .send({ message: 'An error occurred during Google authentication.' });
             }
         }
+        
     );
+    // Endpoint to verify 2FA code after Google Sign-In
+    fastify.post('/api/auth/google/verify-2fa', async (request: FastifyRequest<{ Body: { mfaCode: string } }>, reply: FastifyReply) => {
+        const { mfaCode } = request.body;
+        if (!mfaCode) {
+            return reply.status(400).send({ message: 'MFA code is required.' });
+        }
+
+        interface GoogleJwtPayload {
+            id: number;
+            username: string;
+            tfa: string;
+            [key: string]: any;
+        }
+
+        let decodedToken: GoogleJwtPayload;
+        try {
+            // Verify the pending token from the cookie
+            decodedToken = await request.jwtVerify({ onlyCookie: true }) as GoogleJwtPayload;
+            if (decodedToken.tfa !== 'pending') {
+                throw new Error('Not a pending 2FA token.');
+            }
+        } catch (err) {
+            return reply.status(401).send({ message: 'Invalid or expired session. Please sign in again.' });
+        }
+
+        const userId = decodedToken.id;
+
+        const user: { twofa_secret: string | null } | undefined = await new Promise((resolve, reject) => {
+            db.get('SELECT twofa_secret FROM users WHERE id = ?', [userId], (err, row) => {
+                if (err) return reject(err);
+                resolve(row as any);
+            });
+        });
+
+        if (!user || !user.twofa_secret || !validateMfaToken(user.twofa_secret, mfaCode)) {
+            return reply.status(401).send({ message: 'Invalid 2FA code.', twofaRequired: true });
+        }
+
+        // 2FA code is correct. Issue a complete token.
+        const token = fastify.jwt.sign({ id: decodedToken.id, username: decodedToken.username, tfa: 'complete' });
+        reply
+            .setCookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'strict',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7 // 7 days
+            })
+            .status(200)
+            .send({ message: 'Sign-in successful.' });
+    });
 }

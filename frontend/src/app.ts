@@ -175,6 +175,8 @@ class App {
                 </div>
             `;
             this.handleGoogleCallback();
+        } else if (path === '/verify-2fa') {
+            this.renderTwoFactorView();
         } else if (path === '/signin') {
             const signInForm = new ConnectForm();
             this.pageContentElement.appendChild(signInForm.render());
@@ -232,9 +234,16 @@ class App {
                 throw new Error(errorData.message || 'Google sign-in failed.');
             }
 
-            // Success! The backend has set the cookie.
-            // Navigate to the main authenticated page.
-            this.navigateTo('/game');
+            const data = await res.json();
+
+            if (data.twofaRequired) {
+                // The backend has set a pending token. Navigate to the 2FA verification view.
+                this.navigateTo('/verify-2fa');
+            } else {
+                // Success! The backend has set the cookie.
+                // Navigate to the main authenticated page.
+                this.navigateTo('/game');
+            }
 
         } catch (error) {
             console.error('Error during Google sign-in:', error);
@@ -248,7 +257,91 @@ class App {
             }
         }
     }
+    private async renderTwoFactorView(): Promise<void> {
+        if (!this.pageContentElement) return;
+        this.pageContentElement.innerHTML = '';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bg-white rounded-lg shadow-lg p-8 w-full max-w-md';
+
+        const title = document.createElement('h2');
+        title.className = 'text-2xl font-bold mb-4 text-center';
+        title.textContent = 'Two-Factor Authentication';
+
+        const instruction = document.createElement('p');
+        instruction.className = 'text-gray-600 mb-6 text-center';
+        instruction.textContent = 'Enter the code from your authenticator app to complete sign-in.';
+
+        const form = document.createElement('form');
+        form.className = 'space-y-4';
+
+        const twofaInput = document.createElement('input');
+        twofaInput.type = 'text';
+        twofaInput.placeholder = '6-digit code';
+        twofaInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+        twofaInput.maxLength = 6;
+        twofaInput.autocomplete = 'one-time-code';
+        twofaInput.inputMode = 'numeric';
+        twofaInput.pattern = '[0-9]*';
+
+        const submitButton = document.createElement('button');
+        submitButton.type = 'submit';
+        submitButton.textContent = 'Verify & Sign In';
+        submitButton.className = 'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm';
+
+        const errorMsg = document.createElement('p');
+        errorMsg.className = 'text-red-600 text-sm hidden mt-2 text-center';
+
+        form.appendChild(twofaInput);
+        form.appendChild(submitButton);
+        form.appendChild(errorMsg);
+
+        wrapper.appendChild(title);
+        wrapper.appendChild(instruction);
+        wrapper.appendChild(form);
+
+        this.pageContentElement.appendChild(wrapper);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.classList.add('hidden');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Verifying...';
+
+            const code = twofaInput.value.trim();
+            if (!/^\d{6}$/.test(code)) {
+                errorMsg.textContent = 'Please enter a valid 6-digit code.';
+                errorMsg.classList.remove('hidden');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Verify & Sign In';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/google/verify-2fa', {
+                    method: 'POST',
+                    credentials: 'include', // Important to send the cookie
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ twofaCode: code }),
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || 'Verification failed.');
+                }
+                // Success, navigate to game
+                this.navigateTo('/game');
+            } catch (error: any) {
+                errorMsg.textContent = error.message;
+                errorMsg.classList.remove('hidden');
+                twofaInput.value = ''; // Clear input on error
+                submitButton.disabled = false;
+                submitButton.textContent = 'Verify & Sign In';
+            }
+        });
+    }
 }
+
+
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new App();
