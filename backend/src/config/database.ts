@@ -23,12 +23,13 @@ export const setupDatabase = (): Promise<void> => {
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
+                password_hash TEXT,
                 display_name TEXT,
                 avatar_path TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 twofa_secret TEXT,
-                twofa_enabled INTEGER DEFAULT 0
+                twofa_enabled INTEGER DEFAULT 0,
+                google_id TEXT UNIQUE
             );
             CREATE TABLE IF NOT EXISTS friend_requests (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import avatarRoutes from './avatarRoutes';
 import friendsRoutes from './friends';
+import registerGoogleAuthRoutes from './googleAuthRoutes';
 import userRoutes from './userRoutes';
 import registerRoutes from './registerRoutes';
 import signinRoutes from './signinRoutes';

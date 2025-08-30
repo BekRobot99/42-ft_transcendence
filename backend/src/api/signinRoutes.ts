@@ -24,7 +24,7 @@ export default async function signinRoutes(app: FastifyInstance) {
                 });
             });
 
-            if (!user) {
+            if (!user || !user.password_hash) {
                 return reply.status(401).send({ message: 'Invalid username or password.' });
             }
 

@@ -167,37 +167,17 @@ class App {
             backButton.addEventListener('click', () => this.navigateTo('/'));
             this.pageContentElement.appendChild(backButton);
 
+        }else if (path.startsWith('/auth/google/callback')) {
+            this.pageContentElement.innerHTML = `
+                <div class="text-center">
+                    <p class="text-lg font-semibold">Signing in with Google...</p>
+                    <p class="text-gray-600">Please wait, you will be redirected shortly.</p>
+                </div>
+            `;
+            this.handleGoogleCallback();
         } else if (path === '/signin') {
             const signInForm = new ConnectForm();
             this.pageContentElement.appendChild(signInForm.render());
-                // // Create Google Sign-In button container
-                // const googleButtonDiv = document.createElement('div');
-                // googleButtonDiv.id = 'google-signin-button';
-                // this.pageContentElement.appendChild(googleButtonDiv);
-                //
-                // // Load Google Identity Services script dynamically
-                // const existingScript = document.getElementById('google-identity-script');
-                // if (!existingScript) {
-                //     const script = document.createElement('script');
-                //     script.src = 'https://accounts.google.com/gsi/client';
-                //     script.async = true;
-                //     script.defer = true;
-                //     script.id = 'google-identity-script';
-                //     script.onload = () => {
-                //         // Initialize the Google Sign-In button after script loads
-                //         // @ts-ignore
-                //         google.accounts.id.initialize({
-                //             client_id: 'YOUR_GOOGLE_CLIENT_ID',
-                //             callback: this.handleGoogleCredentialResponse.bind(this),
-                //         });
-                //         // Render the button
-                //         // @ts-ignore
-                //         google.accounts.id.renderButton(
-                //             googleButtonDiv,
-                //             { theme: 'outline', size: 'large' }
-                //         );
-                //     };
-                //     document.head.appendChild(script);
 
             const backButton = document.createElement('button');
             backButton.textContent = '‹ Back to Home';
@@ -227,6 +207,45 @@ class App {
             renderHomePage(this.pageContentElement);
             // Re-attach event listeners for the home view buttons
             attachHomePageListeners(this);
+        }
+    }
+     private async handleGoogleCallback(): Promise<void> {
+        const code = new URLSearchParams(window.location.search).get('code');
+
+        if (!code) {
+            console.error('Google callback did not provide a code.');
+            // Clear the URL of auth params and navigate home
+            history.replaceState({ path: '/' }, '', '/');
+            this.renderView('/');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/auth/google/callback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Google sign-in failed.');
+            }
+
+            // Success! The backend has set the cookie.
+            // Navigate to the main authenticated page.
+            this.navigateTo('/game');
+
+        } catch (error) {
+            console.error('Error during Google sign-in:', error);
+            // Navigate home and show an error
+            this.navigateTo('/');
+            if (this.pageContentElement) {
+                const errorEl = document.createElement('p');
+                errorEl.className = 'text-red-600 text-center mt-4';
+                errorEl.textContent = (error as Error).message;
+                this.pageContentElement.prepend(errorEl);
+            }
         }
     }
 }

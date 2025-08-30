@@ -68,9 +68,18 @@ export function attachHomePageListeners(app: any): void {
     app.registerBtn = document.getElementById('registerBtn');
 
     if (app.googleBtn) {
-        app.googleBtn.addEventListener('click', (event: Event) => {
+        app.googleBtn.addEventListener('click', async (event: Event) => {
             event.preventDefault();
-            console.log('Google Sign In clicked - functionality to be implemented');
+             try {
+        const res = await fetch('/api/auth/google/url');
+        if (!res.ok) throw new Error('Failed to get Google auth URL');
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } catch (error) {
+        console.error("Google Sign In failed:", error);
+      }
         });
     }
     if (app.signInBtn) {
