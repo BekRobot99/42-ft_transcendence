@@ -1,4 +1,6 @@
-export function renderGamePage(gameWrapper: HTMLElement): () => void {
+export function renderGamePage(gameWrapper: HTMLElement, tournamentOptions?: {mode?: string; player1Name: string, player2Name: string, onGameEnd: (winnerName: string) => void }): () => void {
+    const player1Alias = tournamentOptions ? tournamentOptions.player1Name : 'Player 1';
+    const player2Alias = tournamentOptions ? tournamentOptions.player2Name : 'Player 2';
     gameWrapper.innerHTML = `
         <div class="text-center flex flex-col items-center">
             <h1 class="text-3xl font-bold mb-2">Ping Pong</h1>
@@ -24,6 +26,7 @@ export function renderGamePage(gameWrapper: HTMLElement): () => void {
     const PADDLE_HEIGHT = 100;
     const BALL_RADIUS = 7;
     const PADDLE_SPEED = 6;
+    const WINNING_SCORE = 1;
     const INITIAL_BALL_SPEED = 3;
     const BALL_SPEED_INCREASE_FACTOR = 1.1;
 
@@ -134,9 +137,19 @@ export function renderGamePage(gameWrapper: HTMLElement): () => void {
         // Score points if ball goes past a paddle
         if (ball.x + ball.radius > canvas.width) {
             player1.score++;
+            if (tournamentOptions && player1.score >= WINNING_SCORE) {
+                cancelAnimationFrame(animationFrameId);
+                tournamentOptions.onGameEnd(player1Alias);
+                return;
+            }
             resetBall();
         } else if (ball.x - ball.radius < 0) {
             player2.score++;
+            if (tournamentOptions && player2.score >= WINNING_SCORE) {
+                cancelAnimationFrame(animationFrameId);
+                tournamentOptions.onGameEnd(player2Alias);
+                return;
+            }
             resetBall();
         }
 
@@ -178,6 +191,14 @@ export function renderGamePage(gameWrapper: HTMLElement): () => void {
         ctx!.fillText(player2.score.toString(), (canvas.width / 4) * 3, 50);
     }
 
+     // Draw player names if in tournament mode
+        if (tournamentOptions) {
+            ctx!.font = '20px sans-serif';
+            ctx!.textAlign = 'center';
+            ctx!.fillStyle = 'white';
+            ctx!.fillText(player1Alias, canvas.width / 4, canvas.height - 20);
+            ctx!.fillText(player2Alias, (canvas.width / 4) * 3, canvas.height - 20);
+        }
 
     let animationFrameId: number;
     update();

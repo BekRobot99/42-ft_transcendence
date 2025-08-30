@@ -2,7 +2,7 @@ import { removeNavigationBar, renderNavigationBar } from './ui/NavigationBar.js'
 import { SignUpForm } from './ui/SingUpForm.js';
 import { ConnectForm } from './ui/ConnectForm.js';
 import { renderSocialView } from './views/socialView.js';
-import { renderGamePage } from './views/GamePage.js';
+import { renderTournamentView } from './views/TournamentPage.js';
 import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
 import { renderSettingsPage } from './views/SettingsPage.js';
 
@@ -196,7 +196,21 @@ class App {
             this.pageContentElement.appendChild(backButton);
 
         } else if (path === '/game') {
-            this.currentViewCleanup = renderGamePage(this.pageContentElement);
+            const gamePageContainer = document.createElement('div');
+            gamePageContainer.className = 'space-y-6 flex flex-col items-center pt-10';
+
+            const tournamentButton = document.createElement('button');
+            tournamentButton.textContent = '🏆 Start a Tournament';
+            tournamentButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105';
+            tournamentButton.addEventListener('click', () => this.navigateTo('/tournament'));
+            
+            gamePageContainer.appendChild(tournamentButton);
+            this.pageContentElement.appendChild(gamePageContainer);
+
+            this.currentViewCleanup = () => {};
+
+        } else if (path === '/tournament') {
+            this.currentViewCleanup = await renderTournamentView(this.pageContentElement);
 
         } else if (path === '/settings') {
             await renderSettingsPage(this.pageContentElement);
