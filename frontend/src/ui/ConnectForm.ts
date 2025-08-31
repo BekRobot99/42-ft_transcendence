@@ -16,7 +16,7 @@ export class ConnectForm {
     constructor(app: any) {
         this.app = app;
         this.formContainer = document.createElement('div');
-        this.formContainer.className = 'bg-white rounded-lg shadow-lg p-8 w-full space-y-4';
+        this.formContainer.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000] w-full space-y-4';
         this.buildForm();
     }
 
@@ -82,8 +82,12 @@ export class ConnectForm {
 
         // Sign In button
         this.submitButton = document.createElement('button');
-        this.submitButton.className = 'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-        this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+        this.submitButton.className = 'w-full relative inline-block px-4 py-3 font-medium group';
+        this.submitButton.innerHTML = `
+            <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+            <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+            <span class="relative text-black group-hover:text-white">${translate('Sign In', 'Anmelden', 'Se connecter')}</span>
+        `;
         this.submitButton.type = 'submit';
 
         // Server error and success message containers
@@ -153,7 +157,7 @@ export class ConnectForm {
         event.preventDefault();
         this.resetServerMessages();
         this.submitButton.disabled = true;
-        this.submitButton.textContent = translate('Signing In...', 'Anmeldung...', 'Connexion...');
+        this.submitButton.querySelector('span.relative')!.textContent = translate('Signing In...', 'Anmeldung...', 'Connexion...');
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
@@ -163,7 +167,7 @@ export class ConnectForm {
             this.serverErrorMessage.textContent = translate('Username and password are required.', 'Benutzername und Passwort sind erforderlich.', 'Le nom d\'utilisateur et le mot de passe sont requis.');
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
-            this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+            this.submitButton.querySelector('span.relative')!.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
             return;
         }
 
@@ -215,7 +219,11 @@ export class ConnectForm {
             this.serverErrorMessage.classList.remove('hidden');
         } finally {
             this.submitButton.disabled = false;
-            this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+             if (!this.successMessage.classList.contains('hidden')) {
+                // If successful, keep the "signing in" message until redirect
+            } else {
+                this.submitButton.querySelector('span.relative')!.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+            }
         }
     }
 

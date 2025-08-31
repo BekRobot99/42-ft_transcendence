@@ -56,7 +56,7 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
     container.innerHTML = ''; // Clear previous content
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'bg-white rounded-lg shadow-lg p-8 space-y-8';
+    wrapper.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000] space-y-8';
 
     const pageTitle = document.createElement('h2');
     pageTitle.className = 'text-2xl font-bold mb-6 text-center';
@@ -73,8 +73,12 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
     friendUsernameInput.className = 'flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
     const sendRequestButton = document.createElement('button');
     sendRequestButton.type = 'submit';
-    sendRequestButton.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer une demande');
-    sendRequestButton.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm';
+    sendRequestButton.className = 'relative inline-block px-4 py-2 font-medium group';
+    sendRequestButton.innerHTML = `
+        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+        <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
+        <span class="relative text-white">${translate('Send Request', 'Anfrage senden', 'Envoyer la demande')}</span>
+    `;
     const addFriendFeedback = document.createElement('p');
     addFriendFeedback.className = 'text-sm mt-2';
 
@@ -89,7 +93,7 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
         if (!username) return;
 
         sendRequestButton.disabled = true;
-        sendRequestButton.textContent = translate('Sending...', 'Senden...', 'Envoi...');
+        sendRequestButton.querySelector('span.relative')!.textContent = translate('Sending...', 'Senden...', 'Envoi...');
         addFriendFeedback.textContent = '';
         addFriendFeedback.className = 'text-sm mt-2';
 
@@ -112,7 +116,7 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
             addFriendFeedback.classList.add('text-red-600');
         } finally {
             sendRequestButton.disabled = false;
-            sendRequestButton.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer la demande');
+            sendRequestButton.querySelector('span.relative')!.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer la demande');
         }
     });
 
@@ -166,8 +170,12 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
 
         incoming.forEach(req => {
             const acceptButton = document.createElement('button');
-             acceptButton.textContent = translate('Accept', 'Akzeptieren', 'Accepter');
-            acceptButton.className = 'bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
+            acceptButton.className = 'relative inline-block px-3 py-1 font-medium group';
+            acceptButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-green-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-green-600 border-2 border-green-800 group-hover:bg-green-800"></span>
+                <span class="relative text-white text-sm">${translate('Accept', 'Akzeptieren', 'Accepter')}</span>
+            `;
             acceptButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
                     method: 'PUT',
@@ -179,8 +187,12 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
             };
 
             const declineButton = document.createElement('button');
-            declineButton.textContent = translate('Decline', 'Ablehnen', 'Refuser');
-            declineButton.className = 'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
+             declineButton.className = 'relative inline-block px-3 py-1 font-medium group';
+            declineButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
+                <span class="relative text-white text-sm">${translate('Decline', 'Ablehnen', 'Refuser')}</span>
+            `;
             declineButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
                     method: 'PUT',
@@ -207,8 +219,12 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
 
         outgoing.forEach(req => {
             const cancelButton = document.createElement('button');
-            cancelButton.textContent = translate('Cancel', 'Abbrechen', 'Annuler');
-            cancelButton.className = 'bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
+               cancelButton.className = 'relative inline-block px-3 py-1 font-medium group';
+            cancelButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-gray-600 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-gray-400 border-2 border-gray-600 group-hover:bg-gray-600"></span>
+                <span class="relative text-white text-sm">${translate('Cancel', 'Abbrechen', 'Annuler')}</span>
+            `;
             cancelButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
                     method: 'PUT',
@@ -242,8 +258,12 @@ function renderFriendList(container: HTMLElement, friends: any[], rerenderCallba
     } else {
         friends.forEach(friend => {
             const removeButton = document.createElement('button');
-            removeButton.textContent = translate('Remove', 'Entfernen', 'Supprimer');
-            removeButton.className = 'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
+            removeButton.className = 'relative inline-block px-3 py-1 font-medium group';
+            removeButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
+                <span class="relative text-white text-sm">${translate('Remove', 'Entfernen', 'Supprimer')}</span>
+            `;
             removeButton.onclick = async () => {
                 if (confirm(translate(`Are you sure you want to remove ${friend.username}?`, `Bist du sicher, dass du ${friend.username} entfernen möchtest?`, `Êtes-vous sûr de vouloir supprimer ${friend.username} ?`))) {
                     await fetch(`/api/friends/${friend.id}`, {

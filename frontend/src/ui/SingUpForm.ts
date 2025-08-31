@@ -20,7 +20,7 @@ export class SignUpForm {
    constructor(app: any) {
         this.app = app;
         this.formContainer = document.createElement('div');
-        this.formContainer.className = 'bg-white rounded-lg shadow-lg p-8 w-full space-y-4';
+        this.formContainer.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000] w-full space-y-4';
         this.buildForm();
     }
 
@@ -113,10 +113,12 @@ export class SignUpForm {
         confirmPasswordGroup.appendChild(this.confirmPasswordField);
 
         // Submit button
-        this.submitButton = document.createElement('button');
-        this.submitButton.className =
-            'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-        this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+        this.submitButton.className = 'w-full relative inline-block px-4 py-3 font-medium group';
+        this.submitButton.innerHTML = `
+            <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+            <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+            <span class="relative text-black group-hover:text-white">${translate('Register', 'Registrieren', 'S\'inscrire')}</span>
+        `;
         this.submitButton.type = 'submit';
 
         // Server messages
@@ -133,8 +135,8 @@ export class SignUpForm {
 
         form.appendChild(usernameGroup);
         form.appendChild(passwordGroup);
-        form.appendChild(this.validationInfo);
         form.appendChild(confirmPasswordGroup);
+        form.appendChild(this.validationInfo);
         form.appendChild(this.submitButton);
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
@@ -202,7 +204,7 @@ export class SignUpForm {
         event.preventDefault();
         this.resetServerMessages();
         this.submitButton.disabled = true;
-        this.submitButton.textContent = translate('Registering...', 'Registrierung...', 'Inscription...');
+        this.submitButton.querySelector('span.relative')!.textContent = translate('Registering...', 'Registrierung...', 'Inscription...');
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
@@ -212,7 +214,7 @@ export class SignUpForm {
               this.serverErrorMessage.textContent = translate('Passwords do not match.', 'Die Passwörter stimmen nicht überein.', 'Les mots de passe ne correspondent pas.');
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
-            this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+            this.submitButton.querySelector('span.relative')!.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
             return;
         }
 
@@ -245,7 +247,11 @@ export class SignUpForm {
             this.serverErrorMessage.classList.remove('hidden');
         } finally {
             this.submitButton.disabled = false;
-            this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+                 if (!this.successMessage.classList.contains('hidden')) {
+                // Keep "Registering..." text on success until redirect
+            } else {
+                this.submitButton.querySelector('span.relative')!.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+            }
         }
     }
 

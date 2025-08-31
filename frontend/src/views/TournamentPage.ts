@@ -45,16 +45,6 @@ function render() {
 
     const header = document.createElement('div');
     header.className = 'w-full max-w-4xl mx-auto text-center';
-    const backButton = document.createElement('a');
-    backButton.href = '/game';
-    backButton.className = 'text-blue-500 hover:underline mb-4 inline-block';
-    backButton.textContent = translate('‹ Back to Game Page', '‹ Zurück zur Spieleseite', '‹ Retour à la page de jeu');
-    backButton.onclick = (e) => {
-        e.preventDefault();
-        window.history.pushState({}, '', '/game');
-        window.dispatchEvent(new PopStateEvent('popstate'));
-    };
-    header.appendChild(backButton);
     appContainer.appendChild(header);
 
     if (!tournamentState) {
@@ -68,7 +58,7 @@ function render() {
 
 function renderCreationForm() {
     const formContainer = document.createElement('div');
-    formContainer.className = 'bg-white p-8 rounded-lg shadow-lg w-full max-w-md mx-auto';
+    formContainer.className = 'bg-white p-8 border-2 border-black shadow-[8px_8px_0px_#000000] w-full max-w-md mx-auto';
     formContainer.innerHTML = `
         <h2 class="text-2xl font-bold mb-6 text-center">${translate('Create a New Tournament', 'Ein neues Turnier erstellen', 'Créer un nouveau tournoi')}</h2>
         <form id="tournament-create-form" class="space-y-4">
@@ -92,7 +82,11 @@ function renderCreationForm() {
                     <option value="3d">${translate('3D Pong', '3D Pong', 'Pong 3D')}</option>
                 </select>
             </div>
-           <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm">${translate('Create Tournament', 'Turnier erstellen', 'Créer le tournoi')}</button>
+           <button type="submit" class="w-full relative inline-block px-4 py-3 font-medium group">
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
+                <span class="relative text-white">${translate('Create Tournament', 'Turnier erstellen', 'Créer le tournoi')}</span>
+            </button>
             <p id="create-error" class="text-red-600 text-sm hidden mt-2 text-center"></p>
         </form>
     `;
@@ -130,7 +124,7 @@ function renderCreationForm() {
 
 function renderLobby() {
     const lobbyContainer = document.createElement('div');
-    lobbyContainer.className = 'bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl mx-auto';
+    lobbyContainer.className = 'bg-white p-8 border-2 border-black shadow-[8px_8px_0px_#000000] w-full max-w-2xl mx-auto';
     const participants = tournamentState.participants;
     const requiredPlayers = tournamentState.number_of_players;
     const canStart = participants.length === requiredPlayers;
@@ -153,7 +147,11 @@ function renderLobby() {
         form.className = 'flex items-center space-x-2';
         form.innerHTML = `
             <input type="text" name="alias" placeholder="${translate('Enter player alias', 'Spieler-Alias eingeben', 'Entrez l\'alias du joueur')}" required minlength="3" maxlength="16" class="flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</button>
+            <button type="submit" class="relative inline-block px-4 py-2 font-medium group">
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
+                <span class="relative text-white">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</span>
+            </button>
         `;
         actionsContainer.appendChild(form);
         form.addEventListener('submit', async (e) => {
@@ -180,8 +178,12 @@ function renderLobby() {
     } else {
         const startButton = document.createElement('button');
         startButton.id = 'start-tournament-btn';
-        startButton.textContent = translate('Start Tournament', 'Turnier starten', 'Démarrer le tournoi');
-        startButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm';
+        startButton.className = 'w-full relative inline-block px-4 py-3 font-medium group';
+        startButton.innerHTML = `
+            <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+            <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+            <span class="relative text-black group-hover:text-white">${translate('Start Tournament', 'Turnier starten', 'Démarrer le tournoi')}</span>
+        `;
         actionsContainer.appendChild(startButton);
         startButton.addEventListener('click', async () => {
             const errorEl = document.getElementById('lobby-error')!;
@@ -224,14 +226,18 @@ function renderBracket() {
         if (matches) {
             matches.forEach((match: any) => {
                 const matchEl = document.createElement('div');
-                matchEl.className = 'p-4 border rounded-lg bg-gray-100';
+                matchEl.className = 'p-4 border-2 border-black rounded-lg bg-gray-100 shadow-[4px_4px_0px_#000000]';
                  const player1 = match.player1_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2 - 1)}</i>`;
             const player2 = match.player2_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2)}</i>`;
                 
                 let content = `<div class="font-bold ${match.winner_id === match.player1_id ? 'text-green-600' : ''}">${player1}</div><div class="text-gray-500 my-1">vs</div><div class="font-bold ${match.winner_id === match.player2_id ? 'text-green-600' : ''}">${player2}</div>`;
 
                 if (match.status === 'pending' && match.player1_id && match.player2_id && me && me.id === tournamentState.creator_id) {
-                     content += `<button data-match-id="${match.id}" class="play-match-btn mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-1 px-2 rounded">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</button>`;
+                     content += `<button data-match-id="${match.id}" class="play-match-btn mt-2 w-full relative inline-block px-2 py-1 font-medium group">
+                    <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-blue-600 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                    <span class="absolute inset-0 w-full h-full bg-blue-400 border-2 border-blue-600 group-hover:bg-blue-600"></span>
+                    <span class="relative text-black group-hover:text-white text-sm font-bold">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</span>
+                </button>`;
                 } else if (match.status === 'completed') {
                     content += `<p class="text-sm text-center mt-2 text-green-700">${translate('Winner', 'Sieger', 'Gagnant')}: ${match.winner_alias}</p>`;
                 }
@@ -253,7 +259,7 @@ function renderBracket() {
 
     document.querySelectorAll('.play-match-btn').forEach(button => {
         button.addEventListener('click', (e) => {
-            const matchId = (e.target as HTMLElement).dataset.matchId;
+            const matchId = (e.currentTarget as HTMLElement).dataset.matchId;
             const match = tournamentState.matches.find((m: any) => m.id == matchId);
             if (match) {
                 playMatch(match);

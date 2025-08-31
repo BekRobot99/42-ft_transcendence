@@ -183,15 +183,20 @@ class App {
 
         this.pageContentElement.innerHTML = ''; // Clear existing content
 
+         const createBackButton = (text: string, path: string) => {
+            const button = document.createElement('button');
+            button.textContent = text;
+            button.className = 'block w-full text-center mt-4 text-sm text-black hover:underline';
+            button.addEventListener('click', () => this.navigateTo(path));
+            return button;
+        };
+
+
         if (path === '/register') {
             const registerForm = new SignUpForm(this);
             this.pageContentElement.appendChild(registerForm.render());
 
-            const backButton = document.createElement('button');
-            backButton.textContent = translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil');
-            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
-            backButton.addEventListener('click', () => this.navigateTo('/'));
-            this.pageContentElement.appendChild(backButton);
+            this.pageContentElement.appendChild(createBackButton(translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil'), '/'));
 
         }else if (path.startsWith('/auth/google/callback')) {
             this.pageContentElement.innerHTML = `
@@ -207,21 +212,13 @@ class App {
             const signInForm = new ConnectForm(this);
             this.pageContentElement.appendChild(signInForm.render());
 
-            const backButton = document.createElement('button');
-            backButton.textContent = translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil');
-            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
-            backButton.addEventListener('click', () => this.navigateTo('/'));
-            this.pageContentElement.appendChild(backButton);
+           this.pageContentElement.appendChild(createBackButton(translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil'), '/'));
 
             } else if (path.startsWith('/profile/')) {
             const username = path.substring('/profile/'.length);
             if (username) {
                 await renderProfilePage(this.pageContentElement, username);
-                const backButton = document.createElement('button');
-               backButton.textContent = translate('‹ Back', '‹ Zurück', '‹ Retour');
-                backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
-                backButton.addEventListener('click', () => window.history.back());
-                this.pageContentElement.appendChild(backButton);
+                
             } else {
                 this.navigateTo('/game');
             }
@@ -253,19 +250,10 @@ class App {
 
         } else if (path === '/settings') {
             await renderSettingsPage(this.pageContentElement);
-            const backButton = document.createElement('button');
-            backButton.textContent = translate('‹ Back to Game', '‹ Zurück zum Spiel', '‹ Retour au jeu');
-            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
-            backButton.addEventListener('click', () => this.navigateTo('/game'));
-            this.pageContentElement.appendChild(backButton);
-
+            
         } else if (path === '/friends') {
             await renderSocialView(this.pageContentElement);
-            const backButton = document.createElement('button');
-            backButton.textContent = translate('‹ Back to Game', '‹ Zurück zum Spiel', '‹ Retour au jeu');
-            backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
-            backButton.addEventListener('click', () => this.navigateTo('/game'));
-            this.pageContentElement.appendChild(backButton);
+            
         } else { // Default to home view
             renderHomePage(this.pageContentElement, this);
             // Re-attach event listeners for the home view buttons

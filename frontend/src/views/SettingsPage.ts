@@ -15,7 +15,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     }
 
     const settingsWrapper = document.createElement('div');
-    settingsWrapper.className = 'bg-white rounded-lg shadow-lg p-8';
+    settingsWrapper.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000]';
 
     const settingsTitle = document.createElement('h2');
     settingsTitle.className = 'text-2xl font-bold mb-6';
@@ -37,8 +37,13 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const avatarUploadLabel = document.createElement('label');
     avatarUploadLabel.htmlFor = 'avatar-input';
-    avatarUploadLabel.className = 'cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    avatarUploadLabel.textContent = translate('Change Avatar', 'Avatar ändern', 'Changer d\'avatar');
+    avatarUploadLabel.className = 'cursor-pointer relative inline-block px-4 py-2 font-medium group';
+    avatarUploadLabel.innerHTML = `
+        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+        <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+        <span class="relative text-black group-hover:text-white">${translate('Change Avatar', 'Avatar ändern', 'Changer d\'avatar')}</span>
+    `;
+
 
     const avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file';
@@ -48,8 +53,12 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const deleteAvatarBtn = document.createElement('button');
     deleteAvatarBtn.id = 'delete-avatar-btn';
-    deleteAvatarBtn.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    deleteAvatarBtn.textContent = translate('Delete', 'Löschen', 'Supprimer');
+    deleteAvatarBtn.className = 'relative inline-block px-4 py-2 font-medium group';
+    deleteAvatarBtn.innerHTML = `
+        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+        <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
+        <span class="relative text-white">${translate('Delete', 'Löschen', 'Supprimer')}</span>
+    `;
     if (!user.avatar_path) {
         deleteAvatarBtn.classList.add('hidden');
     }
@@ -178,8 +187,18 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const twofaButton = document.createElement('button');
     twofaButton.type = 'button';
-    twofaButton.className = 'bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out mb-2';
-    twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA') : translate('Enable 2FA', '2FA aktivieren', 'Activer la 2FA');
+    twofaButton.className = 'relative inline-block px-4 py-2 font-medium group mb-2';
+    const twofaButtonText = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA') : translate('Enable 2FA', '2FA aktivieren', 'Activer la 2FA');
+    const twofaButtonColor = user.twofa_enabled ? 'bg-red-600' : 'bg-gray-800';
+    const twofaButtonHoverColor = user.twofa_enabled ? 'group-hover:bg-red-800' : 'group-hover:bg-gray-900';
+    const twofaButtonShadowColor = user.twofa_enabled ? 'bg-red-800' : 'bg-black';
+    const twofaButtonBorderColor = user.twofa_enabled ? 'border-red-800' : 'border-black';
+
+    twofaButton.innerHTML = `
+        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 ${twofaButtonShadowColor} group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+        <span class="absolute inset-0 w-full h-full ${twofaButtonColor} border-2 ${twofaButtonBorderColor} ${twofaButtonHoverColor}"></span>
+        <span class="relative text-white">${twofaButtonText}</span>
+    `;
 
     const twofaContainer = document.createElement('div'); // For QR code and input
 
@@ -208,8 +227,12 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             codeInput.maxLength = 6;
             const verifyBtn = document.createElement('button');
             verifyBtn.type = 'button';
-              verifyBtn.textContent = translate('Verify & Enable', 'Verifizieren & Aktivieren', 'Vérifier et activer');
-            verifyBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
+               verifyBtn.className = 'w-full relative inline-block px-4 py-2 font-medium group mb-2';
+            verifyBtn.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
+                <span class="relative text-white">${translate('Verify & Enable', 'Verifizieren & Aktivieren', 'Vérifier et activer')}</span>
+            `;
             const msg = document.createElement('p');
             msg.className = 'text-sm mt-2';
 
@@ -254,12 +277,16 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             const codeInput = document.createElement('input');
             codeInput.type = 'text';
             codeInput.placeholder = translate('Enter 2FA code to disable', '2FA-Code zum Deaktivieren eingeben', 'Entrez le code 2FA pour désactiver');
-            codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
+            codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2 mt-4';
             codeInput.maxLength = 6;
             const disableBtn = document.createElement('button');
             disableBtn.type = 'button';
-            disableBtn.textContent = translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA');
-            disableBtn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
+            disableBtn.className = 'w-full relative inline-block px-4 py-2 font-medium group mb-2';
+            disableBtn.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
+                <span class="relative text-white">${translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA')}</span>
+            `;
             const msg = document.createElement('p');
             msg.className = 'text-sm mt-2';
 
@@ -313,8 +340,12 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     // Save button
     const saveProfileBtn = document.createElement('button');
-    saveProfileBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+    saveProfileBtn.className = 'w-full relative inline-block px-4 py-3 font-medium group';
+    saveProfileBtn.innerHTML = `
+        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+        <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
+        <span class="relative text-white">${translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications')}</span>
+    `;
 
     form.appendChild(usernameGroup);
     form.appendChild(displayNameGroup);
@@ -327,7 +358,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         errorMsg.classList.add('hidden');
         successMsg.classList.add('hidden');
         saveProfileBtn.disabled = true;
-        saveProfileBtn.textContent = translate('Saving...', 'Speichern...', 'Enregistrement...');
+        saveProfileBtn.querySelector('span.relative')!.textContent = translate('Saving...', 'Speichern...', 'Enregistrement...');
 
         // Validation
         const username = usernameField.value.trim().toLowerCase();
@@ -337,14 +368,14 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             errorMsg.textContent = translate('Username must be 3-16 chars, lowercase, and only a-z, 0-9, ., _, -', 'Benutzername muss 3-16 Zeichen lang sein, Kleinbuchstaben und nur a-z, 0-9, ., _, - enthalten', 'Le nom d\'utilisateur doit comporter de 3 à 16 caractères, être en minuscules et ne contenir que a-z, 0-9, ., _, -');
             errorMsg.classList.remove('hidden');
             saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+            saveProfileBtn.querySelector('span.relative')!.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
             return;
         }
         if (displayName.length < 1 || displayName.length > 32 || /<|>/.test(displayName)) {
             errorMsg.textContent = translate('Display name must be 1-32 characters and not contain < or >', 'Anzeigename muss 1-32 Zeichen lang sein und darf keine < oder > enthalten', 'Le nom d\'affichage doit comporter de 1 à 32 caractères et ne pas contenir < ou >');
             errorMsg.classList.remove('hidden');
             saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+            saveProfileBtn.querySelector('span.relative')!.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
             return;
         }
 
@@ -369,7 +400,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             errorMsg.classList.remove('hidden');
         } finally {
             saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+            saveProfileBtn.querySelector('span.relative')!.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
         }
     });
 

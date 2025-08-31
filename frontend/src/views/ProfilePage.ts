@@ -15,7 +15,7 @@ export async function renderProfilePage(gamecontainer: HTMLElement, username: st
         gamecontainer.innerHTML = ''; // Clear loading message
 
         const gamewrapper = document.createElement('div');
-        gamewrapper.className = 'bg-white rounded-lg shadow-lg p-8 space-y-8 w-full max-w-4xl mx-auto';
+        gamewrapper.className = 'bg-white rounded-lg p-8 space-y-8 w-full max-w-4xl mx-auto border-2 border-black shadow-[8px_8px_0px_#000000]';
 
         // --- User Info Header ---
         const header = document.createElement('div');

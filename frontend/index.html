@@ -5,13 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ft_transcendence </title>
   <link rel="icon" type="image/png" href="/assets/42HeilbronnImage.png">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   </script> <!-- TODO: do we need to self-host? -->
+  <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
-  <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="flex items-center justify-center h-screen bg-gray-100 font-sans">
+<body class="bg-blue-50 min-h-screen flex items-center justify-center">
   <div id="page-content" class="bg-white shadow-lg rounded-xl p-8 max-w-sm w-full text-center">
     <!-- Content will be dynamically injected here in app.js -->
   </div>

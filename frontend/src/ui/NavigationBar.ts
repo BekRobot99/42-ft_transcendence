@@ -10,16 +10,11 @@ export function renderNavigationBar(app: any): void {
 
     // Create nav bar
     const nav = document.createElement('nav');
-    nav.className = 'w-full bg-black text-white shadow-md fixed top-0 left-0 z-50';
-    nav.style.height = '64px';
-    nav.style.display = 'flex';
-    nav.style.alignItems = 'center';
-    nav.style.justifyContent = 'space-between';
-    nav.style.padding = '0 2rem';
+    nav.className = 'w-full bg-white text-black shadow-md fixed top-0 left-0 z-50 border-b-4 border-black h-16 flex items-center justify-between px-8';
 
     // Logo/title
     const logo = document.createElement('div');
-    logo.className = 'font-bold text-xl tracking-tight cursor-pointer hover:text-gray-300 transition duration-150 ease-in-out';
+    logo.className = 'font-bold text-xl tracking-tight cursor-pointer hover:text-gray-600 transition duration-150 ease-in-out';
     logo.textContent = 'ft_transcendence';
     logo.addEventListener('click', (e) => app.navigateTo('/game', e));
 
@@ -29,16 +24,25 @@ export function renderNavigationBar(app: any): void {
 
    
     const langSelectorContainer = createLanguageDropdown(app, {
-        className: 'bg-gray-700 text-white py-2 px-2 rounded-lg text-sm focus:outline-none cursor-pointer',
+        className: 'bg-gray-200 text-black py-2 px-2 rounded-lg text-sm focus:outline-none cursor-pointer border-2 border-black',
         containerClassName: 'flex items-center'
        
     });
     right.appendChild(langSelectorContainer);
 
-     // My Profile button
-    const profileButton = document.createElement('button');
-    profileButton.className = 'bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    profileButton.textContent = translate('My Profile', 'Mein Profil', 'Mon profil');
+    const createNavButton = (text: string) => {
+        const button = document.createElement('button');
+        button.className = 'relative inline-block px-3 py-1 font-medium group';
+        button.innerHTML = `
+            <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+            <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+            <span class="relative text-black group-hover:text-white">${text}</span>
+        `;
+        return button;
+    };
+
+    // My Profile button
+    const profileButton = createNavButton(translate('My Profile', 'Mein Profil', 'Mon profil'));
     profileButton.addEventListener('click', (e) => {
         if (app.currentUser) {
             app.navigateTo(`/profile/${app.currentUser.username}`, e);
@@ -46,21 +50,15 @@ export function renderNavigationBar(app: any): void {
     });
 
     // Friends button
-    const friendsButton = document.createElement('button');
-    friendsButton.className = 'bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    friendsButton.textContent = translate('Friends', 'Freunde', 'Amis');
+     const friendsButton = createNavButton(translate('Friends', 'Freunde', 'Amis'));
     friendsButton.addEventListener('click', (e) => app.navigateTo('/friends', e));
 
     // Settings button
-    const settingsButton = document.createElement('button');
-    settingsButton.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    settingsButton.textContent = translate('Settings', 'Einstellungen', 'Paramètres');
+    const settingsButton = createNavButton(translate('Settings', 'Einstellungen', 'Paramètres'));
     settingsButton.addEventListener('click', (e) => app.navigateTo('/settings', e));
 
     // Log out button
-    const logoutButton = document.createElement('button');
-   logoutButton.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    logoutButton.textContent = translate('Log Out', 'Abmelden', 'Se déconnecter');
+     const logoutButton = createNavButton(translate('Log Out', 'Abmelden', 'Se déconnecter'));
     logoutButton.addEventListener('click', async () => {
          // Close WebSocket connection before logging out
         if (app.disconnectWebSocket) {
