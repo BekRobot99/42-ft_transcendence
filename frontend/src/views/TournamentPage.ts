@@ -1,4 +1,5 @@
 import { renderGamePage } from './GamePage.js';
+import { renderGamePage3D } from './GamePage3D.js';
 
 let tournamentState: any = null;
 let appContainer: HTMLElement | null = null;
@@ -83,6 +84,13 @@ function renderCreationForm() {
                     <option value="16">16 Players</option>
                 </select>
             </div>
+            <div>
+                <label for="game-type" class="block text-sm font-medium text-gray-700">Game Type</label>
+                <select id="game-type" name="gameMode" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="2d" selected>2D Pong</option>
+                    <option value="3d">3D Pong</option>
+                </select>
+            </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm">Create Tournament</button>
             <p id="create-error" class="text-red-600 text-sm hidden mt-2 text-center"></p>
         </form>
@@ -97,12 +105,13 @@ function renderCreationForm() {
         const formData = new FormData(form);
         const name = formData.get('name') as string;
         const playerCount = parseInt(formData.get('playerCount') as string, 10);
+        const gameMode = formData.get('gameMode') as string;
 
         try {
             const res = await fetch('/api/tournaments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, playerCount }),
+                body: JSON.stringify({ name, playerCount, gameMode }),
             });
             if (!res.ok) {
                 const err = await res.json();
@@ -258,7 +267,7 @@ function playMatch(match: any) {
     const gameWrapper = document.createElement('div');
     appContainer.appendChild(gameWrapper);
 
-    cleanupGame = renderGamePage(gameWrapper, {
+    const gameOptions = {
         player1Name: match.player1_alias,
         player2Name: match.player2_alias,
         onGameEnd: async (result: { winnerName: string, score1: number, score2: number }) => {
@@ -280,7 +289,13 @@ function playMatch(match: any) {
                 await fetchTournament(tournamentState.id);
             }
         }
-    });
+   };
+
+    if (tournamentState.game_type === '3d') {
+        cleanupGame = renderGamePage3D(gameWrapper, gameOptions);
+    } else {
+        cleanupGame = renderGamePage(gameWrapper, gameOptions);
+    }
 }
 
 export async function renderTournamentView(container: HTMLElement): Promise<() => void> {

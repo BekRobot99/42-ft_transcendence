@@ -49,6 +49,7 @@ export const setupDatabase = (): Promise<void> => {
                 status TEXT NOT NULL CHECK(status IN ('pending', 'active', 'completed')) DEFAULT 'pending',
                 creator_id INTEGER NOT NULL,
                 number_of_players INTEGER NOT NULL,
+                game_type TEXT NOT NULL CHECK(game_type IN ('2d', '3d')) DEFAULT '2d',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
             );

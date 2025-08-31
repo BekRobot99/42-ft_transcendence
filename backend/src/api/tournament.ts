@@ -32,17 +32,21 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
 
     // Create a new tournament
     fastify.post('/api/tournaments', authOpts, async (request: any, reply: FastifyReply) => {
-        const { name, playerCount } = request.body as { name: string, playerCount: number };
+        const { name, playerCount, gameMode } = request.body as { name: string, playerCount: number, gameMode: string };
         const creatorId = request.user.id;
 
-        if (!name || !playerCount) {
-            return reply.status(400).send({ message: 'Tournament name and player count are required.' });
+        if (!name || !playerCount || !gameMode) {
+            return reply.status(400).send({ message: 'Tournament name, player count, and game type are required.' });
         }
         if (!ValidTournamentName(name)) {
             return reply.status(400).send({ message: 'Invalid tournament name (3-32 chars, no special characters).' });
         }
         if (![2, 4, 8, 16].includes(playerCount)) {
             return reply.status(400).send({ message: 'Player count must be 2, 4, 8, or 16.' });
+        }
+
+        if (!['2d', '3d'].includes(gameMode)) {
+            return reply.status(400).send({ message: 'Game type must be "2d" or "3d".' });
         }
 
         try {
@@ -52,8 +56,8 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             }
 
             const result = await dbRun(
-                'INSERT INTO tournaments (name, number_of_players, creator_id) VALUES (?, ?, ?)',
-                [name, playerCount, creatorId]
+                'INSERT INTO tournaments (name, number_of_players, creator_id, game_type) VALUES (?, ?, ?, ?)',
+                [name, playerCount, creatorId, gameMode]
             );
             const tournamentId = result.lastID;
 
