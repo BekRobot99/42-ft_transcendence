@@ -1,8 +1,36 @@
-import { translate } from "../languageService.js";
+import { getCurrentLanguage, translate, updateLanguage } from "../languageService.js";
+import type { Language } from "../languageService.js";
 
-export function renderHomePage(container: HTMLElement): void {
+export function renderHomePage(container: HTMLElement, app: any): void {
     const homeWrapper = document.createElement('div');
     homeWrapper.className = 'bg-white rounded-lg shadow-lg p-8';
+
+    const langSelectorContainer = document.createElement('div');
+  langSelectorContainer.className = 'flex justify-end mb-4';
+
+  const langSelector = document.createElement('select');
+  langSelector.className = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2';
+  const languages: { [key in Language]: string } = {
+      en: 'English',
+      de: 'Deutsch',
+      fr: 'Français'
+  };
+  for (const [code, name] of Object.entries(languages)) {
+      const option = document.createElement('option');
+      option.value = code;
+      option.textContent = name;
+      if (getCurrentLanguage() === code) {
+          option.selected = true;
+      }
+      langSelector.appendChild(option);
+  }
+  langSelector.addEventListener('change', (e) => {
+      const newLang = (e.target as HTMLSelectElement).value as Language;
+      updateLanguage(newLang);
+      app.renderView(window.location.pathname);
+  });
+  langSelectorContainer.appendChild(langSelector);
+  homeWrapper.appendChild(langSelectorContainer);
 
     const headerSection = document.createElement('div');
     headerSection.className = 'text-center mb-8';

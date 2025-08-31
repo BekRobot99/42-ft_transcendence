@@ -184,7 +184,7 @@ class App {
         this.pageContentElement.innerHTML = ''; // Clear existing content
 
         if (path === '/register') {
-            const registerForm = new SignUpForm();
+            const registerForm = new SignUpForm(this);
             this.pageContentElement.appendChild(registerForm.render());
 
             const backButton = document.createElement('button');
@@ -204,7 +204,7 @@ class App {
         } else if (path === '/verify-2fa') {
             this.renderTwoFactorView();
         } else if (path === '/signin') {
-            const signInForm = new ConnectForm();
+            const signInForm = new ConnectForm(this);
             this.pageContentElement.appendChild(signInForm.render());
 
             const backButton = document.createElement('button');
@@ -267,7 +267,7 @@ class App {
             backButton.addEventListener('click', () => this.navigateTo('/game'));
             this.pageContentElement.appendChild(backButton);
         } else { // Default to home view
-            renderHomePage(this.pageContentElement);
+            renderHomePage(this.pageContentElement, this);
             // Re-attach event listeners for the home view buttons
             attachHomePageListeners(this);
         }

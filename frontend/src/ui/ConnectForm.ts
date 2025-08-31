@@ -1,5 +1,5 @@
-import { translate } from "../languageService.js";
-
+import { getCurrentLanguage, translate, updateLanguage } from "../languageService.js";
+import type { Language } from "../languageService.js";
 export class ConnectForm {
     private formContainer: HTMLElement;
     private usernameField!: HTMLInputElement;
@@ -10,15 +10,42 @@ export class ConnectForm {
     private submitButton!: HTMLButtonElement;
     private mfaInputWrapper!: HTMLElement;
     private mfaInput!: HTMLInputElement;
+    private app: any;
 
 
-    constructor() {
+    constructor(app: any) {
+        this.app = app;
         this.formContainer = document.createElement('div');
-        this.formContainer.className = 'w-full space-y-4';
+        this.formContainer.className = 'bg-white rounded-lg shadow-lg p-8 w-full space-y-4';
         this.buildForm();
     }
 
     private buildForm(): void {
+        const langSelectorContainer = document.createElement('div');
+        langSelectorContainer.className = 'flex justify-end';
+
+        const langSelector = document.createElement('select');
+        langSelector.className = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2';
+        const languages: { [key in Language]: string } = {
+            en: 'English',
+            de: 'Deutsch',
+            fr: 'Français'
+        };
+        for (const [code, name] of Object.entries(languages)) {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = name;
+            if (getCurrentLanguage() === code) {
+                option.selected = true;
+            }
+            langSelector.appendChild(option);
+        }
+        langSelector.addEventListener('change', (e) => {
+            const newLang = (e.target as HTMLSelectElement).value as Language;
+            updateLanguage(newLang);
+            this.app.renderView(window.location.pathname);
+        });
+        langSelectorContainer.appendChild(langSelector);
         // Username input
         const usernameGroup = document.createElement('div');
         usernameGroup.className = 'space-y-2';
@@ -100,6 +127,7 @@ export class ConnectForm {
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
 
+        this.formContainer.appendChild(langSelectorContainer);
         this.formContainer.appendChild(form);
         this.addFieldListeners();
     }
