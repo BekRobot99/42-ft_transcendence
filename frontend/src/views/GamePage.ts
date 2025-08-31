@@ -1,4 +1,4 @@
-export function renderGamePage(gameWrapper: HTMLElement, tournamentOptions?: {mode?: string; player1Name: string, player2Name: string, onGameEnd: (winnerName: string) => void }): () => void {
+export function renderGamePage(gameWrapper: HTMLElement, tournamentOptions?: { player1Name: string, player2Name: string, onGameEnd: (result: { winnerName: string, score1: number, score2: number }) => void }): () => void {
     const player1Alias = tournamentOptions ? tournamentOptions.player1Name : 'Player 1';
     const player2Alias = tournamentOptions ? tournamentOptions.player2Name : 'Player 2';
     gameWrapper.innerHTML = `
@@ -139,7 +139,7 @@ export function renderGamePage(gameWrapper: HTMLElement, tournamentOptions?: {mo
             player1.score++;
             if (tournamentOptions && player1.score >= WINNING_SCORE) {
                 cancelAnimationFrame(animationFrameId);
-                tournamentOptions.onGameEnd(player1Alias);
+                tournamentOptions.onGameEnd({ winnerName: player1Alias, score1: player1.score, score2: player2.score });
                 return;
             }
             resetBall();
@@ -147,7 +147,7 @@ export function renderGamePage(gameWrapper: HTMLElement, tournamentOptions?: {mo
             player2.score++;
             if (tournamentOptions && player2.score >= WINNING_SCORE) {
                 cancelAnimationFrame(animationFrameId);
-                tournamentOptions.onGameEnd(player2Alias);
+                tournamentOptions.onGameEnd({ winnerName: player2Alias, score1: player1.score, score2: player2.score });
                 return;
             }
             resetBall();

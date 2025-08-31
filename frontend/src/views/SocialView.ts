@@ -36,11 +36,16 @@ function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElem
     profileInfo.appendChild(profileAvatar);
     profileInfo.appendChild(profileNameBox);
 
+    const profileLink = document.createElement('a');
+    profileLink.href = `/profile/${user.username}`;
+    profileLink.setAttribute('data-link', '');
+    profileLink.className = 'flex-grow';
+    profileLink.appendChild(profileInfo);
     const buttonGroup = document.createElement('div');
     buttonGroup.className = 'flex gap-2';
     buttons.forEach(btn => buttonGroup.appendChild(btn));
 
-    card.appendChild(profileInfo);
+    card.appendChild(profileLink);
     card.appendChild(buttonGroup);
 
     return card;

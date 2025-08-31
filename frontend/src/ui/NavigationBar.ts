@@ -22,6 +22,16 @@ export function renderNavigationBar(app: any): void {
     const right = document.createElement('div');
     right.className = 'flex items-center gap-4';
 
+     // My Profile button
+    const profileButton = document.createElement('button');
+    profileButton.className = 'bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
+    profileButton.textContent = 'My Profile';
+    profileButton.addEventListener('click', (e) => {
+        if (app.currentUser) {
+            app.navigateTo(`/profile/${app.currentUser.username}`, e);
+        }
+    });
+
     // Friends button
     const friendsButton = document.createElement('button');
     friendsButton.className = 'bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';

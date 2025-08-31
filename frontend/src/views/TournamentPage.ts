@@ -259,16 +259,19 @@ function playMatch(match: any) {
     appContainer.appendChild(gameWrapper);
 
     cleanupGame = renderGamePage(gameWrapper, {
-        mode: 'tournament',
         player1Name: match.player1_alias,
         player2Name: match.player2_alias,
-        onGameEnd: async (winnerName: string) => {
-            const winnerId = winnerName === match.player1_alias ? match.player1_id : match.player2_id;
+        onGameEnd: async (result: { winnerName: string, score1: number, score2: number }) => {
+            const winnerId = result.winnerName === match.player1_alias ? match.player1_id : match.player2_id;
             try {
                 await fetch(`/api/matches/${match.id}/winner`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ winnerId }),
+                    body: JSON.stringify({
+                        winnerId,
+                        score1: result.score1,
+                        score2: result.score2
+                    }),
                 });
             } catch (error) {
                 console.error("Failed to report winner", error);

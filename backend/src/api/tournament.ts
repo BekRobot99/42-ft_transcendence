@@ -190,7 +190,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
     // Report match winner
     fastify.post('/api/matches/:matchId/winner', authOpts, async (request: any, reply: FastifyReply) => {
         const matchId = parseInt(request.params.matchId, 10);
-        const { winnerId } = request.body as { winnerId: number };
+        const { winnerId, score1, score2 } = request.body as { winnerId: number, score1: number, score2: number };
         const userId = request.user.id;
 
         try {
@@ -202,7 +202,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             if (match.status !== 'pending') return reply.status(400).send({ message: 'Match result already reported.' });
             if (winnerId !== match.player1_id && winnerId !== match.player2_id) return reply.status(400).send({ message: 'Winner is not a participant in this match.' });
 
-            await dbRun('UPDATE matches SET winner_id = ?, status = \'completed\' WHERE id = ?', [winnerId, matchId]);
+            await dbRun('UPDATE matches SET winner_id = ?, status = \'completed\', player1_score = ?, player2_score = ?, played_at = CURRENT_TIMESTAMP WHERE id = ?', [winnerId, score1, score2, matchId]);
 
             // --- Advance Bracket Logic ---
             const completedRoundMatches = await dbAll('SELECT winner_id FROM matches WHERE tournament_id = ? AND round = ? AND status = \'completed\'', [match.tournament_id, match.round]);
