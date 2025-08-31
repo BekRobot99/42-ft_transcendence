@@ -164,7 +164,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             const tournament = await dbGet('SELECT * FROM tournaments WHERE id = ?', [tournamentId]);
             if (!tournament) return reply.status(404).send({ message: 'Tournament not found.' });
 
-            const participants = await dbAll('SELECT id, alias FROM tournament_participants WHERE tournament_id = ?', [tournamentId]);
+            const participants = await dbAll('SELECT id, user_id, alias FROM tournament_participants WHERE tournament_id = ?', [tournamentId]);
             
             const matches = await dbAll(`
                 SELECT 

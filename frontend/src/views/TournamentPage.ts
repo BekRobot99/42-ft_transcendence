@@ -125,7 +125,7 @@ function renderLobby() {
     const requiredPlayers = tournamentState.number_of_players;
     const canStart = participants.length === requiredPlayers;
 
-    let participantListHTML = participants.map((p: any) => `<li class="p-2 bg-gray-200 rounded">${p.alias} ${p.id === tournamentState.creator_id ? '(Host)' : ''}</li>`).join('');
+   let participantListHTML = participants.map((p: any) => `<li class="p-2 bg-gray-200 rounded">${p.alias} ${p.user_id === tournamentState.creator_id ? '(Host)' : ''}</li>`).join('');
 
     lobbyContainer.innerHTML = `
         <h2 class="text-2xl font-bold mb-2 text-center">${tournamentState.name}</h2>
