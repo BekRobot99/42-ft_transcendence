@@ -129,7 +129,7 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
         gameRunning = false;
 
         setTimeout(() => {
-            const angle = (Math.random() - 0.5) * (Math.PI / 4); // -22.5 to +22.5 degrees
+            const angle = (Math.random() - 0.5) * (Math.PI / 2); // -45 to +45 degrees
             ballVelocity.z = direction * INITIAL_BALL_SPEED * Math.cos(angle);
             ballVelocity.x = INITIAL_BALL_SPEED * Math.sin(angle);
             gameRunning = true;
