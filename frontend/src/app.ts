@@ -199,10 +199,19 @@ class App {
             const gamePageContainer = document.createElement('div');
             gamePageContainer.className = 'space-y-6 flex flex-col items-center pt-10';
 
-            const tournamentButton = document.createElement('button');
-            tournamentButton.textContent = '🏆 Start a Tournament';
-            tournamentButton.className = 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-200 ease-in-out transform hover:scale-105';
-            tournamentButton.addEventListener('click', () => this.navigateTo('/tournament'));
+            const tournamentButton = document.createElement('a');
+            tournamentButton.href = '#_';
+            tournamentButton.className = 'relative inline-block px-6 py-3 font-medium group';
+            tournamentButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+                <span class="relative text-black group-hover:text-white text-xl">🏆 Start a Tournament</span>
+            `;
+            
+            tournamentButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.navigateTo('/tournament');
+            });
             
             gamePageContainer.appendChild(tournamentButton);
             this.pageContentElement.appendChild(gamePageContainer);
