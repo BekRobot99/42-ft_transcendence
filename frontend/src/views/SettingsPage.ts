@@ -1,3 +1,5 @@
+import { translate } from "../languageService.js";
+
 export async function renderSettingsPage(container: HTMLElement): Promise<void> {
     container.innerHTML = '';
     // Fetch current user info
@@ -8,7 +10,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         const data = await res.json();
         user = data.user;
     } catch {
-        container.innerHTML = '<p class="text-red-600">Failed to load user info.</p>';
+       container.innerHTML = `<p class="text-red-600">${translate('Failed to load user info.', 'Benutzerinformationen konnten nicht geladen werden.', 'Échec du chargement des informations utilisateur.')}</p>`;
         return;
     }
 
@@ -17,7 +19,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const settingsTitle = document.createElement('h2');
     settingsTitle.className = 'text-2xl font-bold mb-6';
-    settingsTitle.textContent = 'Settings';
+    settingsTitle.textContent = translate('Settings', 'Einstellungen', 'Paramètres');
 
     // --- Avatar Section ---
     const avatarSection = document.createElement('div');
@@ -36,7 +38,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     const avatarUploadLabel = document.createElement('label');
     avatarUploadLabel.htmlFor = 'avatar-input';
     avatarUploadLabel.className = 'cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    avatarUploadLabel.textContent = 'Change Avatar';
+    avatarUploadLabel.textContent = translate('Change Avatar', 'Avatar ändern', 'Changer d\'avatar');
 
     const avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file';
@@ -47,7 +49,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     const deleteAvatarBtn = document.createElement('button');
     deleteAvatarBtn.id = 'delete-avatar-btn';
     deleteAvatarBtn.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    deleteAvatarBtn.textContent = 'Delete';
+    deleteAvatarBtn.textContent = translate('Delete', 'Löschen', 'Supprimer');
     if (!user.avatar_path) {
         deleteAvatarBtn.classList.add('hidden');
     }
@@ -72,7 +74,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         if (!file) return;
 
         if (file.size > 5 * 1024 * 1024) { // 5MB
-            avatarErrorMsg.textContent = 'File is too large (max 5MB).';
+            avatarErrorMsg.textContent = translate('File is too large (max 5MB).', 'Datei ist zu groß (max. 5MB).', 'Le fichier est trop volumineux (max 5 Mo).');
             avatarErrorMsg.classList.remove('hidden');
             avatarFileInput.value = '';
             return;
@@ -107,7 +109,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     });
 
     deleteAvatarBtn.addEventListener('click', async () => {
-        if (!confirm('Are you sure you want to delete your avatar?')) {
+        if (!confirm(translate('Are you sure you want to delete your avatar?', 'Sind Sie sicher, dass Sie Ihren Avatar löschen möchten?', 'Êtes-vous sûr de vouloir supprimer votre avatar ?'))) {
             return;
         }
         avatarErrorMsg.classList.add('hidden');
@@ -137,7 +139,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     usernameGroup.className = 'mb-4';
     const usernameLabel = document.createElement('label');
     usernameLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
-    usernameLabel.textContent = 'Username';
+    usernameLabel.textContent = translate('Username', 'Benutzername', 'Nom d\'utilisateur');
     const usernameField = document.createElement('input');
     usernameField.type = 'text';
     usernameField.value = user.username;
@@ -152,7 +154,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     displayNameGroup.className = 'mb-4';
     const displayNameLabel = document.createElement('label');
     displayNameLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
-    displayNameLabel.textContent = 'Display Name';
+    displayNameLabel.textContent = translate('Display Name', 'Anzeigename', 'Nom d\'affichage');
     const displayNameInput = document.createElement('input');
     displayNameInput.type = 'text';
     displayNameInput.value = user.display_name || '';
@@ -168,16 +170,16 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const twofaTitle = document.createElement('h3');
     twofaTitle.className = 'text-lg font-semibold mb-2';
-    twofaTitle.textContent = 'Two-Factor Authentication (2FA)';
+    twofaTitle.textContent = translate('Two-Factor Authentication (2FA)', 'Zwei-Faktor-Authentifizierung (2FA)', 'Authentification à deux facteurs (2FA)');
 
     const twofaStatus = document.createElement('p');
     twofaStatus.className = 'mb-2';
-    twofaStatus.textContent = user.twofa_enabled ? '2FA is enabled.' : '2FA is not enabled.';
+    twofaStatus.textContent = user.twofa_enabled ? translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.') : translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
 
     const twofaButton = document.createElement('button');
     twofaButton.type = 'button';
     twofaButton.className = 'bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out mb-2';
-    twofaButton.textContent = user.twofa_enabled ? 'Disable 2FA' : 'Enable 2FA';
+    twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA') : translate('Enable 2FA', '2FA aktivieren', 'Activer la 2FA');
 
     const twofaContainer = document.createElement('div'); // For QR code and input
 
@@ -198,15 +200,15 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             qrImg.className = 'mx-auto mb-2';
             const secretText = document.createElement('p');
             secretText.className = 'text-xs text-gray-500 mb-2 break-all';
-            secretText.textContent = `Secret: ${data.secret}`;
+            secretText.textContent = `${translate('Secret', 'Secret', 'Secret')}: ${data.secret}`;
             const codeInput = document.createElement('input');
             codeInput.type = 'text';
-            codeInput.placeholder = 'Enter 6-digit code';
+             codeInput.placeholder = translate('Enter 6-digit code', '6-stelligen Code eingeben', 'Entrez le code à 6 chiffres');
             codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
             codeInput.maxLength = 6;
             const verifyBtn = document.createElement('button');
             verifyBtn.type = 'button';
-            verifyBtn.textContent = 'Verify & Enable';
+              verifyBtn.textContent = translate('Verify & Enable', 'Verifizieren & Aktivieren', 'Vérifier et activer');
             verifyBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
             const msg = document.createElement('p');
             msg.className = 'text-sm mt-2';
@@ -216,7 +218,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
                 verifyBtn.disabled = true;
                 const code = codeInput.value.trim();
                 if (!/^\d{6}$/.test(code)) {
-                    msg.textContent = 'Enter a valid 6-digit code.';
+                     msg.textContent = translate('Enter a valid 6-digit code.', 'Geben Sie einen gültigen 6-stelligen Code ein.', 'Entrez un code valide à 6 chiffres.');
                     msg.className = 'text-red-600 text-sm mt-2';
                     verifyBtn.disabled = false;
                     return;
@@ -229,10 +231,10 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
                 });
                 const data2 = await res2.json();
                 if (res2.ok) {
-                    msg.textContent = '2FA enabled!';
+                     msg.textContent = translate('2FA enabled!', '2FA aktiviert!', '2FA activée !');
                     msg.className = 'text-green-600 text-sm mt-2';
-                    twofaStatus.textContent = '2FA is enabled.';
-                    twofaButton.textContent = 'Disable 2FA';
+                   twofaStatus.textContent = translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.');
+                    twofaButton.textContent = translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA');
                     user.twofa_enabled = 1;
                     setTimeout(() => { twofaContainer.innerHTML = ''; }, 1500);
                 } else {
@@ -251,12 +253,12 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             // Disable flow
             const codeInput = document.createElement('input');
             codeInput.type = 'text';
-            codeInput.placeholder = 'Enter 2FA code to disable';
+            codeInput.placeholder = translate('Enter 2FA code to disable', '2FA-Code zum Deaktivieren eingeben', 'Entrez le code 2FA pour désactiver');
             codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
             codeInput.maxLength = 6;
             const disableBtn = document.createElement('button');
             disableBtn.type = 'button';
-            disableBtn.textContent = 'Disable 2FA';
+            disableBtn.textContent = translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA');
             disableBtn.className = 'w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm mb-2';
             const msg = document.createElement('p');
             msg.className = 'text-sm mt-2';
@@ -266,7 +268,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
                 disableBtn.disabled = true;
                 const code = codeInput.value.trim();
                 if (!/^\d{6}$/.test(code)) {
-                    msg.textContent = 'Enter a valid 6-digit code.';
+                     msg.textContent = translate('Enter a valid 6-digit code.', 'Geben Sie einen gültigen 6-stelligen Code ein.', 'Entrez un code valide à 6 chiffres.');
                     msg.className = 'text-red-600 text-sm mt-2';
                     disableBtn.disabled = false;
                     return;
@@ -279,10 +281,10 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
                 });
                 const data2 = await res2.json();
                 if (res2.ok) {
-                    msg.textContent = '2FA disabled!';
+                    msg.textContent = translate('2FA disabled!', '2FA deaktiviert!', '2FA désactivée !');
                     msg.className = 'text-green-600 text-sm mt-2';
-                    twofaStatus.textContent = '2FA is not enabled.';
-                    twofaButton.textContent = 'Enable 2FA';
+                    twofaStatus.textContent = translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
+                    twofaButton.textContent = translate('Enable 2FA', '2FA aktivieren', 'Activer la 2FA');
                     user.twofa_enabled = 0;
                     setTimeout(() => { twofaContainer.innerHTML = ''; }, 1500);
                 } else {
@@ -312,7 +314,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     // Save button
     const saveProfileBtn = document.createElement('button');
     saveProfileBtn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    saveProfileBtn.textContent = 'Save Changes';
+    saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
 
     form.appendChild(usernameGroup);
     form.appendChild(displayNameGroup);
@@ -325,24 +327,24 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         errorMsg.classList.add('hidden');
         successMsg.classList.add('hidden');
         saveProfileBtn.disabled = true;
-        saveProfileBtn.textContent = 'Saving...';
+        saveProfileBtn.textContent = translate('Saving...', 'Speichern...', 'Enregistrement...');
 
         // Validation
         const username = usernameField.value.trim().toLowerCase();
         const displayName = displayNameInput.value.trim();
 
         if (!/^[a-z0-9._-]{3,16}$/.test(username)) {
-            errorMsg.textContent = 'Username must be 3-16 chars, lowercase, and only a-z, 0-9, ., _, -';
+            errorMsg.textContent = translate('Username must be 3-16 chars, lowercase, and only a-z, 0-9, ., _, -', 'Benutzername muss 3-16 Zeichen lang sein, Kleinbuchstaben und nur a-z, 0-9, ., _, - enthalten', 'Le nom d\'utilisateur doit comporter de 3 à 16 caractères, être en minuscules et ne contenir que a-z, 0-9, ., _, -');
             errorMsg.classList.remove('hidden');
             saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = 'Save Changes';
+            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
             return;
         }
         if (displayName.length < 1 || displayName.length > 32 || /<|>/.test(displayName)) {
-            errorMsg.textContent = 'Display name must be 1-32 characters and not contain < or >';
+            errorMsg.textContent = translate('Display name must be 1-32 characters and not contain < or >', 'Anzeigename muss 1-32 Zeichen lang sein und darf keine < oder > enthalten', 'Le nom d\'affichage doit comporter de 1 à 32 caractères et ne pas contenir < ou >');
             errorMsg.classList.remove('hidden');
             saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = 'Save Changes';
+            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
             return;
         }
 
@@ -356,18 +358,18 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             });
             const data = await res.json();
             if (res.ok) {
-                successMsg.textContent = 'Profile updated!';
+                successMsg.textContent = translate('Profile updated!', 'Profil aktualisiert!', 'Profil mis à jour !');
                 successMsg.classList.remove('hidden');
             } else {
-                errorMsg.textContent = data.message || 'Failed to update profile.';
+                errorMsg.textContent = data.message || translate('Failed to update profile.', 'Profil konnte nicht aktualisiert werden.', 'Échec de la mise à jour du profil.');
                 errorMsg.classList.remove('hidden');
             }
         } catch {
-            errorMsg.textContent = 'Unexpected error. Please try again.';
+            errorMsg.textContent = translate('Unexpected error. Please try again.', 'Unerwarteter Fehler. Bitte versuchen Sie es erneut.', 'Erreur inattendue. Veuillez réessayer.');
             errorMsg.classList.remove('hidden');
         } finally {
             saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = 'Save Changes';
+            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
         }
     });
 

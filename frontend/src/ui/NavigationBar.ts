@@ -1,3 +1,7 @@
+import { getCurrentLanguage, translate, updateLanguage } from "../languageService.js";
+import type { Language } from "../languageService.js";
+
+
 export function renderNavigationBar(app: any): void {
     // Remove existing nav bar if present
     if (app.navBarElement && app.navBarElement.parentNode) {
@@ -23,10 +27,36 @@ export function renderNavigationBar(app: any): void {
     const right = document.createElement('div');
     right.className = 'flex items-center gap-4';
 
+    // Language Switcher
+    const langSelector = document.createElement('select');
+    langSelector.className = 'bg-gray-700 text-white py-2 px-2 rounded-lg text-sm focus:outline-none cursor-pointer';
+    const languages: { [key in Language]: string } = {
+        en: 'English',
+        de: 'Deutsch',
+        fr: 'Français'
+    };
+    for (const [code, name] of Object.entries(languages)) {
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = name;
+        if (getCurrentLanguage() === code) {
+            option.selected = true;
+        }
+        langSelector.appendChild(option);
+    }
+    langSelector.addEventListener('change', (e) => {
+        const newLang = (e.target as HTMLSelectElement).value as Language;
+        updateLanguage(newLang);
+        // Re-render the current view to apply translations
+        const currentPath = window.location.pathname;
+        app.renderView(currentPath);
+    });
+    right.appendChild(langSelector);
+
      // My Profile button
     const profileButton = document.createElement('button');
     profileButton.className = 'bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    profileButton.textContent = 'My Profile';
+    profileButton.textContent = translate('My Profile', 'Mein Profil', 'Mon profil');
     profileButton.addEventListener('click', (e) => {
         if (app.currentUser) {
             app.navigateTo(`/profile/${app.currentUser.username}`, e);
@@ -36,19 +66,19 @@ export function renderNavigationBar(app: any): void {
     // Friends button
     const friendsButton = document.createElement('button');
     friendsButton.className = 'bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    friendsButton.textContent = 'Friends';
+    friendsButton.textContent = translate('Friends', 'Freunde', 'Amis');
     friendsButton.addEventListener('click', (e) => app.navigateTo('/friends', e));
 
     // Settings button
     const settingsButton = document.createElement('button');
     settingsButton.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    settingsButton.textContent = 'Settings';
+    settingsButton.textContent = translate('Settings', 'Einstellungen', 'Paramètres');
     settingsButton.addEventListener('click', (e) => app.navigateTo('/settings', e));
 
     // Log out button
     const logoutButton = document.createElement('button');
    logoutButton.className = 'bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    logoutButton.textContent = 'Log Out';
+    logoutButton.textContent = translate('Log Out', 'Abmelden', 'Se déconnecter');
     logoutButton.addEventListener('click', async () => {
          // Close WebSocket connection before logging out
         if (app.disconnectWebSocket) {

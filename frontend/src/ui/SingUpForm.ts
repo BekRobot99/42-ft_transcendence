@@ -1,3 +1,5 @@
+import { translate } from "../languageService.js";
+
 export class SignUpForm {
     private formContainer: HTMLElement;
     private usernameField!: HTMLInputElement;
@@ -28,7 +30,7 @@ export class SignUpForm {
         const usernameLabel = document.createElement('label');
         usernameLabel.className = 'block text-sm font-medium text-gray-700';
         usernameLabel.htmlFor = 'signup-username';
-        usernameLabel.textContent = 'Username';
+        usernameLabel.textContent = translate('Username', 'Benutzername', 'Nom d\'utilisateur');
 
         this.usernameField = document.createElement('input');
         this.usernameField.type = 'text';
@@ -52,7 +54,7 @@ export class SignUpForm {
         const passwordLabel = document.createElement('label');
         passwordLabel.className = 'block text-sm font-medium text-gray-700';
         passwordLabel.htmlFor = 'signup-password';
-        passwordLabel.textContent = 'Password';
+        passwordLabel.textContent = translate('Password', 'Passwort', 'Mot de passe');
 
         this.passwordField = document.createElement('input');
         this.passwordField.type = 'password';
@@ -65,11 +67,11 @@ export class SignUpForm {
         this.validationInfo.className = 'space-y-1 mt-2';
 
         const validations = [
-            { id: 'length', text: 'At least 10 characters' },
-            { id: 'uppercase', text: 'Contains uppercase letter' },
-            { id: 'lowercase', text: 'Contains lowercase letter' },
-            { id: 'number', text: 'Contains number' },
-            { id: 'match', text: 'Passwords match' }
+            { id: 'length', text: translate('At least 10 characters', 'Mindestens 10 Zeichen', 'Au moins 10 caractères') },
+            { id: 'uppercase', text: translate('Contains uppercase letter', 'Enthält Großbuchstaben', 'Contient une lettre majuscule') },
+            { id: 'lowercase', text: translate('Contains lowercase letter', 'Enthält Kleinbuchstaben', 'Contient une lettre minuscule') },
+            { id: 'number', text: translate('Contains number', 'Enthält eine Zahl', 'Contient un chiffre') },
+            { id: 'match', text: translate('Passwords match', 'Passwörter stimmen überein', 'Les mots de passe correspondent') }
         ];
 
         validations.forEach(rule => {
@@ -94,7 +96,7 @@ export class SignUpForm {
         const confirmPasswordLabel = document.createElement('label');
         confirmPasswordLabel.className = 'block text-sm font-medium text-gray-700';
         confirmPasswordLabel.htmlFor = 'signup-confirm-password';
-        confirmPasswordLabel.textContent = 'Confirm Password';
+        confirmPasswordLabel.textContent = translate('Confirm Password', 'Passwort bestätigen', 'Confirmer le mot de passe');
 
         this.confirmPasswordField = document.createElement('input');
         this.confirmPasswordField.type = 'password';
@@ -110,7 +112,7 @@ export class SignUpForm {
         this.submitButton = document.createElement('button');
         this.submitButton.className =
             'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-        this.submitButton.textContent = 'Register';
+        this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
         this.submitButton.type = 'submit';
 
         // Server messages
@@ -148,8 +150,11 @@ export class SignUpForm {
             const isValid = /^[a-z0-9._-]*$/.test(this.usernameField.value);
 
             if (!isValid && this.usernameField.value.length > 0) {
-                this.clientErrorMessage.textContent =
-                    'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)';
+               this.clientErrorMessage.textContent = translate(
+                    'Username can only contain lowercase letters (a-z), numbers (0-9), underscores (_), hyphens (-), and periods (.)',
+                    'Der Benutzername darf nur Kleinbuchstaben (a-z), Zahlen (0-9), Unterstriche (_), Bindestriche (-) und Punkte (.) enthalten.',
+                    'Le nom d\'utilisateur ne peut contenir que des lettres minuscules (a-z), des chiffres (0-9), des traits de soulignement (_), des traits d\'union (-) et des points (.).'
+                );
                 this.clientErrorMessage.classList.remove('hidden');
             } else {
                 this.clientErrorMessage.classList.add('hidden');
@@ -192,17 +197,17 @@ export class SignUpForm {
         event.preventDefault();
         this.resetServerMessages();
         this.submitButton.disabled = true;
-        this.submitButton.textContent = 'Registering...';
+        this.submitButton.textContent = translate('Registering...', 'Registrierung...', 'Inscription...');
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
         const confirmPassword = this.confirmPasswordField.value;
 
         if (password !== confirmPassword) {
-            this.serverErrorMessage.textContent = 'Passwords do not match.';
+              this.serverErrorMessage.textContent = translate('Passwords do not match.', 'Die Passwörter stimmen nicht überein.', 'Les mots de passe ne correspondent pas.');
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
-            this.submitButton.textContent = 'Register';
+            this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
             return;
         }
 
@@ -216,7 +221,7 @@ export class SignUpForm {
             const data = await response.json();
 
             if (response.ok) {
-                this.successMessage.textContent = data.message || 'Registration successful!';
+                this.successMessage.textContent = data.message || translate('Registration successful!', 'Registrierung erfolgreich!', 'Inscription réussie !');
                 this.successMessage.classList.remove('hidden');
                 this.usernameField.value = '';
                 this.passwordField.value = '';
@@ -226,16 +231,16 @@ export class SignUpForm {
                     window.location.href = '/game';
                 }, 1000);
             } else {
-                this.serverErrorMessage.textContent = data.message || 'Registration failed.';
+                this.serverErrorMessage.textContent = data.message || translate('Registration failed.', 'Registrierung fehlgeschlagen.', 'L\'inscription a échoué.');
                 this.serverErrorMessage.classList.remove('hidden');
             }
         } catch (err) {
             console.error('Registration error:', err);
-            this.serverErrorMessage.textContent = 'An unexpected error occurred. Please try again.';
+            this.serverErrorMessage.textContent = translate('An unexpected error occurred. Please try again.', 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.', 'Une erreur inattendue s\'est produite. Veuillez réessayer.');
             this.serverErrorMessage.classList.remove('hidden');
         } finally {
             this.submitButton.disabled = false;
-            this.submitButton.textContent = 'Register';
+            this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
         }
     }
 

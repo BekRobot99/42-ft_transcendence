@@ -1,5 +1,7 @@
+import { translate } from "../languageService.js";
+
 export async function renderProfilePage(gamecontainer: HTMLElement, username: string): Promise<void> {
-    gamecontainer.innerHTML = `<p class="text-center">Loading profile...</p>`;
+    gamecontainer.innerHTML = `<p class="text-center">${translate('Loading profile...', 'Lade Profil...', 'Chargement du profil...')}</p>`;
 
     try {
         const res = await fetch(`/api/users/${username}/profile`, { credentials: 'include' });
@@ -33,7 +35,7 @@ export async function renderProfilePage(gamecontainer: HTMLElement, username: st
         userName.textContent = `@${user.username}`;
         const memberSince = document.createElement('p');
         memberSince.className = 'text-sm text-gray-400 mt-2';
-        memberSince.textContent = `Member since ${new Date(user.created_at).toLocaleDateString()}`;
+        memberSince.textContent = `${translate('Member since', 'Mitglied seit', 'Membre depuis')} ${new Date(user.created_at).toLocaleDateString()}`;
 
         userInfo.appendChild(displayName);
         userInfo.appendChild(userName);
@@ -45,12 +47,12 @@ export async function renderProfilePage(gamecontainer: HTMLElement, username: st
         const statsSection = document.createElement('div');
         statsSection.className = 'flex justify-around text-center';
         const winsDiv = document.createElement('div');
-        winsDiv.innerHTML = `<p class="text-2xl font-bold text-green-600">${stats.wins}</p><p class="text-gray-500">Wins</p>`;
+        winsDiv.innerHTML = `<p class="text-2xl font-bold text-green-600">${stats.wins}</p><p class="text-gray-500">${translate('Wins', 'Siege', 'Victoires')}</p>`;
         const lossesDiv = document.createElement('div');
-        lossesDiv.innerHTML = `<p class="text-2xl font-bold text-red-600">${stats.losses}</p><p class="text-gray-500">Losses</p>`;
+        lossesDiv.innerHTML = `<p class="text-2xl font-bold text-red-600">${stats.losses}</p><p class="text-gray-500">${translate('Losses', 'Niederlagen', 'Défaites')}</p>`;
         const winRate = (stats.wins + stats.losses) > 0 ? Math.round((stats.wins / (stats.wins + stats.losses)) * 100) : 0;
         const winRateDiv = document.createElement('div');
-        winRateDiv.innerHTML = `<p class="text-2xl font-bold text-blue-600">${winRate}%</p><p class="text-gray-500">Win Rate</p>`;
+        winRateDiv.innerHTML = `<p class="text-2xl font-bold text-blue-600">${winRate}%</p><p class="text-gray-500">${translate('Win Rate', 'Siegquote', 'Taux de victoire')}</p>`;
 
         statsSection.appendChild(winsDiv);
         statsSection.appendChild(lossesDiv);
@@ -60,22 +62,22 @@ export async function renderProfilePage(gamecontainer: HTMLElement, username: st
         const historySection = document.createElement('div');
         const historyTitle = document.createElement('h3');
         historyTitle.className = 'text-xl font-semibold mb-4';
-        historyTitle.textContent = 'Match History';
+        historyTitle.textContent = translate('Match History', 'Spielverlauf', 'Historique des matchs');
         historySection.appendChild(historyTitle);
 
         if (matchHistory.length === 0) {
-            historySection.innerHTML += '<p class="text-gray-500">No matches played yet.</p>';
+           historySection.innerHTML += `<p class="text-gray-500">${translate('No matches played yet.', 'Noch keine Spiele gespielt.', 'Aucun match joué pour le moment.')}</p>`;
         } else {
             const table = document.createElement('table');
             table.className = 'w-full text-left border-collapse';
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th class="py-2 px-4 bg-gray-100 border-b">Result</th>
-                        <th class="py-2 px-4 bg-gray-100 border-b">Opponent</th>
-                        <th class="py-2 px-4 bg-gray-100 border-b">Score</th>
-                        <th class="py-2 px-4 bg-gray-100 border-b">Tournament</th>
-                        <th class="py-2 px-4 bg-gray-100 border-b">Date</th>
+                         <th class="py-2 px-4 bg-gray-100 border-b">${translate('Result', 'Ergebnis', 'Résultat')}</th>
+                        <th class="py-2 px-4 bg-gray-100 border-b">${translate('Opponent', 'Gegner', 'Adversaire')}</th>
+                        <th class="py-2 px-4 bg-gray-100 border-b">${translate('Score', 'Punktestand', 'Score')}</th>
+                        <th class="py-2 px-4 bg-gray-100 border-b">${translate('Tournament', 'Turnier', 'Tournoi')}</th>
+                        <th class="py-2 px-4 bg-gray-100 border-b">${translate('Date', 'Datum', 'Date')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,13 +86,14 @@ export async function renderProfilePage(gamecontainer: HTMLElement, username: st
             const tbody = table.querySelector('tbody')!;
             matchHistory.forEach((match: any) => {
                 const row = document.createElement('tr');
+                const resultText = match.result === 'Win' ? translate('Win', 'Sieg', 'Victoire') : translate('Loss', 'Niederlage', 'Défaite');
                 const resultClass = match.result === 'Win' ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
                 const opponentLink = match.opponent.username
                     ? `<a href="/profile/${match.opponent.username}" class="text-blue-600 hover:underline" data-link>${match.opponent.alias} (@${match.opponent.username})</a>`
-                    : `${match.opponent.alias} (Guest)`;
+                    : `${match.opponent.alias} (${translate('Guest', 'Gast', 'Invité')})`;
 
                 row.innerHTML = `
-                    <td class="py-2 px-4 border-b"><span class="${resultClass}">${match.result}</span></td>
+                    <td class="py-2 px-4 border-b"><span class="${resultClass}">${resultText}</span></td>
                     <td class="py-2 px-4 border-b">${opponentLink}</td>
                     <td class="py-2 px-4 border-b">${match.score}</td>
                     <td class="py-2 px-4 border-b">${match.tournamentName}</td>

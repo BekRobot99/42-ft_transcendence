@@ -1,4 +1,4 @@
-// frontend/src/views/SocialView.ts
+import { translate } from "../languageService.js";
 
 // Helper to create a profile card
 function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElement {
@@ -22,7 +22,7 @@ function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElem
     
     const statusIndicator = document.createElement('span');
     statusIndicator.className = `status-indicator inline-block w-3 h-3 rounded-full ml-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`;
-    statusIndicator.title = user.isOnline ? 'Online' : 'Offline';
+    statusIndicator.title = user.isOnline ? translate('Online', 'Online', 'En ligne') : translate('Offline', 'Offline', 'Hors ligne');
     profileDisplayName.appendChild(statusIndicator);
 
     const profileUsername = document.createElement('span');
@@ -60,7 +60,7 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
 
     const pageTitle = document.createElement('h2');
     pageTitle.className = 'text-2xl font-bold mb-6 text-center';
-    pageTitle.textContent = 'Friends';
+    pageTitle.textContent = translate('Friends', 'Freunde', 'Amis');
 
     // --- Add Friend Section ---
     const addFriendSection = document.createElement('div');
@@ -69,11 +69,11 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
     addFriendForm.className = 'flex gap-2';
     const friendUsernameInput = document.createElement('input');
     friendUsernameInput.type = 'text';
-    friendUsernameInput.placeholder = 'Enter username to add';
+    friendUsernameInput.placeholder = translate('Enter username to add', 'Benutzernamen zum Hinzufügen eingeben', 'Entrez le nom d\'utilisateur à ajouter');
     friendUsernameInput.className = 'flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
     const sendRequestButton = document.createElement('button');
     sendRequestButton.type = 'submit';
-    sendRequestButton.textContent = 'Send Request';
+    sendRequestButton.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer une demande');
     sendRequestButton.className = 'bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm';
     const addFriendFeedback = document.createElement('p');
     addFriendFeedback.className = 'text-sm mt-2';
@@ -89,7 +89,7 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
         if (!username) return;
 
         sendRequestButton.disabled = true;
-        sendRequestButton.textContent = 'Sending...';
+        sendRequestButton.textContent = translate('Sending...', 'Senden...', 'Envoi...');
         addFriendFeedback.textContent = '';
         addFriendFeedback.className = 'text-sm mt-2';
 
@@ -112,7 +112,7 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
             addFriendFeedback.classList.add('text-red-600');
         } finally {
             sendRequestButton.disabled = false;
-            sendRequestButton.textContent = 'Send Request';
+            sendRequestButton.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer la demande');
         }
     });
 
@@ -160,13 +160,13 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
     if (incoming.length > 0) {
         const incomingTitle = document.createElement('h3');
         incomingTitle.className = 'text-xl font-semibold mb-4';
-        incomingTitle.textContent = 'Incoming Requests';
+        incomingTitle.textContent = translate('Incoming Requests', 'Eingehende Anfragen', 'Demandes entrantes');
         const incomingList = document.createElement('div');
         incomingList.className = 'space-y-3';
 
         incoming.forEach(req => {
             const acceptButton = document.createElement('button');
-            acceptButton.textContent = 'Accept';
+             acceptButton.textContent = translate('Accept', 'Akzeptieren', 'Accepter');
             acceptButton.className = 'bg-green-500 hover:bg-green-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
             acceptButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
@@ -179,7 +179,7 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
             };
 
             const declineButton = document.createElement('button');
-            declineButton.textContent = 'Decline';
+            declineButton.textContent = translate('Decline', 'Ablehnen', 'Refuser');
             declineButton.className = 'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
             declineButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
@@ -201,13 +201,13 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
     if (outgoing.length > 0) {
         const outgoingTitle = document.createElement('h3');
         outgoingTitle.className = 'text-xl font-semibold mt-6 mb-4';
-        outgoingTitle.textContent = 'Outgoing Requests';
+        outgoingTitle.textContent = translate('Outgoing Requests', 'Ausgehende Anfragen', 'Demandes sortantes');
         const outgoingList = document.createElement('div');
         outgoingList.className = 'space-y-3';
 
         outgoing.forEach(req => {
             const cancelButton = document.createElement('button');
-            cancelButton.textContent = 'Cancel';
+            cancelButton.textContent = translate('Cancel', 'Abbrechen', 'Annuler');
             cancelButton.className = 'bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
             cancelButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
@@ -230,22 +230,22 @@ function renderFriendList(container: HTMLElement, friends: any[], rerenderCallba
     container.innerHTML = '';
     const title = document.createElement('h3');
     title.className = 'text-xl font-semibold mt-6 mb-4';
-    title.textContent = 'Your Friends';
+    title.textContent = translate('Your Friends', 'Deine Freunde', 'Tes amis');
     container.appendChild(title);
 
     const list = document.createElement('div');
     list.className = 'space-y-3';
 
     if (friends.length === 0) {
-        list.textContent = 'You have no friends yet. Add one above!';
+        list.textContent = translate('You have no friends yet. Add one above!', 'Du hast noch keine Freunde. Füge oben einen hinzu!', 'Vous n\'avez pas encore d\'amis. Ajoutez-en un ci-dessus !');
         list.className = 'text-gray-500';
     } else {
         friends.forEach(friend => {
             const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
+            removeButton.textContent = translate('Remove', 'Entfernen', 'Supprimer');
             removeButton.className = 'bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-lg';
             removeButton.onclick = async () => {
-                if (confirm(`Are you sure you want to remove ${friend.username}?`)) {
+                if (confirm(translate(`Are you sure you want to remove ${friend.username}?`, `Bist du sicher, dass du ${friend.username} entfernen möchtest?`, `Êtes-vous sûr de vouloir supprimer ${friend.username} ?`))) {
                     await fetch(`/api/friends/${friend.id}`, {
                         method: 'DELETE',
                         credentials: 'include',

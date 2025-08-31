@@ -1,3 +1,4 @@
+import { translate } from '../languageService.js';
 import { renderGamePage } from './GamePage.js';
 import { renderGamePage3D } from './GamePage3D.js';
 
@@ -14,7 +15,7 @@ async function fetchMe() {
         me = data.user;
     } catch (error) {
         console.error(error);
-        appContainer!.innerHTML = `<p class="text-red-500">Error loading user data. Please try again.</p>`;
+        appContainer!.innerHTML = `<p class="text-red-500">${translate('Error loading user data. Please try again.', 'Fehler beim Laden der Benutzerdaten. Bitte versuchen Sie es erneut.', 'Erreur lors du chargement des données utilisateur. Veuillez réessayer.')}</p>`;
     }
 }
 
@@ -47,7 +48,7 @@ function render() {
     const backButton = document.createElement('a');
     backButton.href = '/game';
     backButton.className = 'text-blue-500 hover:underline mb-4 inline-block';
-    backButton.textContent = '‹ Back to Game Page';
+    backButton.textContent = translate('‹ Back to Game Page', '‹ Zurück zur Spieleseite', '‹ Retour à la page de jeu');
     backButton.onclick = (e) => {
         e.preventDefault();
         window.history.pushState({}, '', '/game');
@@ -69,29 +70,29 @@ function renderCreationForm() {
     const formContainer = document.createElement('div');
     formContainer.className = 'bg-white p-8 rounded-lg shadow-lg w-full max-w-md mx-auto';
     formContainer.innerHTML = `
-        <h2 class="text-2xl font-bold mb-6 text-center">Create a New Tournament</h2>
+        <h2 class="text-2xl font-bold mb-6 text-center">${translate('Create a New Tournament', 'Ein neues Turnier erstellen', 'Créer un nouveau tournoi')}</h2>
         <form id="tournament-create-form" class="space-y-4">
             <div>
-                <label for="tournament-name" class="block text-sm font-medium text-gray-700">Tournament Name</label>
+                <label for="tournament-name" class="block text-sm font-medium text-gray-700">${translate('Tournament Name', 'Turniername', 'Nom du tournoi')}</label>
                 <input type="text" id="tournament-name" name="name" required minlength="3" maxlength="32" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
-                <label for="player-count" class="block text-sm font-medium text-gray-700">Number of Players</label>
+               <label for="player-count" class="block text-sm font-medium text-gray-700">${translate('Number of Players', 'Anzahl der Spieler', 'Nombre de joueurs')}</label>
                 <select id="player-count" name="playerCount" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="2" selected>2 Players</option>
-                    <option value="4">4 Players</option>
-                    <option value="8">8 Players</option>
-                    <option value="16">16 Players</option>
+                    <option value="2" selected>${translate('2 Players', '2 Spieler', '2 Joueurs')}</option>
+                    <option value="4">${translate('4 Players', '4 Spieler', '4 Joueurs')}</option>
+                    <option value="8">${translate('8 Players', '8 Spieler', '8 Joueurs')}</option>
+                    <option value="16">${translate('16 Players', '16 Spieler', '16 Joueurs')}</option>
                 </select>
             </div>
             <div>
-                <label for="game-type" class="block text-sm font-medium text-gray-700">Game Type</label>
+                <label for="game-type" class="block text-sm font-medium text-gray-700">${translate('Game Type', 'Spieltyp', 'Type de jeu')}</label>
                 <select id="game-type" name="gameMode" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="2d" selected>2D Pong</option>
-                    <option value="3d">3D Pong</option>
+                    <option value="2d" selected>${translate('2D Pong', '2D Pong', 'Pong 2D')}</option>
+                    <option value="3d">${translate('3D Pong', '3D Pong', 'Pong 3D')}</option>
                 </select>
             </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm">Create Tournament</button>
+           <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm">${translate('Create Tournament', 'Turnier erstellen', 'Créer le tournoi')}</button>
             <p id="create-error" class="text-red-600 text-sm hidden mt-2 text-center"></p>
         </form>
     `;
@@ -134,11 +135,11 @@ function renderLobby() {
     const requiredPlayers = tournamentState.number_of_players;
     const canStart = participants.length === requiredPlayers;
 
-   let participantListHTML = participants.map((p: any) => `<li class="p-2 bg-gray-200 rounded">${p.alias} ${p.user_id === tournamentState.creator_id ? '(Host)' : ''}</li>`).join('');
+    let participantListHTML = participants.map((p: any) => `<li class="p-2 bg-gray-200 rounded">${p.alias} ${p.user_id === tournamentState.creator_id ? `(${translate('Host', 'Gastgeber', 'Hôte')})` : ''}</li>`).join('');
 
     lobbyContainer.innerHTML = `
         <h2 class="text-2xl font-bold mb-2 text-center">${tournamentState.name}</h2>
-        <p class="text-gray-600 mb-6 text-center">Waiting for players... (${participants.length}/${requiredPlayers})</p>
+        <p class="text-gray-600 mb-6 text-center">${translate('Waiting for players...', 'Warte auf Spieler...', 'En attente de joueurs...')} (${participants.length}/${requiredPlayers})</p>
         <ul class="space-y-2 mb-6">${participantListHTML}</ul>
         <div id="lobby-actions"></div>
         <p id="lobby-error" class="text-red-600 text-sm hidden mt-2 text-center"></p>
@@ -151,8 +152,8 @@ function renderLobby() {
         form.id = 'add-participant-form';
         form.className = 'flex items-center space-x-2';
         form.innerHTML = `
-            <input type="text" name="alias" placeholder="Enter player alias" required minlength="3" maxlength="16" class="flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm">Add Player</button>
+            <input type="text" name="alias" placeholder="${translate('Enter player alias', 'Spieler-Alias eingeben', 'Entrez l\'alias du joueur')}" required minlength="3" maxlength="16" class="flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</button>
         `;
         actionsContainer.appendChild(form);
         form.addEventListener('submit', async (e) => {
@@ -179,7 +180,7 @@ function renderLobby() {
     } else {
         const startButton = document.createElement('button');
         startButton.id = 'start-tournament-btn';
-        startButton.textContent = 'Start Tournament';
+        startButton.textContent = translate('Start Tournament', 'Turnier starten', 'Démarrer le tournoi');
         startButton.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-sm';
         actionsContainer.appendChild(startButton);
         startButton.addEventListener('click', async () => {
@@ -217,22 +218,22 @@ function renderBracket() {
     Object.keys(rounds).sort().forEach(roundNumber => {
         const roundEl = document.createElement('div');
         roundEl.className = 'flex flex-col justify-around space-y-8';
-        roundEl.innerHTML = `<h3 class="text-xl font-semibold text-center mb-4">Round ${roundNumber}</h3>`;
+        roundEl.innerHTML = `<h3 class="text-xl font-semibold text-center mb-4">${translate('Round', 'Runde', 'Manche')} ${roundNumber}</h3>`;
 
         const matches = rounds[parseInt(roundNumber)];
         if (matches) {
             matches.forEach((match: any) => {
                 const matchEl = document.createElement('div');
                 matchEl.className = 'p-4 border rounded-lg bg-gray-100';
-                const player1 = match.player1_alias || `<i>Winner of R${match.round - 1} M${Math.ceil(match.match_in_round * 2 - 1)}</i>`;
-                const player2 = match.player2_alias || `<i>Winner of R${match.round - 1} M${Math.ceil(match.match_in_round * 2)}</i>`;
+                 const player1 = match.player1_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2 - 1)}</i>`;
+            const player2 = match.player2_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2)}</i>`;
                 
                 let content = `<div class="font-bold ${match.winner_id === match.player1_id ? 'text-green-600' : ''}">${player1}</div><div class="text-gray-500 my-1">vs</div><div class="font-bold ${match.winner_id === match.player2_id ? 'text-green-600' : ''}">${player2}</div>`;
 
                 if (match.status === 'pending' && match.player1_id && match.player2_id && me && me.id === tournamentState.creator_id) {
-                    content += `<button data-match-id="${match.id}" class="play-match-btn mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-1 px-2 rounded">Play Match</button>`;
+                     content += `<button data-match-id="${match.id}" class="play-match-btn mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-1 px-2 rounded">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</button>`;
                 } else if (match.status === 'completed') {
-                    content += `<p class="text-sm text-center mt-2 text-green-700">Winner: ${match.winner_alias}</p>`;
+                    content += `<p class="text-sm text-center mt-2 text-green-700">${translate('Winner', 'Sieger', 'Gagnant')}: ${match.winner_alias}</p>`;
                 }
                 matchEl.innerHTML = content;
                 roundEl.appendChild(matchEl);
@@ -245,7 +246,7 @@ function renderBracket() {
 
     if (tournamentState.status === 'completed') {
         const winner = tournamentState.matches.find((m: any) => m.round === Object.keys(rounds).length)?.winner_alias;
-        bracketContainer.innerHTML += `<p class="text-4xl font-bold text-center mt-8 text-yellow-500">🏆 Winner: ${winner} 🏆</p>`;
+        bracketContainer.innerHTML += `<p class="text-4xl font-bold text-center mt-8 text-yellow-500">🏆 ${translate('Winner', 'Sieger', 'Gagnant')}: ${winner} 🏆</p>`;
     }
 
     appContainer?.appendChild(bracketContainer);

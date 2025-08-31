@@ -1,10 +1,12 @@
+import { translate } from "../languageService.js";
+
 export function renderGamePage(gameWrapper: HTMLElement, tournamentOptions?: { player1Name: string, player2Name: string, onGameEnd: (result: { winnerName: string, score1: number, score2: number }) => void }): () => void {
-    const player1Alias = tournamentOptions ? tournamentOptions.player1Name : 'Player 1';
-    const player2Alias = tournamentOptions ? tournamentOptions.player2Name : 'Player 2';
+   const player1Alias = tournamentOptions ? tournamentOptions.player1Name : translate('Player 1', 'Spieler 1', 'Joueur 1');
+    const player2Alias = tournamentOptions ? tournamentOptions.player2Name : translate('Player 2', 'Spieler 2', 'Joueur 2');
     gameWrapper.innerHTML = `
         <div class="text-center flex flex-col items-center">
-            <h1 class="text-3xl font-bold mb-2">Ping Pong</h1>
-            <p class="text-gray-600 mb-4">Player 1: W/S keys | Player 2: Arrow Up/Down keys</p>
+           <h1 class="text-3xl font-bold mb-2">${translate('Ping Pong', 'Ping Pong', 'Ping Pong')}</h1>
+            <p class="text-gray-600 mb-4">${translate('Player 1: W/S keys | Player 2: Arrow Up/Down keys', 'Spieler 1: W/S Tasten | Spieler 2: Pfeiltasten Hoch/Runter', 'Joueur 1 : Touches W/S | Joueur 2 : Touches Haut/Bas')}</p>
             <canvas id="pongCanvas" class="bg-black border-2 border-white"></canvas>
         </div>
     `;

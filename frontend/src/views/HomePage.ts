@@ -1,3 +1,5 @@
+import { translate } from "../languageService.js";
+
 export function renderHomePage(container: HTMLElement): void {
     const homeWrapper = document.createElement('div');
     homeWrapper.className = 'bg-white rounded-lg shadow-lg p-8';
@@ -11,7 +13,7 @@ export function renderHomePage(container: HTMLElement): void {
 
     const subtitle = document.createElement('p');
     subtitle.className = 'text-gray-600';
-    subtitle.textContent = 'Sign in to start playing Pong!';
+    subtitle.textContent = translate("Sign in to start playing Pong!", "Melde dich an, um Pong zu spielen!", "Connectez-vous pour commencer à jouer au Pong !");
 
     headerSection.appendChild(mainTitle);
     headerSection.appendChild(subtitle);
@@ -22,12 +24,12 @@ export function renderHomePage(container: HTMLElement): void {
     const signInBtn = document.createElement('button');
     signInBtn.id = 'signInBtn';
     signInBtn.className = 'flex-1 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    signInBtn.textContent = 'Sign In';
+    signInBtn.textContent = translate("Sign In", "Anmelden", "Se connecter");
 
     const registerBtn = document.createElement('button');
     registerBtn.id = 'registerBtn';
     registerBtn.className = 'flex-1 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out';
-    registerBtn.textContent = 'Register';
+    registerBtn.textContent = translate("Register", "Registrieren", "S'inscrire");
 
     actionButtons.appendChild(signInBtn);
     actionButtons.appendChild(registerBtn);
@@ -38,7 +40,7 @@ export function renderHomePage(container: HTMLElement): void {
     hr.className = 'border-t border-gray-300';
     const orText = document.createElement('span');
     orText.className = 'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-gray-500';
-    orText.textContent = 'or';
+    orText.textContent = translate("or", "oder", "ou");
     separator.appendChild(hr);
     separator.appendChild(orText);
 
@@ -50,7 +52,7 @@ export function renderHomePage(container: HTMLElement): void {
     googleIcon.alt = 'Google logo';
     googleIcon.className = 'w-5 h-5';
     const googleBtnText = document.createElement('span');
-    googleBtnText.textContent = 'Continue with Google';
+    googleBtnText.textContent = translate("Continue with Google", "Mit Google fortfahren", "Continuer avec Google");
     googleBtn.appendChild(googleIcon);
     googleBtn.appendChild(googleBtnText);
 

@@ -1,7 +1,8 @@
 import { removeNavigationBar, renderNavigationBar } from './ui/NavigationBar.js';
 import { SignUpForm } from './ui/SingUpForm.js';
 import { ConnectForm } from './ui/ConnectForm.js';
-import { renderSocialView } from './views/socialView.js';
+import { translate } from './languageService.js';
+import { renderSocialView } from './views/SocialView.js';
 import { renderTournamentView } from './views/TournamentPage.js';
 import { renderProfilePage } from './views/ProfilePage.js';
 import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
@@ -187,7 +188,7 @@ class App {
             this.pageContentElement.appendChild(registerForm.render());
 
             const backButton = document.createElement('button');
-            backButton.textContent = '‹ Back to Home';
+            backButton.textContent = translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil');
             backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/'));
             this.pageContentElement.appendChild(backButton);
@@ -195,8 +196,8 @@ class App {
         }else if (path.startsWith('/auth/google/callback')) {
             this.pageContentElement.innerHTML = `
                 <div class="text-center">
-                    <p class="text-lg font-semibold">Signing in with Google...</p>
-                    <p class="text-gray-600">Please wait, you will be redirected shortly.</p>
+                     <p class="text-lg font-semibold">${translate('Signing in with Google...', 'Anmeldung mit Google...', 'Connexion avec Google...')}</p>
+                    <p class="text-gray-600">${translate('Please wait, you will be redirected shortly.', 'Bitte warten, Sie werden in Kürze weitergeleitet.', 'Veuillez patienter, vous serez redirigé sous peu.')}</p>
                 </div>
             `;
             this.handleGoogleCallback();
@@ -207,7 +208,7 @@ class App {
             this.pageContentElement.appendChild(signInForm.render());
 
             const backButton = document.createElement('button');
-            backButton.textContent = '‹ Back to Home';
+            backButton.textContent = translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil');
             backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/'));
             this.pageContentElement.appendChild(backButton);
@@ -217,7 +218,7 @@ class App {
             if (username) {
                 await renderProfilePage(this.pageContentElement, username);
                 const backButton = document.createElement('button');
-                backButton.textContent = '‹ Back';
+               backButton.textContent = translate('‹ Back', '‹ Zurück', '‹ Retour');
                 backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
                 backButton.addEventListener('click', () => window.history.back());
                 this.pageContentElement.appendChild(backButton);
@@ -234,7 +235,7 @@ class App {
             tournamentButton.innerHTML = `
                 <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
                 <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
-                <span class="relative text-black group-hover:text-white text-xl">🏆 Start a Tournament</span>
+                <span class="relative text-black group-hover:text-white text-xl">${translate('🏆 Start a Tournament', '🏆 Starte ein Tournier', '🏆 Démarrer un tournoi')}</span>
             `;
             
             tournamentButton.addEventListener('click', (e) => {
@@ -253,7 +254,7 @@ class App {
         } else if (path === '/settings') {
             await renderSettingsPage(this.pageContentElement);
             const backButton = document.createElement('button');
-            backButton.textContent = '‹ Back to Game';
+            backButton.textContent = translate('‹ Back to Game', '‹ Zurück zum Spiel', '‹ Retour au jeu');
             backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/game'));
             this.pageContentElement.appendChild(backButton);
@@ -261,7 +262,7 @@ class App {
         } else if (path === '/friends') {
             await renderSocialView(this.pageContentElement);
             const backButton = document.createElement('button');
-            backButton.textContent = '‹ Back to Game';
+            backButton.textContent = translate('‹ Back to Game', '‹ Zurück zum Spiel', '‹ Retour au jeu');
             backButton.className = 'block w-full text-center mt-4 text-sm text-gray-800 hover:text-gray-900 hover:underline';
             backButton.addEventListener('click', () => this.navigateTo('/game'));
             this.pageContentElement.appendChild(backButton);
@@ -326,18 +327,18 @@ class App {
 
         const title = document.createElement('h2');
         title.className = 'text-2xl font-bold mb-4 text-center';
-        title.textContent = 'Two-Factor Authentication';
+        title.textContent = translate('Two-Factor Authentication', 'Zwei-Faktor-Authentifizierung', 'Authentification à deux facteurs');
 
         const instruction = document.createElement('p');
         instruction.className = 'text-gray-600 mb-6 text-center';
-        instruction.textContent = 'Enter the code from your authenticator app to complete sign-in.';
+        instruction.textContent = translate('Enter the code from your authenticator app to complete sign-in.', 'Geben Sie den Code aus Ihrer Authentifizierungs-App ein, um die Anmeldung abzuschließen.', 'Entrez le code de votre application d\'authentification pour terminer la connexion.');
 
         const form = document.createElement('form');
         form.className = 'space-y-4';
 
         const twofaInput = document.createElement('input');
         twofaInput.type = 'text';
-        twofaInput.placeholder = '6-digit code';
+        twofaInput.placeholder = translate('6-digit code', '6-stelliger Code', 'Code à 6 chiffres');
         twofaInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
         twofaInput.maxLength = 6;
         twofaInput.autocomplete = 'one-time-code';
@@ -346,7 +347,7 @@ class App {
 
         const submitButton = document.createElement('button');
         submitButton.type = 'submit';
-        submitButton.textContent = 'Verify & Sign In';
+        submitButton.textContent = translate('Verify & Sign In', 'Verifizieren & Anmelden', 'Vérifier et se connecter');
         submitButton.className = 'w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-4 rounded-lg shadow-sm';
 
         const errorMsg = document.createElement('p');
@@ -366,14 +367,14 @@ class App {
             e.preventDefault();
             errorMsg.classList.add('hidden');
             submitButton.disabled = true;
-            submitButton.textContent = 'Verifying...';
+            submitButton.textContent = translate('Verifying...', 'Überprüfung...', 'Vérification...');
 
             const code = twofaInput.value.trim();
             if (!/^\d{6}$/.test(code)) {
-                errorMsg.textContent = 'Please enter a valid 6-digit code.';
+                errorMsg.textContent = translate('Please enter a valid 6-digit code.', 'Bitte geben Sie einen gültigen 6-stelligen Code ein.', 'Veuillez entrer un code valide à 6 chiffres.');
                 errorMsg.classList.remove('hidden');
                 submitButton.disabled = false;
-                submitButton.textContent = 'Verify & Sign In';
+                submitButton.textContent = translate('Verify & Sign In', 'Verifizieren & Anmelden', 'Vérifier et se connecter');
                 return;
             }
 
@@ -395,7 +396,7 @@ class App {
                 errorMsg.classList.remove('hidden');
                 twofaInput.value = ''; // Clear input on error
                 submitButton.disabled = false;
-                submitButton.textContent = 'Verify & Sign In';
+                 submitButton.textContent = translate('Verify & Sign In', 'Verifizieren & Anmelden', 'Vérifier et se connecter');
             }
         });
     }

@@ -1,3 +1,5 @@
+import { translate } from "../languageService.js";
+
 // Using global BABYLON and BABYLON.GUI which are loaded from script tags in index.html
 declare const BABYLON: any;
 
@@ -7,8 +9,8 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
 
     container.innerHTML = `
         <div class="text-center flex flex-col items-center">
-            <h1 class="text-3xl font-bold mb-2">3D Ping Pong</h1>
-            <p class="text-gray-600 mb-4">Player 1: A/D keys | Player 2: Left/Right Arrow keys</p>
+           <h1 class="text-3xl font-bold mb-2">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
+            <p class="text-gray-600 mb-4">${translate('Player 1: A/D keys | Player 2: Left/Right Arrow keys', 'Spieler 1: A/D Tasten | Spieler 2: Pfeiltasten Links/Rechts', 'Joueur 1 : Touches A/D | Joueur 2 : Touches Gauche/Droite')}</p>
             <canvas id="pongCanvas3D" class="bg-black border-2 border-white"></canvas>
         </div>
     `;
