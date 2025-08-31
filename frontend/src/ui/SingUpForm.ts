@@ -1,5 +1,5 @@
-import { getCurrentLanguage, translate, updateLanguage } from "../languageService.js";
-import type { Language } from "../languageService.js";
+import { translate } from "../languageService.js";
+import { createLanguageDropdown } from "./LanguageDropdown.js";
 
 export class SignUpForm {
     private formContainer: HTMLElement;
@@ -26,31 +26,7 @@ export class SignUpForm {
 
     /** Build all form elements */
     private buildForm(): void {
-        const langSelectorContainer = document.createElement('div');
-        langSelectorContainer.className = 'flex justify-end';
-
-        const langSelector = document.createElement('select');
-        langSelector.className = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2';
-        const languages: { [key in Language]: string } = {
-            en: 'English',
-            de: 'Deutsch',
-            fr: 'Français'
-        };
-        for (const [code, name] of Object.entries(languages)) {
-            const option = document.createElement('option');
-            option.value = code;
-            option.textContent = name;
-            if (getCurrentLanguage() === code) {
-                option.selected = true;
-            }
-            langSelector.appendChild(option);
-        }
-        langSelector.addEventListener('change', (e) => {
-            const newLang = (e.target as HTMLSelectElement).value as Language;
-            updateLanguage(newLang);
-            this.app.renderView(window.location.pathname);
-        });
-        langSelectorContainer.appendChild(langSelector);
+         const langSelectorContainer = createLanguageDropdown(this.app);
         // Username field
         const usernameGroup = document.createElement('div');
         usernameGroup.className = 'space-y-2';

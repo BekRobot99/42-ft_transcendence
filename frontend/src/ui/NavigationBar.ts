@@ -1,5 +1,5 @@
-import { getCurrentLanguage, translate, updateLanguage } from "../languageService.js";
-import type { Language } from "../languageService.js";
+import { translate } from "../languageService.js";
+import { createLanguageDropdown } from "./LanguageDropdown.js";
 
 
 export function renderNavigationBar(app: any): void {
@@ -27,31 +27,13 @@ export function renderNavigationBar(app: any): void {
     const right = document.createElement('div');
     right.className = 'flex items-center gap-4';
 
-    // Language Switcher
-    const langSelector = document.createElement('select');
-    langSelector.className = 'bg-gray-700 text-white py-2 px-2 rounded-lg text-sm focus:outline-none cursor-pointer';
-    const languages: { [key in Language]: string } = {
-        en: 'English',
-        de: 'Deutsch',
-        fr: 'Français'
-    };
-    for (const [code, name] of Object.entries(languages)) {
-        const option = document.createElement('option');
-        option.value = code;
-        option.textContent = name;
-        if (getCurrentLanguage() === code) {
-            option.selected = true;
-        }
-        langSelector.appendChild(option);
-    }
-    langSelector.addEventListener('change', (e) => {
-        const newLang = (e.target as HTMLSelectElement).value as Language;
-        updateLanguage(newLang);
-        // Re-render the current view to apply translations
-        const currentPath = window.location.pathname;
-        app.renderView(currentPath);
+   
+    const langSelectorContainer = createLanguageDropdown(app, {
+        className: 'bg-gray-700 text-white py-2 px-2 rounded-lg text-sm focus:outline-none cursor-pointer',
+        containerClassName: 'flex items-center'
+       
     });
-    right.appendChild(langSelector);
+    right.appendChild(langSelectorContainer);
 
      // My Profile button
     const profileButton = document.createElement('button');
