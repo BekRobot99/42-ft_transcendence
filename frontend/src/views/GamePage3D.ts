@@ -28,6 +28,7 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     // Camera
     const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 20, new BABYLON.Vector3(0, 0, 0), scene);
     camera.attachControl(canvas, true);
+    camera.inputs.remove(camera.inputs.attached.keyboard); // Prevent camera from being controlled by keyboard
     camera.lowerRadiusLimit = 15;
     camera.upperRadiusLimit = 50;
     
