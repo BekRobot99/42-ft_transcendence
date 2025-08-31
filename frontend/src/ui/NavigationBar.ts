@@ -15,8 +15,9 @@ export function renderNavigationBar(app: any): void {
 
     // Logo/title
     const logo = document.createElement('div');
-    logo.className = 'font-bold text-xl tracking-tight';
+    logo.className = 'font-bold text-xl tracking-tight cursor-pointer hover:text-gray-300 transition duration-150 ease-in-out';
     logo.textContent = 'ft_transcendence';
+    logo.addEventListener('click', (e) => app.navigateTo('/game', e));
 
     // Right side buttons
     const right = document.createElement('div');
