@@ -96,11 +96,8 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
             }
         });
 
-
-        
         connection.on('error', (error: unknown) => {
             fastify.log.error('Realtime socket error:', error);
         });
     });
 }
-

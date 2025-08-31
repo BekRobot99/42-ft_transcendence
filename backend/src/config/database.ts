@@ -31,6 +31,7 @@ export const setupDatabase = (): Promise<void> => {
                 twofa_enabled INTEGER DEFAULT 0,
                 google_id TEXT UNIQUE
             );
+
             CREATE TABLE IF NOT EXISTS friend_requests (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 requester_id INTEGER NOT NULL,
@@ -41,12 +42,49 @@ export const setupDatabase = (): Promise<void> => {
                 FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE,
                 UNIQUE(requester_id, addressee_id)
             );
+
+            CREATE TABLE IF NOT EXISTS tournaments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                status TEXT NOT NULL CHECK(status IN ('pending', 'active', 'completed')) DEFAULT 'pending',
+                creator_id INTEGER NOT NULL,
+                number_of_players INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS tournament_participants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tournament_id INTEGER NOT NULL,
+                user_id INTEGER, -- Can be NULL for guest players
+                alias TEXT NOT NULL,
+                FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+                UNIQUE(tournament_id, alias)
+            );
+
+            CREATE TABLE IF NOT EXISTS matches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tournament_id INTEGER NOT NULL,
+                round INTEGER NOT NULL,
+                match_in_round INTEGER NOT NULL,
+                player1_id INTEGER,
+                player2_id INTEGER,
+                winner_id INTEGER,
+                status TEXT NOT NULL CHECK(status IN ('pending', 'active', 'completed')) DEFAULT 'pending',
+                FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+                FOREIGN KEY (player1_id) REFERENCES tournament_participants(id) ON DELETE SET NULL,
+                FOREIGN KEY (player2_id) REFERENCES tournament_participants(id) ON DELETE SET NULL,
+                FOREIGN KEY (winner_id) REFERENCES tournament_participants(id) ON DELETE SET NULL
+            );
         `, (err) => {
             if (err) {
-                console.error('Error creating users table:', err.message);
+                console.error('Error creating tables:', err.message);
                 return reject(err);
             }
             console.log('Users table checked/created.');
+            console.log('Friend requests table checked/created.');
+            console.log('Tournament tables checked/created.');
             resolve();
         });
     });

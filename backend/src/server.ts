@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import { setupDatabase } from "./config/database";
 import authRoutes from "./api/auth";
+import tournamentRoutes from "./api/tournament";
 import realtimeRoutes from './websocket';
 
 const app = Fastify({
@@ -74,6 +75,7 @@ app.decorate("authenticate", async function(request: any, reply: any) {
 
 // Register routes
 app.register(authRoutes);
+app.register(tournamentRoutes);
 app.register(realtimeRoutes);
 
 const startServer  = async () => {

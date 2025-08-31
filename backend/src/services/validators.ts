@@ -1,14 +1,24 @@
+// username validation (alphanumeric, dot, underscore, hyphen)
 export const validateUsername = (username: string): boolean => {
+    if (typeof username !== 'string') return false;
     return /^[a-z0-9._-]{3,16}$/.test(username);
 };
 
+// password validation (min 10 chars, 1 uppercase, 1 lowercase, 1 number)
 export const validatePassword = (password: string): boolean => {
+    if (typeof password !== 'string') return false;
     return password.length >= 10 &&
            /[A-Z]/.test(password) &&
            /[a-z]/.test(password) &&
            /[0-9]/.test(password);
 };
 
+// display name validation (1-32 chars, no HTML tags)
 export const validateDisplayName = (name: string): boolean => {
     return typeof name === 'string' && name.length >= 1 && name.length <= 32 && !/<|>/.test(name);
 };
+
+// tournament name validation (3-32 chars, no HTML tags)
+export const ValidTournamentName = (name: string): boolean => {
+    return typeof name === 'string' && name.length >= 3 && name.length <= 32 && !/<|>/.test(name);
+}
