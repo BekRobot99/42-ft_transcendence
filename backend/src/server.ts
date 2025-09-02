@@ -1,5 +1,6 @@
 import fastifyCors from "@fastify/cors"; // Updated import
 import fastifyMultipart from "@fastify/multipart";
+import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from "@fastify/static";
 import fastifyWebsocket from '@fastify/websocket';
 import "dotenv/config";
@@ -57,6 +58,13 @@ app.register(fastifyMultipart, {
     limits: {
         fileSize: 5 * 1024 * 1024, // 5MB limit
     },
+});
+
+// Register rate-limit plugin
+app.register(fastifyRateLimit, {
+  max: 100,                 // max 100 requests per IP
+  timeWindow: '1 minute',
+  ban: 5 * 60 * 1000        // ban for 5 minutes
 });
 
 // Decorate request with JWT verify

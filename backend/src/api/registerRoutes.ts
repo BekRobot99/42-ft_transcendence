@@ -5,7 +5,15 @@ import { AuthRequestBody } from '../interfaces/auth';
 import { validateUsername, validatePassword } from '../services/validators';
 
 export default async function registerRoutes(app: FastifyInstance) {
-    app.post('/api/register', async (request: FastifyRequest<{ Body: AuthRequestBody }>, reply: FastifyReply) => {
+   app.post('/api/register', {
+        config: {
+            rateLimit: {
+                max: 5,                     // max 5 requests per IP
+                timeWindow: '1 minute',
+                ban: 5 * 60 * 1000          // ban for 5 minutes
+            }
+        }
+    }, async (request: FastifyRequest<{ Body: AuthRequestBody }>, reply: FastifyReply) => {
         const { username, password } = request.body;
 
         if (!username || !password) {
