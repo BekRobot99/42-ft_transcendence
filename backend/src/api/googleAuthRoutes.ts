@@ -85,6 +85,10 @@ export default async function registerGoogleAuthRoutes(fastify: FastifyInstance)
                         .replace(/[^a-z0-9._-]/gi, '')
                         .toLowerCase();
 
+                      if (!/^[a-z0-9._-]{3,16}$/.test(username)) {
+                    username = `user${Date.now()}`;
+                }
+                
                     // Ensure username is unique
                     let isUsernameTaken = true;
                     let usernameSuffix = 0;
