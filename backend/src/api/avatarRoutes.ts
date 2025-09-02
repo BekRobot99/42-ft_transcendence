@@ -1,11 +1,10 @@
 import { FastifyInstance, FastifyReply } from 'fastify';
+import { fileTypeFromBuffer } from 'file-type';
 import fs from 'fs';
 import path from 'path';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
+import sharp from 'sharp';
 import databaseConnection from '../config/database';
 
-const streamPipeline = promisify(pipeline);
 
 export default async function avatarRoutes(app: FastifyInstance) {
     // Upload avatar (protected)
@@ -17,9 +16,13 @@ export default async function avatarRoutes(app: FastifyInstance) {
             return reply.status(400).send({ message: 'No file uploaded.' });
         }
 
-        // Validate MIME type
+         // Read file into a buffer to validate its content
+        const buffer = await data.toBuffer();
+
+        // 1. Validate file type based on its actual content (magic numbers)
+        const type = await fileTypeFromBuffer(buffer);
         const allowedMimeTypes = ['image/jpeg', 'image/png'];
-        if (!allowedMimeTypes.includes(data.mimetype)) {
+         if (!type || !allowedMimeTypes.includes(type.mime)) {
             return reply.status(400).send({ message: 'Invalid file type. Only JPEG and PNG are allowed.' });
         }
 
@@ -39,15 +42,16 @@ export default async function avatarRoutes(app: FastifyInstance) {
             const oldAvatarPath = user.avatar_path;
 
             // Generate a unique filename
-            const extension = path.extname(data.filename);
+            const extension = `.${type.ext}`; // Use the validated extension
             const filename = `${userId}-${Date.now()}${extension}`;
             const uploadsDir = path.join(process.cwd(), 'uploads', 'avatars');
             const filePath = path.join(uploadsDir, filename);
             const fileUrl = `/uploads/avatars/${filename}`;
 
-            // Save the new file
-            await streamPipeline(data.file, fs.createWriteStream(filePath));
-
+           // 2. Sanitize and save the new file using sharp
+            await sharp(buffer)
+                .resize(200, 200)
+                .toFile(filePath);
             // Update database
             await new Promise<void>((resolve, reject) => {
                 databaseConnection.run('UPDATE users SET avatar_path = ? WHERE id = ?', [fileUrl, userId], (err) => {
