@@ -13,15 +13,21 @@ export const validatePassword = (password: string): boolean => {
            /[0-9]/.test(password);
 };
 
-// display name validation (1-32 chars, no HTML tags)
+// Display name validation (letters, numbers, spaces, _-. max 32 chars, no HTML)
 export const validateDisplayName = (name: string): boolean => {
-    return typeof name === 'string' && name.length >= 1 && name.length <= 32 && !/<|>/.test(name);
+   return typeof name === 'string'
+        && name.length >= 1
+        && name.length <= 32
+        && /^[a-zA-Z0-9 _.\-]+$/.test(name); // Only allow safe characters
 };
 
 // tournament name validation (3-32 chars, no HTML tags)
 export const ValidTournamentName = (name: string): boolean => {
-    return typeof name === 'string' && name.length >= 3 && name.length <= 32 && !/<|>/.test(name);
-}
+    return typeof name === 'string'
+        && name.length >= 3
+        && name.length <= 32
+        && /^[a-zA-Z0-9 _.\-]+$/.test(name); // Only allow safe characters
+};
 
 // Alias validation (letters, numbers, spaces, _-. max 16 chars, no HTML)
 export const ValidAlias = (alias: string): boolean => {

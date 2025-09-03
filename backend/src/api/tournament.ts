@@ -201,6 +201,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             if (!match) return reply.status(404).send({ message: 'Match not found.' });
 
             const tournament = await dbGet('SELECT creator_id FROM tournaments WHERE id = ?', [match.tournament_id]);
+            if (!tournament) return reply.status(404).send({ message: 'Tournament not found.' });
             if (tournament.creator_id !== userId) return reply.status(403).send({ message: 'Only the creator can report results.' });
             if (match.status !== 'pending') return reply.status(400).send({ message: 'Match result already reported.' });
             if (winnerId !== match.player1_id && winnerId !== match.player2_id) return reply.status(400).send({ message: 'Winner is not a participant in this match.' });
