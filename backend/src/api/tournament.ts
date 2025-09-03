@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply } from 'fastify';
 import databaseConnection from '../config/database';
-import { ValidTournamentName } from '../services/validators';
+import { ValidAlias, ValidTournamentName } from '../services/validators';
 
 // Helper function to run DB queries as promises
 const dbRun = (query: string, params: any[] = []) => new Promise<any>((resolve, reject) => {
@@ -85,10 +85,9 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
         if (!alias) {
             return reply.status(400).send({ message: 'Alias is required.' });
         }
-        if (alias.length < 3 || alias.length > 16 || /<|>/g.test(alias)) {
-            return reply.status(400).send({ message: 'Invalid alias (3-16 chars, no special characters).' });
+        if (!ValidAlias(alias)) {
+            return reply.status(400).send({ message: 'Invalid alias (3-16 chars, only letters, numbers, spaces, "_", "-", ".").' });
         }
-
         try {
             const tournament = await dbGet('SELECT * FROM tournaments WHERE id = ?', [tournamentId]);
             if (!tournament) {

@@ -22,3 +22,11 @@ export const validateDisplayName = (name: string): boolean => {
 export const ValidTournamentName = (name: string): boolean => {
     return typeof name === 'string' && name.length >= 3 && name.length <= 32 && !/<|>/.test(name);
 }
+
+// Alias validation (letters, numbers, spaces, _-. max 16 chars, no HTML)
+export const ValidAlias = (alias: string): boolean => {
+    return typeof alias === 'string'
+        && alias.length >= 3
+        && alias.length <= 16
+        && /^[a-zA-Z0-9 _.\-]+$/.test(alias); // Only allow safe characters
+};
