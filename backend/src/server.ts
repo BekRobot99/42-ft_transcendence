@@ -39,6 +39,11 @@ app.register(fastifyCors, { // Updated registration
 app.register(fastifyWebsocket);
 
 // Register JWT plugin
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not set!');
+}
+
+// Register JWT plugin
 app.register(async (instance) => {
     const fastifyJwt = (await import("@fastify/jwt")).default;
     instance.register(fastifyJwt, {
