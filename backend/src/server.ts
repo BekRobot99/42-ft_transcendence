@@ -1,4 +1,5 @@
 import fastifyCors from "@fastify/cors"; // Updated import
+import fastifyHelmet from '@fastify/helmet';
 import fastifyMultipart from "@fastify/multipart";
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from "@fastify/static";
@@ -66,6 +67,10 @@ app.register(fastifyRateLimit, {
   timeWindow: '1 minute',
   ban: 5 * 60 * 1000        // ban for 5 minutes
 });
+
+
+// Register security headers plugin
+app.register(fastifyHelmet);
 
 // Decorate request with JWT verify
 app.decorate("authenticate", async function(request: any, reply: any) {
