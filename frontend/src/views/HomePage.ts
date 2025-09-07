@@ -30,7 +30,7 @@ export function renderHomePage(container: HTMLElement, app: any): void {
 
     const signInBtn = document.createElement('button');
     signInBtn.id = 'signInBtn';
-    "w-full relative inline-block px-4 py-2 font-medium group";
+    signInBtn.className = "w-full relative inline-block px-4 py-2 font-medium group";
     signInBtn.innerHTML = `
     <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
     <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
@@ -39,7 +39,7 @@ export function renderHomePage(container: HTMLElement, app: any): void {
 
     const registerBtn = document.createElement('button');
     registerBtn.id = 'registerBtn';
-     "w-full relative inline-block px-4 py-2 font-medium group";
+    registerBtn.className = "w-full relative inline-block px-4 py-2 font-medium group";
     registerBtn.innerHTML = `
     <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
     <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
@@ -104,5 +104,8 @@ export function attachHomePageListeners(app: any): void {
     }
     if (app.signInBtn) {
         app.signInBtn.addEventListener('click', (e: Event) => app.navigateTo('/signin', e));
+    }
+    if (app.registerBtn) {
+        app.registerBtn.addEventListener('click', (e: Event) => app.navigateTo('/register', e));
     }
 }
