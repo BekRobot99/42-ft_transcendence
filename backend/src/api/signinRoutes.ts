@@ -25,8 +25,8 @@ export default async function signinRoutes(app: FastifyInstance) {
         }
 
         try {
-            const user: { id: number, username: string, password_hash: string, mfa_enabled: number, twofa_secret: string | null } | undefined = await new Promise((resolve, reject) => {
-                databaseConnection.get('SELECT id, username, password_hash, mfa_enabled, twofa_secret FROM users WHERE username = ?', [username.toLowerCase()], (err, row) => {
+            const user: { id: number, username: string, password_hash: string, twofa_enabled: number, twofa_secret: string | null } | undefined = await new Promise((resolve, reject) => {
+                databaseConnection.get('SELECT id, username, password_hash, twofa_enabled, twofa_secret FROM users WHERE username = ?', [username.toLowerCase()], (err, row) => {
                     if (err) return reject(err);
                     resolve(row as any);
                 });
@@ -43,7 +43,7 @@ export default async function signinRoutes(app: FastifyInstance) {
             }
 
             // --- MFA Logic ---
-            if (user.mfa_enabled) {
+            if (user.twofa_enabled) {
                 if (!mfaCode) {
                     // Password is correct, but MFA is enabled and no code was provided.
                     // Issue a temporary, "pending" token that is only valid for the next MFA step.
@@ -53,7 +53,7 @@ export default async function signinRoutes(app: FastifyInstance) {
                     );
 
                     // Set the temporary token in the cookie.
-                    reply.setCookie('token', pendingToken, {
+                    reply.setCookie('authToken', pendingToken, {
                         httpOnly: true,
                         secure: true,
                         sameSite: 'strict',
@@ -70,7 +70,7 @@ export default async function signinRoutes(app: FastifyInstance) {
                 // We also need to ensure this request is coming from a user who just passed the password step
                 // by verifying the "pending" token that should be in the cookie.
                 try {
-                    const decodedToken = request.server.jwt.verify(request.cookies.token || '') as { id: number, username: string, tfa: string };
+                    const decodedToken = request.server.jwt.verify(request.cookies.authToken || '') as { id: number, username: string, tfa: string };
                     if (decodedToken.id !== user.id || decodedToken.tfa !== 'pending') {
                         return reply.status(401).send({ message: 'Invalid session. Please sign in again.' });
                     }
@@ -90,7 +90,7 @@ export default async function signinRoutes(app: FastifyInstance) {
             // 2. 2FA is enabled and the correct code was provided.
             const token = app.jwt.sign({ id: user.id, username: user.username, tfa: 'complete' });
             reply
-                .setCookie('token', token, {
+                .setCookie('authToken', token, {
                     httpOnly: true,
                     secure: true,
                     sameSite: 'strict',
@@ -98,7 +98,7 @@ export default async function signinRoutes(app: FastifyInstance) {
                     maxAge: 60 * 60 * 24 * 7 // 7 days
                 })
                 .status(200)
-                .send({ message: 'Sign-in successful.', user: { username: user.username }, twofaEnabled: !!user.mfa_enabled });
+                .send({ message: 'Sign-in successful.', user: { username: user.username }, twofaEnabled: !!user.twofa_enabled });
         } catch (error) {
             app.log.error(error);
             reply.status(500).send({ message: 'Internal server error.' });

@@ -63,7 +63,7 @@ export default async function registerRoutes(app: FastifyInstance) {
             // Issue JWT token in HTTP-only, Secure cookie
             const token = app.jwt.sign({ id: newUser.id, username: newUser.username, tfa: 'complete' });
             reply
-                .setCookie('token', token, {
+                .setCookie('authToken', token, {
                     httpOnly: true,
                     secure: true,
                     sameSite: 'strict',
