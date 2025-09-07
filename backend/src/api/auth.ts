@@ -18,5 +18,6 @@ export default async function registerAuthRoutes(app: FastifyInstance) {
     await avatarRoutes(app);
     await twofaRoutes(app);
     await friendsRoutes(app);
-    await profileRoutes(app)
+    await profileRoutes(app);
+    await registerGoogleAuthRoutes(app);
 }
