@@ -11,9 +11,12 @@
 node_modules/ 
 vendor/ 
 
-# Frontend dependencies
+# Built files (auto-generated during Docker build)
 frontend/dist/
-
-backend/database/
-nginx.key
 backend/dist/
+
+# SSL certificates (can be regenerated)
+nginx.key
+
+# Database - keep the SQLite file for cloning
+# backend/database/ - commented out so database is included
