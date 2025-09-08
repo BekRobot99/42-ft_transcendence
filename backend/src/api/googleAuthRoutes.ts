@@ -147,7 +147,7 @@ export default async function registerGoogleAuthRoutes(fastify: FastifyInstance)
                     { id: user.id, username: user.username, tfa: 'pending' },
                     { expiresIn: '5m' }
                 );
-                reply.setCookie('token', pendingToken, {
+                reply.setCookie('authToken', pendingToken, {
                     httpOnly: true,
                     secure: true,
                     sameSite: 'strict',
@@ -159,7 +159,7 @@ export default async function registerGoogleAuthRoutes(fastify: FastifyInstance)
                 // Issue JWT token
                 const token = fastify.jwt.sign({ id: user.id, username: user.username, tfa: 'complete' });
                 reply
-                    .setCookie('token', token, {
+                    .setCookie('authToken', token, {
                         httpOnly: true,
                         secure: true,
                         sameSite: 'strict',
@@ -218,7 +218,7 @@ export default async function registerGoogleAuthRoutes(fastify: FastifyInstance)
         // 2FA code is correct. Issue a complete token.
         const token = fastify.jwt.sign({ id: decodedToken.id, username: decodedToken.username, tfa: 'complete' });
         reply
-            .setCookie('token', token, {
+            .setCookie('authToken', token, {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'strict',

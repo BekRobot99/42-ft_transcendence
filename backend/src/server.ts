@@ -1,5 +1,6 @@
 import fastifyCors from "@fastify/cors"; // Updated import
 import fastifyHelmet from '@fastify/helmet';
+import fastifyJwt from "@fastify/jwt";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from "@fastify/static";
@@ -43,16 +44,13 @@ if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is not set!');
 }
 
-// Register JWT plugin
-app.register(async (instance) => {
-    const fastifyJwt = (await import("@fastify/jwt")).default;
-    instance.register(fastifyJwt, {
-        secret: process.env.JWT_SECRET ?? "default_jwt_secret",
-        cookie: {
-            cookieName: "authToken",
-            signed: false,
-        },
-    });
+// Register JWT plugin on main app instance
+app.register(fastifyJwt, {
+    secret: process.env.JWT_SECRET ?? "default_jwt_secret",
+    cookie: {
+        cookieName: "authToken",
+        signed: false,
+    },
 });
 
 
