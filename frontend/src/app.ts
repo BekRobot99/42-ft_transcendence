@@ -7,6 +7,8 @@ import { renderTournamentView } from './views/TournamentPage.js';
 import { renderProfilePage } from './views/ProfilePage.js';
 import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
 import { renderSettingsPage } from './views/SettingsPage.js';
+import { renderGamePage } from './views/GamePage.js';
+import { renderGamePage3D } from './views/GamePage3D.js';
 
 
 class App {
@@ -225,6 +227,53 @@ class App {
         } else if (path === '/game') {
             const gamePageContainer = document.createElement('div');
             gamePageContainer.className = 'space-y-6 flex flex-col items-center pt-10';
+
+            // Game mode selection
+            const gameTitle = document.createElement('h1');
+            gameTitle.className = 'text-3xl font-bold mb-6';
+            gameTitle.textContent = translate('Choose Game Mode', 'Spielmodus wählen', 'Choisir le mode de jeu');
+            gamePageContainer.appendChild(gameTitle);
+
+            // 2D Game Button
+            const game2DButton = document.createElement('button');
+            game2DButton.className = 'relative inline-block px-6 py-3 font-medium group mr-4';
+            game2DButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
+                <span class="relative text-white text-xl">🎮 2D Pong</span>
+            `;
+            
+            game2DButton.addEventListener('click', () => {
+                gamePageContainer.innerHTML = '';
+                this.currentViewCleanup = renderGamePage(gamePageContainer);
+            });
+
+            // 3D Game Button
+            const game3DButton = document.createElement('button');
+            game3DButton.className = 'relative inline-block px-6 py-3 font-medium group';
+            game3DButton.innerHTML = `
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-green-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-green-600 border-2 border-green-800 group-hover:bg-green-800"></span>
+                <span class="relative text-white text-xl">🎮 3D Pong</span>
+            `;
+            
+            game3DButton.addEventListener('click', () => {
+                gamePageContainer.innerHTML = '';
+                this.currentViewCleanup = renderGamePage3D(gamePageContainer, {
+                    player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
+                    player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
+                    onGameEnd: (result) => {
+                        alert(`${result.winnerName} wins! Score: ${result.score1} - ${result.score2}`);
+                        this.navigateTo('/game'); // Return to game selection
+                    }
+                });
+            });
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'flex space-x-4 mb-6';
+            buttonContainer.appendChild(game2DButton);
+            buttonContainer.appendChild(game3DButton);
+            gamePageContainer.appendChild(buttonContainer);
 
             const tournamentButton = document.createElement('a');
             tournamentButton.href = '#_';
