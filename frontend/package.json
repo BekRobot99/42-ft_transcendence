@@ -15,6 +15,11 @@
   "devDependencies": {
     "jest": "^30.0.5",
     "rimraf": "^6.0.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "babylonjs": "^7.37.1",
+    "babylonjs-gui": "^7.37.1"
   }
 }

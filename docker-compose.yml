@@ -2,7 +2,7 @@ services:
   frontend:
     build:
       context: . # Build context is the root directory for the frontend Dockerfile
-      dockerfile: Dockerfile # Specifies the frontend Dockerfile
+      dockerfile: dockerfile # Specifies the frontend Dockerfile (lowercase)
     ports:
       - "8080:443" # Exposes Nginx HTTPS port
       - "8000:80"  # Optionally expose HTTP for redirection

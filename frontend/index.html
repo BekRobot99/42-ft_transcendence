@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ft_transcendence </title>
   <link rel="icon" type="image/png" href="/assets/42HeilbronnImage.png">
+  
+  <!-- Babylon.js CDN -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+  
   <style>
     /* Minimal inline CSS to replace Tailwind for testing */
     .bg-blue-50 { background-color: #eff6ff; }
@@ -24,9 +29,14 @@
     .space-y-4 > * + * { margin-top: 1rem; }
     .space-y-2 > * + * { margin-top: 0.5rem; }
     .space-y-1 > * + * { margin-top: 0.25rem; }
+    .space-x-4 > * + * { margin-left: 1rem; }
+    .space-y-6 > * + * { margin-top: 1.5rem; }
     .block { display: block; }
     .text-sm { font-size: 0.875rem; }
+    .text-xl { font-size: 1.25rem; }
+    .text-3xl { font-size: 1.875rem; }
     .font-medium { font-weight: 500; }
+    .font-bold { font-weight: 700; }
     .text-gray-700 { color: #374151; }
     .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
     .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
@@ -40,7 +50,13 @@
     .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
     .bg-blue-500 { background-color: #3b82f6; }
     .bg-blue-800 { background-color: #1e40af; }
+    .bg-green-600 { background-color: #16a34a; }
+    .bg-green-800 { background-color: #15803d; }
     .text-white { color: white; }
+    .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .pt-10 { padding-top: 2.5rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mr-4 { margin-right: 1rem; }
     .text-red-600 { color: #dc2626; }
     .text-green-600 { color: #16a34a; }
     .hidden { display: none !important; }
