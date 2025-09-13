@@ -20,11 +20,17 @@ FROM nginx:alpine
 # Copy the built JavaScript files from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html/dist
 
+# Copy source files for module imports
+COPY --from=builder /app/src /usr/share/nginx/html/src
+
 # Copy index.html
 COPY --from=builder /app/index.html /usr/share/nginx/html/index.html
 
 # Copy assets folder
 COPY --from=builder /app/assets /usr/share/nginx/html/assets
+
+# Copy styles.css
+COPY --from=builder /app/styles.css /usr/share/nginx/html/styles.css
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
