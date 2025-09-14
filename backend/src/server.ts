@@ -99,6 +99,15 @@ app.get('/api/health', async (request: any, reply: any) => {
     });
 });
 
+// Debug endpoint to list all registered routes
+app.get('/api/debug/routes', async (request: any, reply: any) => {
+    const routes = app.printRoutes();
+    reply.status(200).send({ 
+        routes: routes,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Register routes
 app.register(authRoutes);
 app.register(tournamentRoutes);
