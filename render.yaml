@@ -11,4 +11,6 @@ services:
         value: production
       - key: PORT
         value: 8080
+      - key: JWT_SECRET
+        value: render_production_jwt_secret_2024_transcendence_secure_key
     autoDeploy: true
