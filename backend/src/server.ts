@@ -40,13 +40,14 @@ app.register(fastifyCors, { // Updated registration
 app.register(fastifyWebsocket);
 
 // Register JWT plugin
+const jwtSecret = process.env.JWT_SECRET || "render_production_jwt_secret_2024_transcendence_secure_key";
 if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is not set!');
+    console.warn('JWT_SECRET environment variable not set, using fallback value');
 }
 
 // Register JWT plugin on main app instance
 app.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET ?? "default_jwt_secret",
+    secret: jwtSecret,
     cookie: {
         cookieName: "authToken",
         signed: false,
