@@ -60,7 +60,7 @@ RUN mkdir -p /etc/nginx/conf.d && \
     echo '            try_files $uri $uri/ /index.html;' >> /etc/nginx/nginx.conf && \
     echo '        }' >> /etc/nginx/nginx.conf && \
     echo '        location /api/ {' >> /etc/nginx/nginx.conf && \
-    echo '            proxy_pass http://localhost:4000/;' >> /etc/nginx/nginx.conf && \
+    echo '            proxy_pass http://localhost:3000/;' >> /etc/nginx/nginx.conf && \
     echo '            proxy_http_version 1.1;' >> /etc/nginx/nginx.conf && \
     echo '            proxy_set_header Upgrade $http_upgrade;' >> /etc/nginx/nginx.conf && \
     echo '            proxy_set_header Connection "upgrade";' >> /etc/nginx/nginx.conf && \
@@ -72,10 +72,22 @@ RUN mkdir -p /etc/nginx/conf.d && \
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "🚀 Starting ft_transcendence..."' >> /app/start.sh && \
-    echo 'cd /app/backend && node dist/server.js &' >> /app/start.sh && \
-    echo 'sleep 2' >> /app/start.sh && \
+    echo 'echo "📁 Current directory: $(pwd)"' >> /app/start.sh && \
+    echo 'echo "📂 Backend directory contents:"' >> /app/start.sh && \
+    echo 'ls -la /app/backend/' >> /app/start.sh && \
+    echo 'echo "🔧 Starting backend server..."' >> /app/start.sh && \
+    echo 'cd /app/backend' >> /app/start.sh && \
+    echo 'NODE_ENV=production PORT=3000 node dist/server.js &' >> /app/start.sh && \
+    echo 'BACKEND_PID=$!' >> /app/start.sh && \
+    echo 'echo "🔍 Backend PID: $BACKEND_PID"' >> /app/start.sh && \
+    echo 'sleep 5' >> /app/start.sh && \
+    echo 'echo "📋 Checking if backend is running..."' >> /app/start.sh && \
+    echo 'curl -f http://localhost:3000/api/health || echo "❌ Backend health check failed"' >> /app/start.sh && \
     echo 'echo "🌐 Starting nginx on port 8080..."' >> /app/start.sh && \
-    echo 'nginx -c /etc/nginx/nginx.conf -g "daemon off;"' >> /app/start.sh && \
+    echo 'nginx -c /etc/nginx/nginx.conf -g "daemon off;" &' >> /app/start.sh && \
+    echo 'NGINX_PID=$!' >> /app/start.sh && \
+    echo 'echo "✅ Services started - Backend: $BACKEND_PID, Nginx: $NGINX_PID"' >> /app/start.sh && \
+    echo 'wait' >> /app/start.sh && \
     chmod +x /app/start.sh
 
 EXPOSE 8080
