@@ -65,7 +65,7 @@ export default async function registerRoutes(app: FastifyInstance) {
             reply
                 .setCookie('authToken', token, {
                     httpOnly: true,
-                    secure: true,
+                    secure: false, // Set to true only for production HTTPS
                     sameSite: 'strict',
                     path: '/',
                     maxAge: 60 * 60 * 24 * 7 // 7 days

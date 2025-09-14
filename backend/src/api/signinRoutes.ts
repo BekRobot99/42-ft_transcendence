@@ -55,7 +55,7 @@ export default async function signinRoutes(app: FastifyInstance) {
                     // Set the temporary token in the cookie.
                     reply.setCookie('authToken', pendingToken, {
                         httpOnly: true,
-                        secure: true,
+                        secure: false, // Set to true only for production HTTPS
                         sameSite: 'strict',
                         path: '/',
                         maxAge: 5 * 60, // 5 minutes
@@ -92,7 +92,7 @@ export default async function signinRoutes(app: FastifyInstance) {
             reply
                 .setCookie('authToken', token, {
                     httpOnly: true,
-                    secure: true,
+                    secure: false, // Set to true only for production HTTPS
                     sameSite: 'strict',
                     path: '/',
                     maxAge: 60 * 60 * 24 * 7 // 7 days

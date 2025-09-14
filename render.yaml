@@ -4,7 +4,7 @@ services:
     env: docker
     plan: free
     region: oregon
-    branch: main
+    branch: ali2
     dockerfilePath: ./Dockerfile.render
     envVars:
       - key: NODE_ENV
