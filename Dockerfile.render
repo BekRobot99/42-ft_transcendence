@@ -1,59 +1,44 @@
-# Production Dockerfile for Render.com deployment
-FROM node:lts-alpine AS builder
+# Simple production Dockerfile for Render.com
+FROM node:lts-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy and install frontend dependencies
+# Install dependencies for both frontend and backend
 COPY frontend/package*.json ./frontend/
-WORKDIR /app/frontend
-RUN npm install
-
-# Copy frontend source and build
-COPY frontend/ ./
-RUN npm run build
-
-# Copy and install backend dependencies  
-WORKDIR /app
 COPY backend/package*.json ./backend/
-WORKDIR /app/backend
-RUN npm install
 
-# Copy backend source and build
-COPY backend/ ./
+# Install frontend dependencies
+WORKDIR /app/frontend
+RUN npm ci --only=production
+
+# Install backend dependencies
+WORKDIR /app/backend
+RUN npm ci --only=production
+
+# Copy source files
+WORKDIR /app
+COPY frontend/ ./frontend/
+COPY backend/ ./backend/
+
+# Build frontend
+WORKDIR /app/frontend
 RUN npm run build
 
-# Production stage
-FROM node:lts-alpine AS production
+# Build backend
+WORKDIR /app/backend
+RUN npm run build
 
 # Install nginx
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx curl
 
-# Set working directory
-WORKDIR /app
-
-# Copy built backend
-COPY --from=builder /app/backend/dist ./backend/dist
-COPY --from=builder /app/backend/node_modules ./backend/node_modules
-COPY --from=builder /app/backend/package*.json ./backend/
-COPY --from=builder /app/backend/database ./backend/database
-
-# Copy built frontend
-COPY --from=builder /app/frontend/dist ./frontend/dist
-COPY --from=builder /app/frontend/src ./frontend/src
-COPY --from=builder /app/frontend/assets ./frontend/assets
-COPY --from=builder /app/frontend/index.html ./frontend/
-COPY --from=builder /app/frontend/styles.css ./frontend/
-
-# Create nginx config for Render (HTTP only)
-RUN mkdir -p /etc/nginx/conf.d && \
-    echo 'events { worker_connections 1024; }' > /etc/nginx/nginx.conf && \
+# Create simple nginx config
+RUN echo 'events { worker_connections 1024; }' > /etc/nginx/nginx.conf && \
     echo 'http {' >> /etc/nginx/nginx.conf && \
     echo '    include /etc/nginx/mime.types;' >> /etc/nginx/nginx.conf && \
     echo '    default_type application/octet-stream;' >> /etc/nginx/nginx.conf && \
     echo '    server {' >> /etc/nginx/nginx.conf && \
     echo '        listen 8080;' >> /etc/nginx/nginx.conf && \
-    echo '        server_name _;' >> /etc/nginx/nginx.conf && \
     echo '        root /app/frontend;' >> /etc/nginx/nginx.conf && \
     echo '        index index.html;' >> /etc/nginx/nginx.conf && \
     echo '        location / {' >> /etc/nginx/nginx.conf && \
@@ -61,33 +46,19 @@ RUN mkdir -p /etc/nginx/conf.d && \
     echo '        }' >> /etc/nginx/nginx.conf && \
     echo '        location /api/ {' >> /etc/nginx/nginx.conf && \
     echo '            proxy_pass http://localhost:3000/;' >> /etc/nginx/nginx.conf && \
-    echo '            proxy_http_version 1.1;' >> /etc/nginx/nginx.conf && \
-    echo '            proxy_set_header Upgrade $http_upgrade;' >> /etc/nginx/nginx.conf && \
-    echo '            proxy_set_header Connection "upgrade";' >> /etc/nginx/nginx.conf && \
     echo '            proxy_set_header Host $host;' >> /etc/nginx/nginx.conf && \
+    echo '            proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/nginx.conf && \
     echo '        }' >> /etc/nginx/nginx.conf && \
     echo '    }' >> /etc/nginx/nginx.conf && \
     echo '}' >> /etc/nginx/nginx.conf
 
-# Create startup script
+# Create simple startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "🚀 Starting ft_transcendence..."' >> /app/start.sh && \
-    echo 'echo "📁 Current directory: $(pwd)"' >> /app/start.sh && \
-    echo 'echo "📂 Backend directory contents:"' >> /app/start.sh && \
-    echo 'ls -la /app/backend/' >> /app/start.sh && \
-    echo 'echo "🔧 Starting backend server..."' >> /app/start.sh && \
+    echo 'echo "Starting ft_transcendence..."' >> /app/start.sh && \
     echo 'cd /app/backend' >> /app/start.sh && \
-    echo 'NODE_ENV=production PORT=3000 node dist/server.js &' >> /app/start.sh && \
-    echo 'BACKEND_PID=$!' >> /app/start.sh && \
-    echo 'echo "🔍 Backend PID: $BACKEND_PID"' >> /app/start.sh && \
+    echo 'npm start &' >> /app/start.sh && \
     echo 'sleep 5' >> /app/start.sh && \
-    echo 'echo "📋 Checking if backend is running..."' >> /app/start.sh && \
-    echo 'curl -f http://localhost:3000/api/health || echo "❌ Backend health check failed"' >> /app/start.sh && \
-    echo 'echo "🌐 Starting nginx on port 8080..."' >> /app/start.sh && \
-    echo 'nginx -c /etc/nginx/nginx.conf -g "daemon off;" &' >> /app/start.sh && \
-    echo 'NGINX_PID=$!' >> /app/start.sh && \
-    echo 'echo "✅ Services started - Backend: $BACKEND_PID, Nginx: $NGINX_PID"' >> /app/start.sh && \
-    echo 'wait' >> /app/start.sh && \
+    echo 'nginx -c /etc/nginx/nginx.conf -g "daemon off;"' >> /app/start.sh && \
     chmod +x /app/start.sh
 
 EXPOSE 8080
