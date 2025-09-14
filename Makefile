@@ -226,5 +226,37 @@ info: ## setup - Show project information
 	@echo "  ✅ Real-time WebSocket"
 	@echo "  ✅ SSL/HTTPS Support"
 
+# Production deployment commands
+render-build: ## prod - Build for Render.com deployment
+	@echo "$(YELLOW)🏗️  Building for Render deployment...$(RESET)"
+	@docker-compose build --no-cache
+	@echo "$(GREEN)✅ Render build complete!$(RESET)"
+
+render-start: ## prod - Start for Render.com (keeps container alive)
+	@echo "$(YELLOW)🚀 Starting for Render deployment...$(RESET)"
+	@docker-compose up -d
+	@echo "$(GREEN)✅ Render deployment started!$(RESET)"
+	@echo "$(BLUE)📡 Keeping service alive...$(RESET)"
+
+health: ## prod - Health check endpoint
+	@echo "$(YELLOW)🏥 Checking service health...$(RESET)"
+	@curl -f http://localhost:8080/ -o /dev/null -s -w "Status: %{http_code}\n" || echo "$(RED)❌ Health check failed$(RESET)"
+
+deploy-info: ## prod - Show deployment information
+	@echo "$(CYAN)========================================$(RESET)"
+	@echo "$(CYAN)  🌐 Deployment Information$(RESET)"
+	@echo "$(CYAN)========================================$(RESET)"
+	@echo "$(YELLOW)Platform:$(RESET) Render.com"
+	@echo "$(YELLOW)Config File:$(RESET) render.yaml"
+	@echo "$(YELLOW)Build Command:$(RESET) make render-build"
+	@echo "$(YELLOW)Start Command:$(RESET) make render-start"
+	@echo "$(YELLOW)Port:$(RESET) 8080 (HTTPS)"
+	@echo "$(YELLOW)Auto Deploy:$(RESET) On push to ali2 branch"
+	@echo ""
+	@echo "$(BLUE)Team Workflow:$(RESET)"
+	@echo "  1. Push to ali2 branch → Auto deploy"
+	@echo "  2. Create PR → Review → Merge → Auto deploy"
+	@echo "  3. Manual deploy from Render dashboard"
+
 # Phony targets
-.PHONY: help install build up start stop restart down dev-build dev dev-start dev-stop dev-restart dev-down status logs logs-backend logs-frontend dev-logs dev-logs-backend dev-logs-frontend shell-backend shell-frontend db clean clean-containers clean-images clean-volumes reset test info
+.PHONY: help install build up start stop restart down dev-build dev dev-start dev-stop dev-restart dev-down status logs logs-backend logs-frontend dev-logs dev-logs-backend dev-logs-frontend shell-backend shell-frontend db clean clean-containers clean-images clean-volumes reset test info render-build render-start health deploy-info
