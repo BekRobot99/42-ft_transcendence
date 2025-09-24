@@ -4,7 +4,7 @@
 echo "Building frontend for production..."
 
 # Navigate to frontend directory
-cd frontend
+cd frontend || exit 1
 
 # Install dependencies
 npm install
@@ -15,7 +15,7 @@ npm run build
 # Copy static assets to dist
 cp index.html dist/
 cp styles.css dist/
-cp -r assets/ dist/
+cp -r assets/ dist/ || echo "No assets directory found, skipping..."
 
 echo "Frontend build complete!"
 echo "Static files are in frontend/dist/"
