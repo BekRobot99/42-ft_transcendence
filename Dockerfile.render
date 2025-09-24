@@ -12,7 +12,8 @@ COPY . .
 
 # Install and build backend
 WORKDIR /app/backend
-RUN npm install && npm run build
+RUN npm install
+RUN npm run build && ls -la dist/ && cat dist/server.js | head -20
 
 # Install and build frontend  
 WORKDIR /app/frontend

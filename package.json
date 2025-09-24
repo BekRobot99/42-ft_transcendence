@@ -2,6 +2,7 @@
   "dependencies": {
     "@fastify/multipart": "^9.0.3",
     "@fastify/static": "^8.2.0",
+    "claude": "^0.1.2",
     "file-type": "^21.0.0",
     "sharp": "^0.34.3"
   }
