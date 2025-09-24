@@ -1,0 +1,12 @@
+services:
+  - type: static
+    name: ft-transcendence-frontend
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: ./build-frontend.sh
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: BACKEND_URL
+        value: https://ft-transcendence-backend.onrender.com
+    autoDeploy: true
