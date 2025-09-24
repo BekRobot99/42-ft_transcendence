@@ -1,14 +1,14 @@
 services:
   - type: web
-    name: ft-transcendence
+    name: ft-transcendence-backend
     env: docker
     plan: free
     region: oregon
     branch: main
-    dockerfilePath: ./Dockerfile.render
+    dockerfilePath: ./Dockerfile.backend
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 8080
+      - key: JWT_SECRET
+        value: render_production_jwt_secret_2024_transcendence_secure_key
     autoDeploy: true
