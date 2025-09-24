@@ -32,7 +32,8 @@ app.register(fastifyStatic, {
 
 // Register CORS plugin
 app.register(fastifyCors, { // Updated registration
-    origin: '*', // Allow all origins (for now). If we want to host the project on a public domain, we should restrict
+    origin: ['https://ft-transcendence-frontend.onrender.com', 'http://localhost:3000', 'http://127.0.0.1:3000'], // Allow specific origins
+    credentials: true, // Allow cookies and credentials
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 });
 
