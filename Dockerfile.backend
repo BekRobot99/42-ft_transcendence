@@ -1,0 +1,23 @@
+# Simple backend-only Dockerfile for Render.com
+FROM node:lts-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY backend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source
+COPY backend/ ./
+
+# Build the application
+RUN npm run build
+
+# Expose port (Render will use PORT environment variable)
+EXPOSE 3000
+
+# Start the backend
+CMD ["npm", "start"]

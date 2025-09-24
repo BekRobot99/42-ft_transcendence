@@ -89,6 +89,15 @@ app.decorate("authenticate", async function(request: any, reply: any) {
     }
 });
 
+// Health check endpoint for Render.com
+app.get('/api/health', async (request: any, reply: any) => {
+    reply.status(200).send({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'ft_transcendence_backend'
+    });
+});
+
 // Register routes
 app.register(authRoutes);
 app.register(tournamentRoutes);
