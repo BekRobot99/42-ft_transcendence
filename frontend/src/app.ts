@@ -69,15 +69,29 @@ class App {
 
     private async checkAuth(): Promise<boolean> {
         try {
-            const res = await fetch(`${CONFIG.BACKEND_URL}/api/me`, { credentials: 'include' });
-           if (!res.ok) {
+            console.log('Checking auth with backend URL:', CONFIG.BACKEND_URL);
+            const url = `${CONFIG.BACKEND_URL}/api/me`;
+            console.log('Making request to:', url);
+            
+            const res = await fetch(url, { 
+                credentials: 'include',
+                mode: 'cors'
+            });
+            
+            console.log('Response status:', res.status);
+            console.log('Response ok:', res.ok);
+            
+            if (!res.ok) {
+                console.log('Auth check failed - user not authenticated');
                 this.currentUser = null;
                 return false;
             }
             const data = await res.json();
+            console.log('Auth response data:', data);
             this.currentUser = data.user;
             return !!data.user;
-        } catch {
+        } catch (error) {
+            console.error('Auth check error:', error);
             this.currentUser = null;
             return false;
         }
