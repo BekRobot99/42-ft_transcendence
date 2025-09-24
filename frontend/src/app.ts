@@ -9,6 +9,7 @@ import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
 import { renderSettingsPage } from './views/SettingsPage.js';
 import { renderGamePage } from './views/GamePage.js';
 import { renderGamePage3D } from './views/GamePage3D.js';
+import CONFIG from './config.js';
 
 
 class App {
@@ -68,7 +69,7 @@ class App {
 
     private async checkAuth(): Promise<boolean> {
         try {
-            const res = await fetch('/api/me', { credentials: 'include' });
+            const res = await fetch(`${CONFIG.BACKEND_URL}/api/me`, { credentials: 'include' });
            if (!res.ok) {
                 this.currentUser = null;
                 return false;
@@ -87,9 +88,18 @@ class App {
             return; // Already connected
         }
 
-        // Use wss for secure connections, ws for localhost dev
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/api/ws/status`;
+        // Use backend URL for WebSocket connection
+        let wsUrl: string;
+        if (CONFIG.BACKEND_URL) {
+            // Production: use backend service URL
+            const wsProtocol = CONFIG.BACKEND_URL.startsWith('https:') ? 'wss:' : 'ws:';
+            const backendHost = CONFIG.BACKEND_URL.replace(/^https?:\/\//, '');
+            wsUrl = `${wsProtocol}//${backendHost}/api/ws/status`;
+        } else {
+            // Local development: use relative URL
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            wsUrl = `${protocol}//${window.location.host}/api/ws/status`;
+        }
 
         this.webSocket = new WebSocket(wsUrl);
 
