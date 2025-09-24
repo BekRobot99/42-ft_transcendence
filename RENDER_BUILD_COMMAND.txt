@@ -1,0 +1,2 @@
+# Simple build commands for Render static site deployment
+cd frontend && npm install && npm run build && cp index.html dist/ && cp styles.css dist/ && if [ -d "assets" ]; then cp -r assets/ dist/; fi
