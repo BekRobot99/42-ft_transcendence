@@ -1,5 +1,5 @@
 # Simple backend-only Dockerfile for Render.com
-FROM node:lts-alpine
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
