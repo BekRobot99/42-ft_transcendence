@@ -1,11 +1,12 @@
 services:
   - type: web
     name: ft-transcendence-backend
-    env: docker
+    env: node
     plan: free
     region: oregon
     branch: separate-deployment
-    dockerfilePath: ./Dockerfile.backend
+    buildCommand: cd backend && npm ci && npm run build
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
