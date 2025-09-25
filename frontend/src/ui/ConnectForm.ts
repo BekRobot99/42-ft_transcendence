@@ -1,5 +1,7 @@
-import { translate } from "../languageService.js";
+import { translate } from '../languageService.js';
+import CONFIG from '../config.js';
 import { createLanguageDropdown } from "./LanguageDropdown.js";
+
 export class ConnectForm {
     private formContainer: HTMLElement;
     private usernameField!: HTMLInputElement;
@@ -172,15 +174,21 @@ export class ConnectForm {
         }
 
         try {
-            const response = await fetch('/api/signin', {
+            console.log('Attempting signin with backend URL:', CONFIG.BACKEND_URL);
+            const url = `${CONFIG.BACKEND_URL}/api/signin`;
+            console.log('Signin URL:', url);
+            
+            const response = await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password, twofaCode: twofaCode || undefined }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, mfaCode }),
+                credentials: 'include',
+                mode: 'cors'
             });
 
+            console.log('Signin response status:', response.status);
             const data = await response.json();
+            console.log('Signin response data:', data);
 
             if (response.ok) {
                 // The first step of 2FA (password correct) will return 200 OK with twofaRequired: true

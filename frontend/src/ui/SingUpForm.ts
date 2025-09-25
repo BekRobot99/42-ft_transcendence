@@ -1,4 +1,5 @@
-import { translate } from "../languageService.js";
+import { translate } from '../languageService.js';
+import CONFIG from '../config.js';
 import { createLanguageDropdown } from "./LanguageDropdown.js";
 
 export class SignUpForm {
@@ -220,13 +221,21 @@ export class SignUpForm {
         }
 
         try {
-            const response = await fetch('/api/register', {
+            console.log('Attempting registration with backend URL:', CONFIG.BACKEND_URL);
+            const url = `${CONFIG.BACKEND_URL}/api/register`;
+            console.log('Registration URL:', url);
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
+                credentials: 'include',
+                mode: 'cors'
             });
 
+            console.log('Registration response status:', response.status);
             const data = await response.json();
+            console.log('Registration response data:', data);
 
             if (response.ok) {
                 this.successMessage.textContent = data.message || translate('Registration successful!', 'Registrierung erfolgreich!', 'Inscription réussie !');
