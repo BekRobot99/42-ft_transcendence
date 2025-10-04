@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ft_transcendence </title>
+  <link rel="icon" type="image/png" href="/assets/42HeilbronnImage.png">
+  
+  <!-- Babylon.js CDN -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+  
+  <style>
+    /* Minimal inline CSS to replace Tailwind for testing */
+    .bg-blue-50 { background-color: #eff6ff; }
+    .min-h-screen { min-height: 100vh; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .bg-white { background-color: white; }
+    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .rounded-xl { border-radius: 0.75rem; }
+    .p-8 { padding: 2rem; }
+    .max-w-sm { max-width: 24rem; }
+    .w-full { width: 100%; }
+    .text-center { text-align: center; }
+    
+    /* Form styling */
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .space-y-1 > * + * { margin-top: 0.25rem; }
+    .space-x-4 > * + * { margin-left: 1rem; }
+    .space-y-6 > * + * { margin-top: 1.5rem; }
+    .block { display: block; }
+    .text-sm { font-size: 0.875rem; }
+    .text-xl { font-size: 1.25rem; }
+    .text-3xl { font-size: 1.875rem; }
+    .font-medium { font-weight: 500; }
+    .font-bold { font-weight: 700; }
+    .text-gray-700 { color: #374151; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .border { border-width: 1px; border-style: solid; }
+    .border-gray-300 { border-color: #d1d5db; }
+    .border-blue-800 { border-color: #1e40af; }
+    .border-2 { border-width: 2px; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    .bg-blue-500 { background-color: #3b82f6; }
+    .bg-blue-800 { background-color: #1e40af; }
+    .bg-green-600 { background-color: #16a34a; }
+    .bg-green-800 { background-color: #15803d; }
+    .text-white { color: white; }
+    .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .pt-10 { padding-top: 2.5rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mr-4 { margin-right: 1rem; }
+    .text-red-600 { color: #dc2626; }
+    .text-green-600 { color: #16a34a; }
+    .hidden { display: none !important; }
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .inline-block { display: inline-block; }
+    .group:hover .group-hover\:bg-blue-800 { background-color: #1e40af; }
+    .group:hover .group-hover\:-translate-x-0 { transform: translateX(0); }
+    .group:hover .group-hover\:-translate-y-0 { transform: translateY(0); }
+    .translate-x-1 { transform: translateX(0.25rem); }
+    .translate-y-1 { transform: translateY(0.25rem); }
+    .transition { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; }
+    .duration-200 { transition-duration: 200ms; }
+    .ease-out { transition-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+    .transform { transform: var(--tw-transform); }
+    
+    /* Input focus styles */
+    input:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    /* Make sure form elements are clickable */
+    input, button, select { pointer-events: auto; }
+    form { pointer-events: auto; }
+  </style>
+</head>
+<body class="bg-blue-50 min-h-screen flex items-center justify-center">
+  <div id="page-content" class="bg-white shadow-lg rounded-xl p-8 max-w-sm w-full text-center">
+    <!-- Content will be dynamically injected here in app.js -->
+    <div>Loading...</div>
+  </div>
+  <script type="module" src="/dist/app.js"></script>
+</body>
+</html>
