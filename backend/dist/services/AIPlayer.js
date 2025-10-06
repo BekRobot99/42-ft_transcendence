@@ -1,10 +1,4 @@
 "use strict";
-/**
- * AI Player for Pong Game
- *
- * Implements an AI opponent that can play against human players.
- * Uses event-driven architecture for game state updates and decisions.
- */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AIPlayer = void 0;
 class AIPlayer {
@@ -14,6 +8,11 @@ class AIPlayer {
         this.gameState = null;
         // Event handlers
         this.eventHandlers = new Map();
+        // External callback functions for WebSocket integration
+        this.onAIKeyboardInput = null;
+        this.onAIActivated = null;
+        this.onAIDeactivated = null;
+        this.onDifficultyChanged = null;
         // AI updates game state once per second for realistic gameplay
         this.UPDATE_INTERVAL = 1000; // 1 second update cycle
         // Predefined difficulty levels
@@ -88,6 +87,10 @@ class AIPlayer {
         this.lastUpdateTime = Date.now();
         console.log(`AI Player activated (${this.difficulty.name} mode)`);
         this.emit('aiActivated', { difficulty: this.difficulty.name });
+        // Call external callback if set
+        if (this.onAIActivated) {
+            this.onAIActivated({ difficulty: this.difficulty.name });
+        }
     }
     /**
      * Deactivate the AI player
@@ -97,6 +100,10 @@ class AIPlayer {
         this.gameState = null;
         console.log('AI Player deactivated');
         this.emit('aiDeactivated');
+        // Call external callback if set
+        if (this.onAIDeactivated) {
+            this.onAIDeactivated();
+        }
     }
     /**
      * Update game state - called from game loop
@@ -155,12 +162,17 @@ class AIPlayer {
         }
         // Send movement command through event system
         if (move !== 'none') {
-            this.emit('aiKeyboardInput', {
+            const keyboardEvent = {
                 action: move,
                 player: 'ai',
                 timestamp: Date.now(),
                 difficulty: this.difficulty.name
-            });
+            };
+            this.emit('aiKeyboardInput', keyboardEvent);
+            // Call external callback if set
+            if (this.onAIKeyboardInput) {
+                this.onAIKeyboardInput(keyboardEvent);
+            }
         }
     }
     /**
@@ -170,6 +182,10 @@ class AIPlayer {
         this.difficulty = this.DIFFICULTIES[level];
         console.log(`AI difficulty changed to ${level}`);
         this.emit('difficultyChanged', { newDifficulty: level });
+        // Call external callback if set
+        if (this.onDifficultyChanged) {
+            this.onDifficultyChanged({ newDifficulty: level });
+        }
     }
     /**
      * Get current AI status

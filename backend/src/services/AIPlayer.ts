@@ -1,3 +1,5 @@
+import { AIKeyboardEvent } from '../interfaces/GameTypes';
+
 /**
  * AI Player for Pong Game
  * 
@@ -40,6 +42,12 @@ export class AIPlayer {
   
   // Event handlers
   private eventHandlers: Map<string, AIEventHandler[]> = new Map();
+  
+  // External callback functions for WebSocket integration
+  public onAIKeyboardInput: ((event: AIKeyboardEvent) => void) | null = null;
+  public onAIActivated: ((data: { difficulty: string }) => void) | null = null;
+  public onAIDeactivated: (() => void) | null = null;
+  public onDifficultyChanged: ((data: { newDifficulty: string }) => void) | null = null;
   
   // AI updates game state once per second for realistic gameplay
   private readonly UPDATE_INTERVAL = 1000; // 1 second update cycle
@@ -121,6 +129,11 @@ export class AIPlayer {
     this.lastUpdateTime = Date.now();
     console.log(`AI Player activated (${this.difficulty.name} mode)`);
     this.emit('aiActivated', { difficulty: this.difficulty.name });
+    
+    // Call external callback if set
+    if (this.onAIActivated) {
+      this.onAIActivated({ difficulty: this.difficulty.name });
+    }
   }
 
   /**
@@ -131,6 +144,11 @@ export class AIPlayer {
     this.gameState = null;
     console.log('AI Player deactivated');
     this.emit('aiDeactivated');
+    
+    // Call external callback if set
+    if (this.onAIDeactivated) {
+      this.onAIDeactivated();
+    }
   }
 
   /**
@@ -200,12 +218,19 @@ export class AIPlayer {
     
     // Send movement command through event system
     if (move !== 'none') {
-      this.emit('aiKeyboardInput', {
+      const keyboardEvent: AIKeyboardEvent = {
         action: move,
         player: 'ai',
         timestamp: Date.now(),
         difficulty: this.difficulty.name
-      });
+      };
+      
+      this.emit('aiKeyboardInput', keyboardEvent);
+      
+      // Call external callback if set
+      if (this.onAIKeyboardInput) {
+        this.onAIKeyboardInput(keyboardEvent);
+      }
     }
   }
 
@@ -216,6 +241,11 @@ export class AIPlayer {
     this.difficulty = this.DIFFICULTIES[level];
     console.log(`AI difficulty changed to ${level}`);
     this.emit('difficultyChanged', { newDifficulty: level });
+    
+    // Call external callback if set
+    if (this.onDifficultyChanged) {
+      this.onDifficultyChanged({ newDifficulty: level });
+    }
   }
 
   /**
