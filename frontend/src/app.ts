@@ -420,7 +420,7 @@ class App {
                     method: 'POST',
                     credentials: 'include', // Important to send the cookie
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ twofaCode: code }),
+                    body: JSON.stringify({ mfaCode: code }),
                 });
                 const data = await res.json();
                 if (!res.ok) {

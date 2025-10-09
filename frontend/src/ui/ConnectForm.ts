@@ -161,7 +161,7 @@ export class ConnectForm {
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
-        const twofaCode = this.mfaInput.value;
+        const mfaCode = this.mfaInput.value;
 
         if (!username || !password) {
             this.serverErrorMessage.textContent = translate('Username and password are required.', 'Benutzername und Passwort sind erforderlich.', 'Le nom d\'utilisateur et le mot de passe sont requis.');
@@ -177,7 +177,7 @@ export class ConnectForm {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password, twofaCode: twofaCode || undefined }),
+                body: JSON.stringify({ username, password, mfaCode: mfaCode || undefined }),
             });
 
             const data = await response.json();

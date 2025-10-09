@@ -15,6 +15,7 @@ RESET = \033[0m
 PROJECT_NAME = ft_transcendence
 COMPOSE_FILE = docker-compose.yml
 DEV_COMPOSE_FILE = docker-compose.dev.yml
+DOCKER_COMPOSE := $(shell if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then echo docker compose; elif command -v docker-compose >/dev/null 2>&1; then echo docker-compose; else echo ""; fi)
 
 # Default target
 .DEFAULT_GOAL := help
@@ -51,134 +52,135 @@ help: ## Show this help message
 install: ## setup - Check and install prerequisites (Docker, Docker Compose)
 	@echo "$(YELLOW)🔍 Checking prerequisites...$(RESET)"
 	@command -v docker >/dev/null 2>&1 || { echo "$(RED)❌ Docker is not installed. Please install Docker first.$(RESET)"; exit 1; }
-	@command -v docker-compose >/dev/null 2>&1 || command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1 || { echo "$(RED)❌ Docker Compose is not installed. Please install Docker Compose first.$(RESET)"; exit 1; }
+	@$(DOCKER_COMPOSE) version >/dev/null 2>&1 || { echo "$(RED)❌ Docker Compose is not installed. Please install Docker Compose first.$(RESET)"; exit 1; }
 	@echo "$(GREEN)✅ Docker is installed$(RESET)"
 	@echo "$(GREEN)✅ Docker Compose is installed$(RESET)"
 	@echo "$(GREEN)🎉 All prerequisites are ready!$(RESET)"
 
 # Production commands
+
 build: ## prod - Build production containers
 	@echo "$(YELLOW)🏗️  Building production containers...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) build --no-cache
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) build --no-cache
 	@echo "$(GREEN)✅ Production build complete!$(RESET)"
 
 up: build ## prod - Start production environment (build + run)
 	@echo "$(YELLOW)🚀 Starting production environment...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) up -d
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) up -d
 	@echo "$(GREEN)✅ Production environment is running!$(RESET)"
 	@echo "$(CYAN)🌐 Visit: https://localhost:8080$(RESET)"
 	@echo "$(PURPLE)📝 Note: You may need to accept SSL certificate warning$(RESET)"
 
 start: ## prod - Start existing production containers
 	@echo "$(YELLOW)▶️  Starting production containers...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) start
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) start
 	@echo "$(GREEN)✅ Production containers started!$(RESET)"
 
 stop: ## prod - Stop production containers
 	@echo "$(YELLOW)⏹️  Stopping production containers...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) stop
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) stop
 	@echo "$(GREEN)✅ Production containers stopped!$(RESET)"
 
 restart: ## prod - Restart production containers
 	@echo "$(YELLOW)🔄 Restarting production containers...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) restart
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) restart
 	@echo "$(GREEN)✅ Production containers restarted!$(RESET)"
 
 down: ## prod - Stop and remove production containers
 	@echo "$(YELLOW)⬇️  Stopping and removing production containers...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) down --remove-orphans
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down --remove-orphans
 	@echo "$(GREEN)✅ Production environment stopped!$(RESET)"
 
 # Development commands
 dev-build: ## dev - Build development containers
 	@echo "$(YELLOW)🏗️  Building development containers...$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) build --no-cache
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) build --no-cache
 	@echo "$(GREEN)✅ Development build complete!$(RESET)"
 
 dev: dev-build ## dev - Start development environment (build + run with hot reload)
 	@echo "$(YELLOW)🛠️  Starting development environment...$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) down --remove-orphans 2>/dev/null || true
-	@docker-compose -f $(DEV_COMPOSE_FILE) up -d
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) down --remove-orphans 2>/dev/null || true
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) up -d
 	@echo "$(GREEN)✅ Development environment is running!$(RESET)"
 	@echo "$(CYAN)🌐 Visit: https://localhost:8080$(RESET)"
 	@echo "$(PURPLE)📝 Note: Hot reload enabled for TypeScript files$(RESET)"
 
 dev-start: ## dev - Start existing development containers
 	@echo "$(YELLOW)▶️  Starting development containers...$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) start
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) start
 	@echo "$(GREEN)✅ Development containers started!$(RESET)"
 
 dev-stop: ## dev - Stop development containers
 	@echo "$(YELLOW)⏹️  Stopping development containers...$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) stop
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) stop
 	@echo "$(GREEN)✅ Development containers stopped!$(RESET)"
 
 dev-restart: ## dev - Restart development containers
 	@echo "$(YELLOW)🔄 Restarting development containers...$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) restart
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) restart
 	@echo "$(GREEN)✅ Development containers restarted!$(RESET)"
 
 dev-down: ## dev - Stop and remove development containers
 	@echo "$(YELLOW)⬇️  Stopping and removing development containers...$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) down --remove-orphans
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) down --remove-orphans
 	@echo "$(GREEN)✅ Development environment stopped!$(RESET)"
 
 # Monitoring commands
 status: ## monitor - Show container status
 	@echo "$(YELLOW)📊 Production containers status:$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) ps
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) ps
 	@echo ""
 	@echo "$(YELLOW)📊 Development containers status:$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) ps
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) ps
 
 logs: ## monitor - Show production logs
 	@echo "$(YELLOW)📋 Production logs:$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) logs -f
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs -f
 
 logs-backend: ## monitor - Show production backend logs
 	@echo "$(YELLOW)📋 Production backend logs:$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) logs -f backend
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs -f backend
 
 logs-frontend: ## monitor - Show production frontend logs  
 	@echo "$(YELLOW)📋 Production frontend logs:$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) logs -f frontend
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) logs -f frontend
 
 dev-logs: ## monitor - Show development logs
 	@echo "$(YELLOW)📋 Development logs:$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) logs -f
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) logs -f
 
 dev-logs-backend: ## monitor - Show development backend logs
 	@echo "$(YELLOW)📋 Development backend logs:$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) logs -f backend
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) logs -f backend
 
 dev-logs-frontend: ## monitor - Show development frontend logs
 	@echo "$(YELLOW)📋 Development frontend logs:$(RESET)"
-	@docker-compose -f $(DEV_COMPOSE_FILE) logs -f ts-watcher
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) logs -f ts-watcher
 
 shell-backend: ## monitor - Open shell in backend container
 	@echo "$(YELLOW)🐚 Opening backend container shell...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) exec backend sh || docker-compose -f $(DEV_COMPOSE_FILE) exec backend sh
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend sh || $(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) exec backend sh
 
 shell-frontend: ## monitor - Open shell in frontend container
 	@echo "$(YELLOW)🐚 Opening frontend container shell...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) exec frontend sh || docker-compose -f $(DEV_COMPOSE_FILE) exec web sh
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec frontend sh || $(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) exec web sh
 
 db: ## monitor - Connect to SQLite database
 	@echo "$(YELLOW)🗄️  Connecting to database...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) exec backend sh -c 'apk add --no-cache sqlite && sqlite3 /app/database/transcendence.sqlite' || \
-	docker-compose -f $(DEV_COMPOSE_FILE) exec backend sh -c 'apk add --no-cache sqlite && sqlite3 /app/database/transcendence.sqlite'
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) exec backend sh -c 'apk add --no-cache sqlite && sqlite3 /app/database/transcendence.sqlite' || \
+	$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) exec backend sh -c 'apk add --no-cache sqlite && sqlite3 /app/database/transcendence.sqlite'
 
 # Cleanup commands
 clean: ## clean - Remove all containers, images, and volumes
 	@echo "$(YELLOW)🧹 Cleaning up all containers and images...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) down --remove-orphans --volumes --rmi all 2>/dev/null || true
-	@docker-compose -f $(DEV_COMPOSE_FILE) down --remove-orphans --volumes --rmi all 2>/dev/null || true
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down --remove-orphans --volumes --rmi all 2>/dev/null || true
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) down --remove-orphans --volumes --rmi all 2>/dev/null || true
 	@echo "$(GREEN)✅ Cleanup complete!$(RESET)"
 
 clean-containers: ## clean - Remove all containers only
 	@echo "$(YELLOW)🧹 Removing containers...$(RESET)"
-	@docker-compose -f $(COMPOSE_FILE) down --remove-orphans 2>/dev/null || true
-	@docker-compose -f $(DEV_COMPOSE_FILE) down --remove-orphans 2>/dev/null || true
+	@$(DOCKER_COMPOSE) -f $(COMPOSE_FILE) down --remove-orphans 2>/dev/null || true
+	@$(DOCKER_COMPOSE) -f $(DEV_COMPOSE_FILE) down --remove-orphans 2>/dev/null || true
 	@echo "$(GREEN)✅ Containers removed!$(RESET)"
 
 clean-images: ## clean - Remove project Docker images
@@ -229,12 +231,12 @@ info: ## setup - Show project information
 # Production deployment commands
 render-build: ## prod - Build for Render.com deployment
 	@echo "$(YELLOW)🏗️  Building for Render deployment...$(RESET)"
-	@docker-compose build --no-cache
+	@$(DOCKER_COMPOSE) build --no-cache
 	@echo "$(GREEN)✅ Render build complete!$(RESET)"
 
 render-start: ## prod - Start for Render.com (keeps container alive)
 	@echo "$(YELLOW)🚀 Starting for Render deployment...$(RESET)"
-	@docker-compose up -d
+	@$(DOCKER_COMPOSE) up -d
 	@echo "$(GREEN)✅ Render deployment started!$(RESET)"
 	@echo "$(BLUE)📡 Keeping service alive...$(RESET)"
 
