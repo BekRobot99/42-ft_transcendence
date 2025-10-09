@@ -25,11 +25,11 @@ services:
     container_name: ft_transcendence_backend
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=your_super_secret_jwt_key_change_in_production_123456
+      - JWT_SECRET=${JWT_SECRET:-your_super_secret_jwt_key_change_in_production_123456}
       - PORT=3000
-      - GOOGLE_CLIENT_ID=your_google_client_id
-      - GOOGLE_CLIENT_SECRET=your_google_client_secret
-      - GOOGLE_REDIRECT_URI=https://localhost:8080/api/auth/google/callback
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://localhost:8080/auth/google/callback}
     restart: unless-stopped
 
 volumes:
