@@ -243,9 +243,34 @@ function handleGameMessage(connection, userId, message) {
                 }));
             }
             break;
-        case 'leave_game':
-            // Clean up game room and AI
+        case 'ai_performance_stats':
+            // Get AI performance statistics
             if (aiPlayer) {
+                const stats = aiPlayer.getPerformanceStats();
+                connection.send(JSON.stringify({
+                    type: 'ai_performance_stats',
+                    gameId: gameId,
+                    stats: stats,
+                    timestamp: Date.now()
+                }));
+            }
+            break;
+        case 'reset_ai_stats':
+            // Reset AI performance counters
+            if (aiPlayer) {
+                aiPlayer.resetPerformanceStats();
+                connection.send(JSON.stringify({
+                    type: 'ai_stats_reset',
+                    gameId: gameId,
+                    timestamp: Date.now()
+                }));
+            }
+            break;
+        case 'leave_game':
+            // Clean up game room and AI with final stats
+            if (aiPlayer) {
+                const finalStats = aiPlayer.getPerformanceStats();
+                console.log(`Game ${gameId} ended - AI Performance:`, finalStats);
                 aiPlayer.deactivate();
                 aiPlayers.delete(gameId);
             }

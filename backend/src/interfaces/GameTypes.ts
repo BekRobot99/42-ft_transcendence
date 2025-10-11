@@ -144,6 +144,8 @@ export type GameSocketEvent =
   | 'game_resume'
   | 'game_end'
   | 'ai_move'
+  | 'ai_performance_stats'
+  | 'reset_ai_stats'
   | 'powerup_activate'
   | 'chat_message';
 

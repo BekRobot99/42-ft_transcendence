@@ -40,6 +40,12 @@ export class AIPlayer {
   private gameState: GameState | null = null;
   private difficulty: AIDifficulty;
   
+  // Performance monitoring for 1-second constraint
+  private updateCount: number = 0;
+  private skippedUpdates: number = 0;
+  private averageProcessingTime: number = 0;
+  private lastProcessingTime: number = 0;
+  
   // Event handlers
   private eventHandlers: Map<string, AIEventHandler[]> = new Map();
   
@@ -49,8 +55,9 @@ export class AIPlayer {
   public onAIDeactivated: (() => void) | null = null;
   public onDifficultyChanged: ((data: { newDifficulty: string }) => void) | null = null;
   
-  // AI updates game state once per second for realistic gameplay
-  private readonly UPDATE_INTERVAL = 1000; // 1 second update cycle
+  // Precise 1-second constraint implementation
+  private readonly UPDATE_INTERVAL = 1000; // Exactly 1 second - critical requirement
+  private readonly TIMING_TOLERANCE = 50; // Allow 50ms variance for system load
   
   // Predefined difficulty levels
   private readonly DIFFICULTIES: Record<string, AIDifficulty> = {
@@ -153,7 +160,7 @@ export class AIPlayer {
 
   /**
    * Update game state - called from game loop
-   * AI processes this ONLY once per second (42 School constraint)
+   * Implements strict 1-second update constraint with performance monitoring
    */
   updateGameState(state: GameState): void {
     if (!this.isActive || !state.gameActive) {
@@ -161,19 +168,68 @@ export class AIPlayer {
     }
     
     const now = Date.now();
+    const timeSinceLastUpdate = now - this.lastUpdateTime;
     
-    // Only update AI logic once per second for balanced gameplay
-    if (now - this.lastUpdateTime >= this.UPDATE_INTERVAL) {
-      this.gameState = { ...state }; // Deep copy to prevent reference issues
-      this.lastUpdateTime = now;
+    // Strict 1-second enforcement with timing precision
+    if (timeSinceLastUpdate >= (this.UPDATE_INTERVAL - this.TIMING_TOLERANCE)) {
+      const processingStart = performance.now();
       
-      // Add reaction time delay to simulate human-like behavior
+      // Performance monitoring
+      if (timeSinceLastUpdate < this.UPDATE_INTERVAL) {
+        this.skippedUpdates++;
+        console.debug(`AI update skipped - too early by ${this.UPDATE_INTERVAL - timeSinceLastUpdate}ms`);
+        return;
+      }
+      
+      // Update state and timing
+      this.gameState = this.deepCopyGameState(state);
+      this.lastUpdateTime = now;
+      this.updateCount++;
+      
+      // Log timing violations for debugging
+      if (timeSinceLastUpdate > this.UPDATE_INTERVAL + this.TIMING_TOLERANCE) {
+        console.warn(`AI update late by ${timeSinceLastUpdate - this.UPDATE_INTERVAL}ms - system under load?`);
+      }
+      
+      // Process decision with reaction delay
       setTimeout(() => {
         if (this.isActive && this.gameState) {
+          const decisionStart = performance.now();
           this.makeDecision();
+          
+          // Track processing performance
+          this.lastProcessingTime = performance.now() - decisionStart;
+          this.averageProcessingTime = (this.averageProcessingTime * (this.updateCount - 1) + this.lastProcessingTime) / this.updateCount;
         }
       }, this.difficulty.reactionTime);
+      
+      // Overall processing time tracking
+      const processingEnd = performance.now();
+      const totalProcessingTime = processingEnd - processingStart;
+      
+      if (totalProcessingTime > 100) {
+        console.warn(`AI processing took ${totalProcessingTime.toFixed(2)}ms - consider optimization`);
+      }
     }
+  }
+
+  /**
+   * Deep copy game state to prevent reference issues
+   */
+  private deepCopyGameState(state: GameState): GameState {
+    return {
+      ballX: state.ballX,
+      ballY: state.ballY,
+      ballVelX: state.ballVelX,
+      ballVelY: state.ballVelY,
+      paddleY: state.paddleY,
+      paddleHeight: state.paddleHeight,
+      canvasHeight: state.canvasHeight,
+      canvasWidth: state.canvasWidth,
+      opponentPaddleY: state.opponentPaddleY,
+      score: { ...state.score },
+      gameActive: state.gameActive
+    };
   }
 
   /**
@@ -271,5 +327,54 @@ export class AIPlayer {
    */
   getDifficulty(): AIDifficulty {
     return { ...this.difficulty };
+  }
+
+  /**
+   * Get performance statistics for monitoring 1-second constraint compliance
+   */
+  getPerformanceStats(): {
+    updateCount: number;
+    skippedUpdates: number;
+    averageProcessingTime: number;
+    lastProcessingTime: number;
+    complianceRate: number;
+    isCompliant: boolean;
+  } {
+    const complianceRate = this.updateCount > 0 ? 
+      ((this.updateCount - this.skippedUpdates) / this.updateCount) * 100 : 100;
+    
+    return {
+      updateCount: this.updateCount,
+      skippedUpdates: this.skippedUpdates,
+      averageProcessingTime: Math.round(this.averageProcessingTime * 100) / 100,
+      lastProcessingTime: Math.round(this.lastProcessingTime * 100) / 100,
+      complianceRate: Math.round(complianceRate * 100) / 100,
+      isCompliant: complianceRate >= 95 // 95% compliance threshold
+    };
+  }
+
+  /**
+   * Reset performance counters
+   */
+  resetPerformanceStats(): void {
+    this.updateCount = 0;
+    this.skippedUpdates = 0;
+    this.averageProcessingTime = 0;
+    this.lastProcessingTime = 0;
+    console.log('AI performance statistics reset');
+  }
+
+  /**
+   * Force immediate AI update (for testing purposes only)
+   */
+  forceUpdate(state: GameState): void {
+    if (!this.isActive) {
+      console.warn('Cannot force update - AI is not active');
+      return;
+    }
+    
+    console.warn('FORCED UPDATE - This bypasses the 1-second constraint!');
+    this.gameState = this.deepCopyGameState(state);
+    this.makeDecision();
   }
 }
