@@ -11,6 +11,14 @@ class AIPlayer {
         this.skippedUpdates = 0;
         this.averageProcessingTime = 0;
         this.lastProcessingTime = 0;
+        // Keyboard simulation metrics
+        this.keyboardMetrics = {
+            totalKeyPresses: 0,
+            totalHoldTime: 0,
+            jitterEvents: 0,
+            doubleTaps: 0,
+            correctionInputs: 0
+        };
         // Event handlers
         this.eventHandlers = new Map();
         // External callback functions for WebSocket integration
@@ -208,20 +216,8 @@ class AIPlayer {
         else if (targetY < paddleCenter - deadZone) {
             move = 'up';
         }
-        // Send movement command through event system
-        if (move !== 'none') {
-            const keyboardEvent = {
-                action: move,
-                player: 'ai',
-                timestamp: Date.now(),
-                difficulty: this.difficulty.name
-            };
-            this.emit('aiKeyboardInput', keyboardEvent);
-            // Call external callback if set
-            if (this.onAIKeyboardInput) {
-                this.onAIKeyboardInput(keyboardEvent);
-            }
-        }
+        // Simulate human-like keyboard input patterns
+        this.simulateKeyboardInput(move);
     }
     /**
      * Change AI difficulty during gameplay
@@ -281,6 +277,167 @@ class AIPlayer {
         this.averageProcessingTime = 0;
         this.lastProcessingTime = 0;
         console.log('AI performance statistics reset');
+    }
+    /**
+     * Get keyboard simulation metrics
+     */
+    getKeyboardMetrics() {
+        const averageHoldTime = this.keyboardMetrics.totalKeyPresses > 0 ?
+            this.keyboardMetrics.totalHoldTime / this.keyboardMetrics.totalKeyPresses : 0;
+        // Calculate human-likeness score based on various factors
+        let humanlikeScore = 100;
+        // Reduce score for too perfect patterns
+        if (this.keyboardMetrics.jitterEvents === 0 && this.keyboardMetrics.totalKeyPresses > 10) {
+            humanlikeScore -= 30; // Too robotic
+        }
+        // Reduce score for excessive double taps
+        const doubleTapRatio = this.keyboardMetrics.totalKeyPresses > 0 ?
+            this.keyboardMetrics.doubleTaps / this.keyboardMetrics.totalKeyPresses : 0;
+        if (doubleTapRatio > 0.2) {
+            humanlikeScore -= 20; // Too many mistakes
+        }
+        // Bonus for realistic correction patterns
+        if (this.keyboardMetrics.correctionInputs > 0) {
+            humanlikeScore = Math.min(100, humanlikeScore + 10);
+        }
+        return {
+            totalKeyPresses: this.keyboardMetrics.totalKeyPresses,
+            averageHoldTime: Math.round(averageHoldTime * 100) / 100,
+            jitterEvents: this.keyboardMetrics.jitterEvents,
+            doubleTaps: this.keyboardMetrics.doubleTaps,
+            correctionInputs: this.keyboardMetrics.correctionInputs,
+            humanlikeScore: Math.max(0, Math.min(100, Math.round(humanlikeScore)))
+        };
+    }
+    /**
+     * Reset keyboard simulation metrics
+     */
+    resetKeyboardMetrics() {
+        this.keyboardMetrics = {
+            totalKeyPresses: 0,
+            totalHoldTime: 0,
+            jitterEvents: 0,
+            doubleTaps: 0,
+            correctionInputs: 0
+        };
+        console.log('AI keyboard simulation metrics reset');
+    }
+    /**
+     * Simulate realistic keyboard input patterns like a human player
+     */
+    simulateKeyboardInput(move) {
+        if (move === 'none')
+            return;
+        // Human-like input characteristics based on difficulty
+        const inputCharacteristics = {
+            keyHoldTime: this.generateHumanKeyHoldTime(),
+            keyPressDelay: this.generateKeyPressDelay(),
+            inputJitter: this.generateInputJitter(),
+            doubleTapProbability: this.difficulty.name === 'easy' ? 0.15 : 0.05
+        };
+        // Simulate key press with human-like timing variations
+        const simulateKeyPress = () => {
+            const keyboardEvent = {
+                action: move,
+                player: 'ai',
+                timestamp: Date.now(),
+                difficulty: this.difficulty.name
+            };
+            // Add jitter to make movement less robotic
+            if (Math.random() < inputCharacteristics.inputJitter) {
+                this.keyboardMetrics.jitterEvents++;
+                this.keyboardMetrics.correctionInputs++;
+                // Sometimes add a very brief opposite movement (human correction)
+                const oppositeMove = move === 'up' ? 'down' : 'up';
+                setTimeout(() => {
+                    const correctionEvent = {
+                        ...keyboardEvent,
+                        action: oppositeMove,
+                        timestamp: Date.now(),
+                        inputType: 'correction',
+                        holdDuration: 20
+                    };
+                    this.emit('aiKeyboardInput', correctionEvent);
+                    if (this.onAIKeyboardInput) {
+                        this.onAIKeyboardInput(correctionEvent);
+                    }
+                }, 20); // Brief 20ms correction
+            }
+            // Track metrics for main input
+            this.keyboardMetrics.totalKeyPresses++;
+            this.keyboardMetrics.totalHoldTime += inputCharacteristics.keyHoldTime;
+            // Main input event with enhanced data
+            const enhancedKeyboardEvent = {
+                ...keyboardEvent,
+                inputType: 'press',
+                holdDuration: inputCharacteristics.keyHoldTime,
+                reactionDelay: inputCharacteristics.keyPressDelay
+            };
+            this.emit('aiKeyboardInput', enhancedKeyboardEvent);
+            if (this.onAIKeyboardInput) {
+                this.onAIKeyboardInput(enhancedKeyboardEvent);
+            }
+            // Simulate key release after hold time
+            setTimeout(() => {
+                const releaseEvent = {
+                    action: 'none',
+                    player: 'ai',
+                    timestamp: Date.now(),
+                    difficulty: this.difficulty.name
+                };
+                this.emit('aiKeyboardInput', releaseEvent);
+                if (this.onAIKeyboardInput) {
+                    this.onAIKeyboardInput(releaseEvent);
+                }
+            }, inputCharacteristics.keyHoldTime);
+            // Sometimes simulate double-tap (especially on easy difficulty)
+            if (Math.random() < inputCharacteristics.doubleTapProbability) {
+                this.keyboardMetrics.doubleTaps++;
+                setTimeout(() => {
+                    const doubleTapEvent = {
+                        ...keyboardEvent,
+                        timestamp: Date.now(),
+                        inputType: 'double_tap'
+                    };
+                    this.emit('aiKeyboardInput', doubleTapEvent);
+                    if (this.onAIKeyboardInput) {
+                        this.onAIKeyboardInput(doubleTapEvent);
+                    }
+                }, inputCharacteristics.keyHoldTime + 50);
+            }
+        };
+        // Add random delay before key press (human reaction time variation)
+        setTimeout(simulateKeyPress, inputCharacteristics.keyPressDelay);
+    }
+    /**
+     * Generate human-like key hold duration
+     */
+    generateHumanKeyHoldTime() {
+        const baseTime = this.difficulty.name === 'easy' ? 180 :
+            this.difficulty.name === 'medium' ? 120 : 80;
+        // Add realistic variation (±40%)
+        const variation = (Math.random() - 0.5) * 0.4;
+        return Math.max(50, baseTime + (baseTime * variation));
+    }
+    /**
+     * Generate realistic key press delay
+     */
+    generateKeyPressDelay() {
+        const baseDelay = this.difficulty.reactionTime * 0.1; // 10% of reaction time
+        // Human-like variation in response timing
+        const variation = (Math.random() - 0.5) * 0.6;
+        return Math.max(10, baseDelay + (baseDelay * variation));
+    }
+    /**
+     * Calculate input jitter probability based on difficulty
+     */
+    generateInputJitter() {
+        switch (this.difficulty.name) {
+            case 'easy': return 0.25; // 25% chance of jittery input
+            case 'medium': return 0.15; // 15% chance
+            case 'hard': return 0.08; // 8% chance (more precise)
+            default: return 0.15;
+        }
     }
     /**
      * Force immediate AI update (for testing purposes only)

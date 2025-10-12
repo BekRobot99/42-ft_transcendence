@@ -163,6 +163,18 @@ export interface AIKeyboardEvent {
   player: 'ai';
   timestamp: number;
   difficulty: string;
+  inputType?: 'press' | 'hold' | 'release' | 'correction' | 'double_tap';
+  holdDuration?: number;
+  reactionDelay?: number;
+}
+
+export interface KeyboardSimulationMetrics {
+  totalKeyPresses: number;
+  averageHoldTime: number;
+  jitterEvents: number;
+  doubleTaps: number;
+  correctionInputs: number;
+  humanlikeScore: number; // 0-100 score of how human-like the input patterns are
 }
 
 export interface AIActivationEvent {
