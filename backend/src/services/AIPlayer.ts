@@ -242,8 +242,8 @@ export class AIPlayer {
   }
 
   /**
-   * AI decision making logic
-   * Analyzes game state and determines next move
+   * Enhanced AI decision making logic with advanced ball tracking
+   * Analyzes game state, predicts ball trajectory, and determines optimal move
    */
   private makeDecision(): void {
     if (!this.gameState) return;
@@ -251,38 +251,190 @@ export class AIPlayer {
     const paddleCenter = this.gameState.paddleY + (this.gameState.paddleHeight / 2);
     const ballY = this.gameState.ballY;
     const ballX = this.gameState.ballX;
+    const ballVelX = this.gameState.ballVelX;
+    const ballVelY = this.gameState.ballVelY;
     
-    // Predict where ball will be (based on difficulty)
-    let targetY = ballY;
+    // Enhanced ball trajectory analysis
+    const prediction = this.calculateBallTrajectory(ballX, ballY, ballVelX, ballVelY);
+    let targetY = prediction.interceptY;
     
-    if (this.difficulty.predictionDepth > 1) {
-      // Simple ball trajectory prediction for higher difficulties
-      const timeToReachPaddle = Math.abs(ballX - this.gameState.canvasWidth * 0.9) / Math.abs(this.gameState.ballVelX);
-      targetY = ballY + (this.gameState.ballVelY * timeToReachPaddle);
-      
-      // Handle ball bouncing off top/bottom walls
-      const canvasHeight = this.gameState.canvasHeight;
-      if (targetY < 0 || targetY > canvasHeight) {
-        targetY = targetY < 0 ? -targetY : (2 * canvasHeight - targetY);
-      }
-    }
+    // Strategic positioning based on game situation
+    const gameStrategy = this.analyzeGameSituation();
+    targetY = this.applyGameStrategy(targetY, gameStrategy);
     
-    // Add accuracy variation (AI doesn't always move perfectly)
-    const accuracyOffset = (Math.random() - 0.5) * (1 - this.difficulty.accuracy) * 100;
-    targetY += accuracyOffset;
+    // Apply difficulty-based modifications
+    targetY = this.applyDifficultyModifiers(targetY, paddleCenter);
     
-    // Determine movement based on target position
-    let move: AIMove = 'none';
-    const deadZone = 15; // Prevent jittery movement
-    
-    if (targetY > paddleCenter + deadZone) {
-      move = 'down';
-    } else if (targetY < paddleCenter - deadZone) {
-      move = 'up';
-    }
+    // Determine movement with enhanced logic
+    const move = this.calculateOptimalMove(targetY, paddleCenter);
     
     // Simulate human-like keyboard input patterns
     this.simulateKeyboardInput(move);
+  }
+
+  /**
+   * Calculate ball trajectory with multiple bounce predictions
+   */
+  private calculateBallTrajectory(ballX: number, ballY: number, velX: number, velY: number): {
+    interceptY: number;
+    timeToIntercept: number;
+    bounces: number;
+  } {
+    const paddleX = this.gameState!.canvasWidth * 0.9; // AI paddle position
+    const canvasHeight = this.gameState!.canvasHeight;
+    
+    let currentX = ballX;
+    let currentY = ballY;
+    let currentVelX = velX;
+    let currentVelY = velY;
+    let bounces = 0;
+    let time = 0;
+    
+    // Predict trajectory for up to 3 bounces (based on difficulty)
+    const maxBounces = this.difficulty.predictionDepth;
+    
+    while (currentX < paddleX && bounces < maxBounces) {
+      // Calculate time to reach paddle X or wall collision
+      const timeToWall = currentVelY > 0 ? 
+        (canvasHeight - currentY) / currentVelY : 
+        -currentY / currentVelY;
+      const timeToPaddle = (paddleX - currentX) / currentVelX;
+      
+      if (timeToPaddle <= timeToWall) {
+        // Ball reaches paddle before hitting wall
+        time += timeToPaddle;
+        return {
+          interceptY: currentY + (currentVelY * timeToPaddle),
+          timeToIntercept: time,
+          bounces: bounces
+        };
+      } else {
+        // Ball hits wall first
+        time += timeToWall;
+        currentX += currentVelX * timeToWall;
+        currentY = currentVelY > 0 ? canvasHeight : 0;
+        currentVelY *= -1; // Bounce off wall
+        bounces++;
+      }
+    }
+    
+    // Fallback: simple linear prediction
+    const timeToReach = Math.abs(paddleX - currentX) / Math.abs(currentVelX);
+    return {
+      interceptY: currentY + (currentVelY * timeToReach),
+      timeToIntercept: time + timeToReach,
+      bounces: bounces
+    };
+  }
+
+  /**
+   * Analyze current game situation for strategic decisions
+   */
+  private analyzeGameSituation(): {
+    isWinning: boolean;
+    ballDirection: 'incoming' | 'outgoing';
+    urgency: 'low' | 'medium' | 'high';
+    paddleAdvantage: number; // -1 to 1, where 1 is optimal position
+  } {
+    const ballVelX = this.gameState!.ballVelX;
+    const ballX = this.gameState!.ballX;
+    const canvasWidth = this.gameState!.canvasWidth;
+    
+    const isWinning = (this.gameState!.score.ai || 0) > (this.gameState!.score.human || 0);
+    const ballDirection = ballVelX > 0 ? 'incoming' : 'outgoing';
+    
+    // Calculate urgency based on ball proximity and speed
+    const distanceRatio = (canvasWidth - ballX) / canvasWidth;
+    const speedFactor = Math.abs(ballVelX) / 5; // Normalize speed
+    let urgency: 'low' | 'medium' | 'high' = 'low';
+    
+    if (ballDirection === 'incoming') {
+      if (distanceRatio < 0.3 && speedFactor > 1) urgency = 'high';
+      else if (distanceRatio < 0.5) urgency = 'medium';
+    }
+    
+    // Calculate paddle positioning advantage
+    const paddleCenter = this.gameState!.paddleY + (this.gameState!.paddleHeight / 2);
+    const canvasCenter = this.gameState!.canvasHeight / 2;
+    const paddleAdvantage = 1 - (Math.abs(paddleCenter - canvasCenter) / (this.gameState!.canvasHeight / 2));
+    
+    return { isWinning, ballDirection, urgency, paddleAdvantage };
+  }
+
+  /**
+   * Apply strategic modifications to target position
+   */
+  private applyGameStrategy(targetY: number, strategy: any): number {
+    let modifiedY = targetY;
+    const canvasHeight = this.gameState!.canvasHeight;
+    const paddleHeight = this.gameState!.paddleHeight;
+    
+    // Defensive strategy: stay closer to center when not urgent
+    if (strategy.urgency === 'low' && strategy.ballDirection === 'outgoing') {
+      const centerY = canvasHeight / 2;
+      const centerWeight = this.difficulty.name === 'easy' ? 0.7 : 0.3;
+      modifiedY = (modifiedY * (1 - centerWeight)) + (centerY * centerWeight);
+    }
+    
+    // Aggressive strategy: optimize for counter-attacks when winning
+    if (strategy.isWinning && strategy.ballDirection === 'incoming') {
+      // Position slightly off-center to create angled returns
+      const angleOffset = (Math.random() - 0.5) * paddleHeight * 0.3;
+      modifiedY += angleOffset;
+    }
+    
+    // Ensure target is within playable bounds
+    return Math.max(paddleHeight / 2, Math.min(canvasHeight - paddleHeight / 2, modifiedY));
+  }
+
+  /**
+   * Apply difficulty-based accuracy and reaction modifiers
+   */
+  private applyDifficultyModifiers(targetY: number, currentCenter: number): number {
+    // Base accuracy error
+    const maxError = (1 - this.difficulty.accuracy) * 80;
+    const accuracyError = (Math.random() - 0.5) * maxError;
+    
+    // Skill-based targeting adjustments
+    let skillModifier = 0;
+    
+    switch (this.difficulty.name) {
+      case 'easy':
+        // Sometimes aims for center of paddle instead of optimal position
+        if (Math.random() < 0.4) {
+          skillModifier = (this.gameState!.canvasHeight / 2 - targetY) * 0.5;
+        }
+        break;
+        
+      case 'hard':
+        // Predictive positioning - tries to anticipate player movement
+        const opponentY = this.gameState!.opponentPaddleY;
+        const opponentCenter = opponentY + (this.gameState!.paddleHeight / 2);
+        const opponentMovement = opponentCenter - (this.gameState!.canvasHeight / 2);
+        skillModifier = -opponentMovement * 0.2; // Counter opponent positioning
+        break;
+    }
+    
+    return targetY + accuracyError + skillModifier;
+  }
+
+  /**
+   * Calculate optimal movement direction with enhanced logic
+   */
+  private calculateOptimalMove(targetY: number, currentCenter: number): AIMove {
+    const difference = targetY - currentCenter;
+    const moveThreshold = this.difficulty.name === 'easy' ? 25 : 
+                         this.difficulty.name === 'medium' ? 18 : 12;
+    
+    // Add momentum consideration for smoother movement
+    const momentumFactor = this.difficulty.speed;
+    const adjustedThreshold = moveThreshold / momentumFactor;
+    
+    if (Math.abs(difference) < adjustedThreshold) {
+      return 'none';
+    }
+    
+    return difference > 0 ? 'down' : 'up';
   }
 
   /**
