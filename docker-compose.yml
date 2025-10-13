@@ -1,13 +1,17 @@
 services:
   waf:
-    build:
-      context: ./backend/security/waf
-      dockerfile: dockerfile
+    image: owasp/modsecurity-crs:nginx
+    # build:                              #IF USING DOCKERFILE - OTHERVISE USE IMAGE
+      # context: ./backend/security/waf  
+      # dockerfile: dockerfile
     ports:
         - "8080:443"  # Exposes Nginx HTTPS port
         - "8000:80"  #Optionally expose HTTP for redirection
     volumes:
       - ./backend/security/waf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/security/waf/modsecurity:/etc/modsecurity.d:ro
+      - ./backend/security/waf/logs:/var/log/modsecurity
+    container_name: ft_transcendence_waf
     depends_on:
       - frontend
     restart: unless-stopped
