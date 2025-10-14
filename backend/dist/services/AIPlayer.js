@@ -29,28 +29,36 @@ class AIPlayer {
         // Precise 1-second constraint implementation
         this.UPDATE_INTERVAL = 1000; // Exactly 1 second - critical requirement
         this.TIMING_TOLERANCE = 50; // Allow 50ms variance for system load
-        // Predefined difficulty levels
+        // Gameplay balance configuration
+        this.BALANCE_CONFIG = {
+            maxTrajectoryBounces: 3,
+            centerBiasWeight: 0.3,
+            randomnessIntensity: 0.15,
+            momentumSmoothing: 1.2,
+            strategicDepth: 0.8
+        };
+        // Carefully tuned difficulty levels for balanced gameplay
         this.DIFFICULTIES = {
             easy: {
                 name: 'easy',
-                reactionTime: 800, // Slower reactions
-                accuracy: 0.6, // 60% accuracy
-                speed: 0.7, // Slower movement
-                predictionDepth: 1 // Basic prediction
+                reactionTime: 650, // Slightly faster than before for better gameplay
+                accuracy: 0.65, // Improved from 60% to make it less frustrating
+                speed: 0.75, // Slightly faster movement
+                predictionDepth: 1 // Still basic prediction only
             },
             medium: {
                 name: 'medium',
-                reactionTime: 400, // Medium reactions
-                accuracy: 0.8, // 80% accuracy
-                speed: 0.9, // Near normal speed
-                predictionDepth: 2 // Better prediction
+                reactionTime: 350, // Faster reactions for challenging gameplay
+                accuracy: 0.82, // Fine-tuned for competitive balance
+                speed: 0.95, // Nearly human-level speed
+                predictionDepth: 2 // Good prediction capability
             },
             hard: {
                 name: 'hard',
-                reactionTime: 200, // Fast reactions
-                accuracy: 0.95, // 95% accuracy
-                speed: 1.2, // Faster than human
-                predictionDepth: 3 // Advanced prediction
+                reactionTime: 180, // Very fast but not impossible reactions
+                accuracy: 0.92, // Reduced from 95% to be beatable
+                speed: 1.15, // Faster than human but not overwhelming
+                predictionDepth: 3 // Full advanced prediction
             }
         };
         this.difficulty = this.DIFFICULTIES[difficulty];
@@ -304,24 +312,39 @@ class AIPlayer {
      * Apply difficulty-based accuracy and reaction modifiers
      */
     applyDifficultyModifiers(targetY, currentCenter) {
-        // Base accuracy error
-        const maxError = (1 - this.difficulty.accuracy) * 80;
+        // Refined accuracy error scaling for better game balance
+        const maxError = (1 - this.difficulty.accuracy) * 60; // Reduced from 80 to 60
         const accuracyError = (Math.random() - 0.5) * maxError;
-        // Skill-based targeting adjustments
+        // Enhanced skill-based targeting adjustments
         let skillModifier = 0;
         switch (this.difficulty.name) {
             case 'easy':
-                // Sometimes aims for center of paddle instead of optimal position
-                if (Math.random() < 0.4) {
-                    skillModifier = (this.gameState.canvasHeight / 2 - targetY) * 0.5;
+                // More frequent sub-optimal positioning, but not completely random
+                if (Math.random() < 0.45) {
+                    const centerBias = (this.gameState.canvasHeight / 2 - targetY) * 0.4;
+                    skillModifier = centerBias;
+                }
+                // Sometimes completely misses timing (represents human errors)
+                if (Math.random() < 0.15) {
+                    skillModifier += (Math.random() - 0.5) * 40;
+                }
+                break;
+            case 'medium':
+                // Occasional strategic errors
+                if (Math.random() < 0.2) {
+                    skillModifier = (Math.random() - 0.5) * 20;
                 }
                 break;
             case 'hard':
-                // Predictive positioning - tries to anticipate player movement
+                // Advanced predictive positioning with opponent movement tracking
                 const opponentY = this.gameState.opponentPaddleY;
                 const opponentCenter = opponentY + (this.gameState.paddleHeight / 2);
                 const opponentMovement = opponentCenter - (this.gameState.canvasHeight / 2);
-                skillModifier = -opponentMovement * 0.2; // Counter opponent positioning
+                skillModifier = -opponentMovement * 0.25; // Enhanced counter positioning
+                // Rare but impactful strategic adjustments
+                if (Math.random() < 0.1) {
+                    skillModifier += (Math.random() - 0.5) * 15;
+                }
                 break;
         }
         return targetY + accuracyError + skillModifier;
@@ -331,12 +354,16 @@ class AIPlayer {
      */
     calculateOptimalMove(targetY, currentCenter) {
         const difference = targetY - currentCenter;
-        const moveThreshold = this.difficulty.name === 'easy' ? 25 :
-            this.difficulty.name === 'medium' ? 18 : 12;
+        // Fine-tuned movement thresholds for better gameplay balance
+        const moveThreshold = this.difficulty.name === 'easy' ? 22 :
+            this.difficulty.name === 'medium' ? 16 : 10;
         // Add momentum consideration for smoother movement
         const momentumFactor = this.difficulty.speed;
         const adjustedThreshold = moveThreshold / momentumFactor;
-        if (Math.abs(difference) < adjustedThreshold) {
+        // Add small randomization to prevent perfect robotic movement
+        const randomOffset = (Math.random() - 0.5) * 3;
+        const finalThreshold = adjustedThreshold + randomOffset;
+        if (Math.abs(difference) < finalThreshold) {
             return 'none';
         }
         return difference > 0 ? 'down' : 'up';
