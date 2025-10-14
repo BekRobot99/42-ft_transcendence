@@ -1,4 +1,5 @@
 import { AIKeyboardEvent, KeyboardSimulationMetrics } from '../interfaces/GameTypes';
+import { BallPhysicsEngine, BallState, PaddlePhysics, Vector2D } from './BallPhysics';
 
 /**
  * AI Player for Pong Game
@@ -54,6 +55,9 @@ export class AIPlayer {
     doubleTaps: 0,
     correctionInputs: 0
   };
+
+  // Physics engine for advanced ball prediction
+  private physicsEngine: BallPhysicsEngine;
   
   // Event handlers
   private eventHandlers: Map<string, AIEventHandler[]> = new Map();
@@ -104,6 +108,13 @@ export class AIPlayer {
 
   constructor(difficulty: 'easy' | 'medium' | 'hard' = 'medium') {
     this.difficulty = this.DIFFICULTIES[difficulty];
+    this.physicsEngine = new BallPhysicsEngine({
+      maxSpeed: 8,
+      minSpeed: 2,
+      speedIncreaseFactor: 1.05,
+      wallBounceDamping: 0.98,
+      paddleBounceDamping: 1.02
+    });
     console.log(`AI Player initialized with ${difficulty} difficulty`);
   }
 
@@ -282,7 +293,7 @@ export class AIPlayer {
   }
 
   /**
-   * Calculate ball trajectory with multiple bounce predictions
+   * Calculate ball trajectory using advanced physics engine
    */
   private calculateBallTrajectory(ballX: number, ballY: number, velX: number, velY: number): {
     interceptY: number;
@@ -290,49 +301,51 @@ export class AIPlayer {
     bounces: number;
   } {
     const paddleX = this.gameState!.canvasWidth * 0.9; // AI paddle position
+    const canvasWidth = this.gameState!.canvasWidth;
     const canvasHeight = this.gameState!.canvasHeight;
     
-    let currentX = ballX;
-    let currentY = ballY;
-    let currentVelX = velX;
-    let currentVelY = velY;
+    // Create ball state for physics engine
+    const ballState: BallState = {
+      position: { x: ballX, y: ballY },
+      velocity: { x: velX, y: velY },
+      radius: 7, // Standard ball radius
+      lastCollisionTime: Date.now()
+    };
+    
+    // Use physics engine for precise trajectory prediction
+    const interceptionPoint = this.physicsEngine.calculateInterceptionPoint(
+      ballState, paddleX, canvasWidth, canvasHeight
+    );
+    
+    // Enhanced prediction with physics simulation
+    const trajectory = this.physicsEngine.predictTrajectory(ballState, canvasWidth, canvasHeight, 60);
+    
     let bounces = 0;
-    let time = 0;
+    let interceptY = interceptionPoint.y;
+    let timeToIntercept = interceptionPoint.time;
     
-    // Predict trajectory for up to 3 bounces (based on difficulty)
-    const maxBounces = this.difficulty.predictionDepth;
-    
-    while (currentX < paddleX && bounces < maxBounces) {
-      // Calculate time to reach paddle X or wall collision
-      const timeToWall = currentVelY > 0 ? 
-        (canvasHeight - currentY) / currentVelY : 
-        -currentY / currentVelY;
-      const timeToPaddle = (paddleX - currentX) / currentVelX;
+    // Count wall bounces in trajectory
+    for (let i = 1; i < trajectory.length; i++) {
+      const prevY = trajectory[i - 1].y;
+      const currY = trajectory[i].y;
       
-      if (timeToPaddle <= timeToWall) {
-        // Ball reaches paddle before hitting wall
-        time += timeToPaddle;
-        return {
-          interceptY: currentY + (currentVelY * timeToPaddle),
-          timeToIntercept: time,
-          bounces: bounces
-        };
-      } else {
-        // Ball hits wall first
-        time += timeToWall;
-        currentX += currentVelX * timeToWall;
-        currentY = currentVelY > 0 ? canvasHeight : 0;
-        currentVelY *= -1; // Bounce off wall
+      // Detect bounce (change in direction near walls)
+      if ((prevY <= 10 && currY > 10) || (prevY >= canvasHeight - 10 && currY < canvasHeight - 10)) {
         bounces++;
+      }
+      
+      // Stop if ball reaches paddle area
+      if (trajectory[i].x >= paddleX) {
+        interceptY = trajectory[i].y;
+        timeToIntercept = i * 16.67; // Approximate time based on frame rate
+        break;
       }
     }
     
-    // Fallback: simple linear prediction
-    const timeToReach = Math.abs(paddleX - currentX) / Math.abs(currentVelX);
     return {
-      interceptY: currentY + (currentVelY * timeToReach),
-      timeToIntercept: time + timeToReach,
-      bounces: bounces
+      interceptY,
+      timeToIntercept,
+      bounces: Math.min(bounces, this.difficulty.predictionDepth)
     };
   }
 

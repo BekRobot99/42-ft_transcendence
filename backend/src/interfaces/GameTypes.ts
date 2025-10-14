@@ -188,3 +188,35 @@ export interface DifficultyChangeEvent {
   gameId: string;
   timestamp: number;
 }
+
+// Physics-related interfaces
+export interface PhysicsUpdateEvent {
+  ballPosition: { x: number; y: number };
+  ballVelocity: { x: number; y: number };
+  timestamp: number;
+  collisionData?: {
+    type: 'wall' | 'paddle' | 'none';
+    point: { x: number; y: number };
+    angle?: number;
+  };
+}
+
+export interface GamePhysicsState {
+  ballPhysics: {
+    position: { x: number; y: number };
+    velocity: { x: number; y: number };
+    radius: number;
+    lastCollisionTime: number;
+  };
+  paddlePhysics: {
+    player1: { x: number; y: number; width: number; height: number; velocity: { x: number; y: number } };
+    player2: { x: number; y: number; width: number; height: number; velocity: { x: number; y: number } };
+  };
+  physicsConfig: {
+    gravity: number;
+    friction: number;
+    maxSpeed: number;
+    minSpeed: number;
+    speedIncreaseFactor: number;
+  };
+}
