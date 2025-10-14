@@ -11,6 +11,7 @@ services:
       - ./backend/security/waf/nginx.conf:/etc/nginx/templates/conf.d/default.conf.template:ro
       - ./backend/security/waf/modsecurity/config.conf:/etc/nginx/templates/modsecurity.d/modsecurity.conf.template:ro
       - ./backend/security/waf/logs:/var/log/modsecurity
+      - ./certificates:/etc/nginx/certs:ro
     container_name: ft_transcendence_waf
     depends_on:
       - frontend
