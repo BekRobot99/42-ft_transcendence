@@ -20,6 +20,7 @@ export interface GameState {
   opponentPaddleY: number;
   score: { ai: number; human: number };
   gameActive: boolean;
+  timestamp?: number; // For game duration tracking
 }
 
 export type AIMove = 'up' | 'down' | 'none';
@@ -58,6 +59,25 @@ export class AIPlayer {
 
   // Physics engine for advanced ball prediction
   private physicsEngine: BallPhysicsEngine;
+  
+  // Game identification and statistics
+  private gameId: string = `ai_game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  private aiSide: 'left' | 'right' = 'right'; // Default to right side
+  private stats = {
+    gamesPlayed: 0,
+    gamesWon: 0,
+    averageReactionTime: 0,
+    totalPlayTime: 0
+  };
+  
+  // Enhanced performance statistics for scoring integration
+  private performanceStats = {
+    totalReactions: 0,
+    totalReactionTime: 0,
+    missedBalls: 0,
+    successfulDefenses: 0,
+    totalMissDistance: 0
+  };
   
   // Event handlers
   private eventHandlers: Map<string, AIEventHandler[]> = new Map();
@@ -760,5 +780,128 @@ export class AIPlayer {
     console.warn('FORCED UPDATE - This bypasses the 1-second constraint!');
     this.gameState = this.deepCopyGameState(state);
     this.makeDecision();
+  }
+
+  /**
+   * Handle score updates and adjust AI strategy accordingly
+   */
+  onScoreUpdate(score: { player1: number; player2: number }): void {
+    if (!this.gameState) return;
+    
+    // Update internal score tracking - convert format
+    this.gameState.score = { 
+      ai: score.player2,     // AI is typically player 2
+      human: score.player1   // Human is typically player 1
+    };
+    
+    // Adjust AI behavior based on score situation
+    const aiScore = score.player2; // AI is typically player 2
+    const humanScore = score.player1;
+    const scoreDiff = aiScore - humanScore;
+    
+    // Emit strategic adjustment event
+    this.emit('score_updated', {
+      gameId: this.gameId,
+      score: score,
+      scoreDifferential: scoreDiff,
+      aiPosition: scoreDiff > 0 ? 'winning' : scoreDiff < 0 ? 'losing' : 'tied',
+      timestamp: Date.now(),
+      strategicAdjustment: this.calculateStrategicAdjustment(scoreDiff)
+    });
+    
+    // Track scoring patterns for performance analysis
+    this.stats.gamesPlayed = Math.max(this.stats.gamesPlayed, aiScore + humanScore);
+    
+    console.log(`[AI ${this.gameId}] Score updated - AI: ${aiScore}, Human: ${humanScore}, Diff: ${scoreDiff}`);
+  }
+
+  /**
+   * Handle ball scoring events for AI learning and adaptation
+   */
+  onBallScored(side: 'left' | 'right', gameContext: GameState): void {
+    if (!this.gameState) return;
+    
+    const aiScoredAgainst = (side === 'left' && this.aiSide === 'right') || 
+                            (side === 'right' && this.aiSide === 'left');
+    
+    // Calculate miss analysis for performance improvement
+    const missDistance = Math.abs(gameContext.paddleY - gameContext.ballY);
+    const reactionQuality = missDistance < 50 ? 'good' : missDistance < 100 ? 'fair' : 'poor';
+    
+    // Update performance statistics
+    if (aiScoredAgainst) {
+      this.performanceStats.missedBalls++;
+      this.performanceStats.totalMissDistance += missDistance;
+    } else {
+      this.performanceStats.successfulDefenses++;
+    }
+    
+    // Emit ball scored analysis event
+    this.emit('ball_scored_analysis', {
+      gameId: this.gameId,
+      aiScoredAgainst,
+      missDistance,
+      reactionQuality,
+      ballSpeed: Math.sqrt(gameContext.ballVelX ** 2 + gameContext.ballVelY ** 2),
+      paddlePosition: gameContext.paddleY,
+      ballPosition: gameContext.ballY,
+      difficulty: this.difficulty.name,
+      timestamp: Date.now()
+    });
+    
+    console.log(`[AI ${this.gameId}] Ball scored on ${side} side - AI affected: ${aiScoredAgainst}, Reaction: ${reactionQuality}`);
+  }
+
+  /**
+   * Handle game end events and finalize statistics
+   */
+  onGameEnd(winner: 'human' | 'ai', finalScore: { player1: number; player2: number }): void {
+    const aiWon = winner === 'ai';
+    const gameDuration = Date.now() - (this.gameState?.timestamp || Date.now());
+    
+    // Update final statistics
+    this.stats.gamesPlayed++;
+    if (aiWon) {
+      this.stats.gamesWon++;
+    }
+    
+    // Calculate final performance metrics
+    const totalReactions = this.performanceStats.totalReactions;
+    const avgReactionTime = totalReactions > 0 ? 
+      this.performanceStats.totalReactionTime / totalReactions : 0;
+    
+    const accuracyRate = this.performanceStats.successfulDefenses / 
+      (this.performanceStats.successfulDefenses + this.performanceStats.missedBalls);
+    
+    // Emit comprehensive game end analysis
+    this.emit('game_ended', {
+      gameId: this.gameId,
+      winner,
+      finalScore,
+      aiWon,
+      gameDuration,
+      performance: {
+        averageReactionTime: avgReactionTime,
+        accuracyRate: isNaN(accuracyRate) ? 0 : accuracyRate,
+        totalReactions,
+        missedBalls: this.performanceStats.missedBalls,
+        successfulDefenses: this.performanceStats.successfulDefenses,
+        difficulty: this.difficulty.name
+      },
+      timestamp: Date.now()
+    });
+    
+    console.log(`[AI ${this.gameId}] Game ended - Winner: ${winner}, AI Performance: ${(accuracyRate * 100).toFixed(1)}% accuracy`);
+  }
+
+  /**
+   * Calculate strategic adjustments based on score differential
+   */
+  private calculateStrategicAdjustment(scoreDiff: number): string {
+    if (scoreDiff >= 2) return 'defensive'; // AI is winning, play safer
+    if (scoreDiff <= -2) return 'aggressive'; // AI is losing, take risks
+    if (scoreDiff === 1) return 'maintain'; // Slight lead, maintain advantage
+    if (scoreDiff === -1) return 'pressure'; // Slight deficit, apply pressure
+    return 'balanced'; // Tied game, balanced play
   }
 }

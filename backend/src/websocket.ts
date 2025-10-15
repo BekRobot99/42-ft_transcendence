@@ -297,6 +297,82 @@ function handleGameMessage(connection: any, userId: number, message: GameSocketM
             }
             break;
 
+        case 'score_update':
+            // Handle score updates and sync with AI system
+            if (room && message.data) {
+                const { scorer, newScore } = message.data;
+                
+                if (scorer === 'human') {
+                    room.gameState.score.player1 = newScore.human;
+                    room.gameState.score.player2 = newScore.ai;
+                } else if (scorer === 'ai') {
+                    room.gameState.score.player1 = newScore.human;
+                    room.gameState.score.player2 = newScore.ai;
+                }
+                
+                // Notify AI of score change for strategic adjustments
+                if (aiPlayer) {
+                    aiPlayer.onScoreUpdate(room.gameState.score);
+                }
+                
+                // Broadcast score update to all players
+                broadcastToGame(gameId, JSON.stringify({
+                    type: 'score_updated',
+                    gameId: gameId,
+                    score: room.gameState.score,
+                    scorer: scorer,
+                    timestamp: Date.now()
+                }));
+                
+                // Check for game end conditions
+                const winningScore = 5; // Standard Pong winning score
+                if (room.gameState.score.player1 >= winningScore || room.gameState.score.player2 >= winningScore) {
+                    const winner = room.gameState.score.player1 >= winningScore ? 'human' : 'ai';
+                    
+                    room.gameState.gameActive = false;
+                    room.gameState.winner = winner;
+                    
+                    if (aiPlayer) {
+                        aiPlayer.onGameEnd(winner, room.gameState.score);
+                        aiPlayer.deactivate();
+                    }
+                    
+                    broadcastToGame(gameId, JSON.stringify({
+                        type: 'game_ended',
+                        gameId: gameId,
+                        winner: winner,
+                        finalScore: room.gameState.score,
+                        timestamp: Date.now()
+                    }));
+                }
+            }
+            break;
+
+        case 'ball_scored':
+            // Handle ball scoring events
+            if (room && message.data && aiPlayer) {
+                const { side, ballPosition, ballVelocity } = message.data;
+                
+                // Update AI with scoring context for learning
+                aiPlayer.onBallScored(side, {
+                    ballX: ballPosition.x,
+                    ballY: ballPosition.y,
+                    ballVelX: ballVelocity.x,
+                    ballVelY: ballVelocity.y,
+                    paddleY: room.gameState.paddles.player2.y,
+                    paddleHeight: room.gameState.paddles.player2.height,
+                    canvasHeight: room.gameState.canvas.height,
+                    canvasWidth: room.gameState.canvas.width,
+                    opponentPaddleY: room.gameState.paddles.player1.y,
+                    score: { 
+                        ai: room.gameState.score.player2,
+                        human: room.gameState.score.player1
+                    },
+                    gameActive: room.gameState.gameActive
+                });
+            }
+            break;
+
         case 'leave_game':
             // Clean up game room and AI with final stats
             if (aiPlayer) {

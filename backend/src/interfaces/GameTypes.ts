@@ -147,7 +147,15 @@ export type GameSocketEvent =
   | 'ai_performance_stats'
   | 'reset_ai_stats'
   | 'powerup_activate'
-  | 'chat_message';
+  | 'chat_message'
+  | 'ai_keyboard'
+  | 'ai_start'
+  | 'ai_stop'
+  | 'ai_difficulty'
+  | 'ai_status_request'
+  | 'physics_update'
+  | 'score_update'
+  | 'ball_scored';
 
 export interface GameSocketMessage {
   event: GameSocketEvent;
@@ -219,4 +227,36 @@ export interface GamePhysicsState {
     minSpeed: number;
     speedIncreaseFactor: number;
   };
+}
+
+// Scoring and game event interfaces
+export interface ScoreUpdateEvent {
+  scorer: 'human' | 'ai';
+  newScore: { human: number; ai: number };
+  scoringTime: number;
+  gameId: string;
+}
+
+export interface BallScoredEvent {
+  side: 'left' | 'right';
+  ballPosition: { x: number; y: number };
+  ballVelocity: { x: number; y: number };
+  paddleState: {
+    y: number;
+    height: number;
+    velocity: number;
+  };
+  gameContext: {
+    score: { player1: number; player2: number };
+    elapsedTime: number;
+    difficulty: 'easy' | 'medium' | 'hard';
+  };
+}
+
+export interface GameEndEvent {
+  winner: 'human' | 'ai';
+  finalScore: { player1: number; player2: number };
+  gameDuration: number;
+  totalRallies: number;
+  averageRallyLength: number;
 }

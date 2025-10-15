@@ -309,6 +309,51 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 console.log(`AI activated with ${message.difficulty} difficulty`);
                 break;
 
+            case 'score_updated':
+                // Update score display when backend confirms score change
+                if (message.score) {
+                    player1.score = message.score.player1;
+                    player2.score = message.score.player2;
+                    updateScoreDisplay();
+                    console.log(`Score updated by ${message.scorer}: ${player1.score} - ${player2.score}`);
+                }
+                break;
+
+            case 'game_ended':
+                // Handle game end event
+                if (message.winner && ctx) {
+                    const winnerText = message.winner === 'human' ? 'You Win!' : 'AI Wins!';
+                    const finalScore = `Final Score: ${message.finalScore.player1} - ${message.finalScore.player2}`;
+                    
+                    // Display game end message overlay
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '48px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(winnerText, canvas.width / 2, canvas.height / 2 - 50);
+                    
+                    ctx.font = '24px Arial';
+                    ctx.fillText(finalScore, canvas.width / 2, canvas.height / 2 + 50);
+                    
+                    console.log(`Game ended - Winner: ${message.winner}, Final: ${finalScore}`);
+                    
+                    // Stop the ball movement
+                    ball.dx = 0;
+                    ball.dy = 0;
+                }
+                break;
+
+            case 'ball_scored_analysis':
+                // Handle AI ball scoring analysis (for debugging/stats)
+                if (message.aiScoredAgainst) {
+                    console.log(`AI missed ball - Distance: ${message.missDistance}px, Quality: ${message.reactionQuality}`);
+                } else {
+                    console.log('AI successfully defended');
+                }
+                break;
+
             default:
                 console.log('Unknown AI game message:', message);
         }
@@ -419,6 +464,35 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         if (ball.x + ball.radius > canvas.width) {
             player1.score++;
             updateScoreDisplay();
+            
+            // Notify AI of scoring event
+            if (isAIMode && aiSocket && aiGameId) {
+                // Send ball scored event first
+                aiSocket.send(JSON.stringify({
+                    event: 'ball_scored',
+                    gameId: aiGameId,
+                    playerId: 'human_player',
+                    timestamp: Date.now(),
+                    data: {
+                        side: 'right', // Ball went past right paddle (AI scored against)
+                        ballPosition: { x: ball.x, y: ball.y },
+                        ballVelocity: { x: ball.dx, y: ball.dy }
+                    }
+                }));
+                
+                // Send score update
+                aiSocket.send(JSON.stringify({
+                    event: 'score_update',
+                    gameId: aiGameId,
+                    playerId: 'human_player',
+                    timestamp: Date.now(),
+                    data: {
+                        scorer: 'human',
+                        newScore: { human: player1.score, ai: player2.score }
+                    }
+                }));
+            }
+            
             if (gameOptions.onGameEnd && player1.score >= WINNING_SCORE) {
                 cancelAnimationFrame(animationFrameId);
                 gameOptions.onGameEnd({ winnerName: player1Alias, score1: player1.score, score2: player2.score });
@@ -428,6 +502,35 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         } else if (ball.x - ball.radius < 0) {
             player2.score++;
             updateScoreDisplay();
+            
+            // Notify AI of scoring event
+            if (isAIMode && aiSocket && aiGameId) {
+                // Send ball scored event first
+                aiSocket.send(JSON.stringify({
+                    event: 'ball_scored',
+                    gameId: aiGameId,
+                    playerId: 'human_player',
+                    timestamp: Date.now(),
+                    data: {
+                        side: 'left', // Ball went past left paddle (human scored against)
+                        ballPosition: { x: ball.x, y: ball.y },
+                        ballVelocity: { x: ball.dx, y: ball.dy }
+                    }
+                }));
+                
+                // Send score update
+                aiSocket.send(JSON.stringify({
+                    event: 'score_update',
+                    gameId: aiGameId,
+                    playerId: 'human_player',
+                    timestamp: Date.now(),
+                    data: {
+                        scorer: 'ai',
+                        newScore: { human: player1.score, ai: player2.score }
+                    }
+                }));
+            }
+            
             if (gameOptions.onGameEnd && player2.score >= WINNING_SCORE) {
                 cancelAnimationFrame(animationFrameId);
                 gameOptions.onGameEnd({ winnerName: player2Alias, score1: player1.score, score2: player2.score });
