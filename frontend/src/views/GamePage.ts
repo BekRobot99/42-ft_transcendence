@@ -143,6 +143,26 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     let aiSocket: WebSocket | null = null;
     let aiGameId: string | null = null;
     let aiStatsInterval: number | null = null;
+    
+    // AI status indicators and visual feedback
+    let aiStatus = {
+        isActive: false,
+        difficulty: 'medium',
+        lastMove: 'none' as 'up' | 'down' | 'none',
+        lastMoveTime: 0,
+        reactionTime: 0,
+        accuracy: 0,
+        thinking: false,
+        thinkingStartTime: 0
+    };
+    
+    // Visual effects for AI feedback
+    let aiIndicators = {
+        thinkingOpacity: 0,
+        moveIndicatorOpacity: 0,
+        accuracyBarWidth: 0,
+        reactionTimeColor: '#00ff00'
+    };
 
     function keyDownHandler(e: KeyboardEvent) {
         keysPressed[e.key] = true;
@@ -296,17 +316,34 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 // Handle AI paddle movement
                 if (message.move === 'up') {
                     player2.y = Math.max(0, player2.y - PADDLE_SPEED);
+                    aiStatus.lastMove = 'up';
                 } else if (message.move === 'down') {
                     player2.y = Math.min(canvas.height - player2.height, player2.y + PADDLE_SPEED);
+                    aiStatus.lastMove = 'down';
+                } else {
+                    aiStatus.lastMove = 'none';
                 }
+                aiStatus.lastMoveTime = Date.now();
                 break;
 
             case 'ai_performance_stats':
                 updateAIStatsDisplay(message.stats);
+                if (message.stats) {
+                    aiStatus.reactionTime = message.stats.averageReactionTime || 0;
+                    aiStatus.accuracy = message.stats.complianceRate ? message.stats.complianceRate / 100 : 0;
+                    aiStatus.thinking = message.stats.isThinking || false;
+                    if (aiStatus.thinking && aiStatus.thinkingStartTime === 0) {
+                        aiStatus.thinkingStartTime = Date.now();
+                    } else if (!aiStatus.thinking) {
+                        aiStatus.thinkingStartTime = 0;
+                    }
+                }
                 break;
 
             case 'ai_activated':
                 console.log(`AI activated with ${message.difficulty} difficulty`);
+                aiStatus.isActive = true;
+                aiStatus.difficulty = message.difficulty || 'medium';
                 break;
 
             case 'score_updated':
@@ -577,19 +614,86 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         ctx!.fillText(player2.score.toString(), (canvas.width / 4) * 3, 50);
     }
 
-     // Draw player names and game mode info
+        // Draw player names and game mode info
         ctx!.font = '20px sans-serif';
         ctx!.textAlign = 'center';
         ctx!.fillStyle = 'white';
         ctx!.fillText(player1Alias, canvas.width / 4, canvas.height - 20);
         ctx!.fillText(player2Alias, (canvas.width / 4) * 3, canvas.height - 20);
         
-        // Show AI indicator if in AI mode
-        if (isAIMode) {
-            ctx!.font = '12px sans-serif';
-            ctx!.fillStyle = '#00ff00';
-            ctx!.fillText('AI', (canvas.width / 4) * 3, canvas.height - 40);
+        // Enhanced AI status indicators
+        if (isAIMode && ctx) {
+            // AI difficulty indicator
+            const aiX = player2.x + player2.width + 15;
+            const aiY = player2.y;
+            
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#00ff00';
+            ctx.fillText(`AI: ${aiStatus.difficulty.toUpperCase()}`, aiX, aiY - 10);
+            
+            // AI status badge
+            const badgeColor = aiStatus.isActive ? '#00ff00' : '#ff0000';
+            ctx.fillStyle = badgeColor;
+            ctx.fillRect(aiX, aiY - 5, 8, 8);
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Arial';
+            ctx.fillText(aiStatus.isActive ? 'ON' : 'OFF', aiX + 12, aiY + 2);
+            
+            // Performance bars
+            const barY = aiY + 35;
+            const barWidth = 80;
+            const barHeight = 6;
+            
+            // Accuracy bar background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(aiX, barY, barWidth, barHeight);
+            
+            // Accuracy bar fill
+            const accuracyWidth = (aiStatus.accuracy * barWidth);
+            const accuracyColor = aiStatus.accuracy > 0.8 ? '#00ff00' : 
+                                aiStatus.accuracy > 0.5 ? '#ffff00' : '#ff4444';
+            ctx.fillStyle = accuracyColor;
+            ctx.fillRect(aiX, barY, accuracyWidth, barHeight);
+            
+            // Accuracy label
+            ctx.font = '8px Arial';
+            ctx.fillStyle = 'white';
+            ctx.fillText(`Accuracy: ${Math.round(aiStatus.accuracy * 100)}%`, aiX, barY - 2);
+            
+            // Ball trajectory prediction line
+            if (aiStatus.thinking && ball.dx !== 0 && ball.dy !== 0) {
+                ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                
+                let predX = ball.x;
+                let predY = ball.y;
+                let predVelX = ball.dx;
+                let predVelY = ball.dy;
+                
+                ctx.moveTo(predX, predY);
+                
+                // Simple prediction
+                for (let i = 0; i < 30; i++) {
+                    predX += predVelX;
+                    predY += predVelY;
+                    
+                    if (predY <= 0 || predY >= canvas.height) {
+                        predVelY = -predVelY;
+                    }
+                    
+                    ctx.lineTo(predX, predY);
+                    
+                    if (predX >= player2.x) break;
+                }
+                
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
         }
+    }
 
     let animationFrameId: number;
     update();
