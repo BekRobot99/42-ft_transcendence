@@ -12,6 +12,12 @@ services:
       - ./backend/security/waf/modsecurity/config.conf:/etc/nginx/templates/modsecurity.d/modsecurity.conf.template:ro
       - ./backend/security/waf/logs:/var/log/modsecurity
       - ./certificates:/etc/nginx/certs:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -skf https://localhost:443/healthz || curl -skf http://localhost:80/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     container_name: ft_transcendence_waf
     depends_on:
       - frontend
