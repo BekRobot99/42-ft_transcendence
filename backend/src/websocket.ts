@@ -161,6 +161,44 @@ function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'medium' |
         broadcastToGame(gameId, message);
     };
 
+    // Add visual event listeners for AI activity indicators
+    aiPlayer.on('thinking_started', (data: any) => {
+        const message = JSON.stringify({
+            type: 'ai_thinking_started',
+            gameId: gameId,
+            ballPosition: data.ballPosition,
+            difficulty: data.difficulty,
+            timestamp: data.timestamp
+        });
+        broadcastToGame(gameId, message);
+    });
+
+    aiPlayer.on('thinking_completed', (data: any) => {
+        const message = JSON.stringify({
+            type: 'ai_thinking_completed',
+            gameId: gameId,
+            decision: data.decision,
+            targetPosition: data.targetPosition,
+            confidence: data.confidence,
+            processingTime: data.processingTime,
+            timestamp: data.timestamp
+        });
+        broadcastToGame(gameId, message);
+    });
+
+    aiPlayer.on('ai_reaction', (data: any) => {
+        const message = JSON.stringify({
+            type: 'ai_reaction',
+            gameId: gameId,
+            reactionType: data.reactionType,
+            intensity: data.intensity,
+            reactionTime: data.reactionTime,
+            difficulty: data.difficulty,
+            timestamp: data.timestamp
+        });
+        broadcastToGame(gameId, message);
+    });
+
     aiPlayers.set(gameId, aiPlayer);
     
     return gameId;

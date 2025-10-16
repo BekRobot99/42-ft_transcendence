@@ -391,6 +391,34 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 }
                 break;
 
+            case 'ai_thinking_started':
+                // Start thinking animation
+                aiStatus.thinking = true;
+                aiStatus.thinkingStartTime = Date.now();
+                console.log('AI started thinking...');
+                break;
+
+            case 'ai_thinking_completed':
+                // Stop thinking animation and show decision
+                aiStatus.thinking = false;
+                aiStatus.thinkingStartTime = 0;
+                console.log(`AI decision: ${message.decision} (confidence: ${Math.round((message.confidence || 0) * 100)}%)`);
+                break;
+
+            case 'ai_reaction':
+                // Show reaction indicator
+                if (message.reactionType === 'move_up') {
+                    aiStatus.lastMove = 'up';
+                } else if (message.reactionType === 'move_down') {
+                    aiStatus.lastMove = 'down';
+                } else {
+                    aiStatus.lastMove = 'none';
+                }
+                aiStatus.lastMoveTime = Date.now();
+                aiStatus.reactionTime = message.reactionTime || 0;
+                console.log(`AI reacting: ${message.reactionType} (${message.reactionTime}ms)`);
+                break;
+
             default:
                 console.log('Unknown AI game message:', message);
         }
@@ -661,36 +689,86 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             ctx.fillStyle = 'white';
             ctx.fillText(`Accuracy: ${Math.round(aiStatus.accuracy * 100)}%`, aiX, barY - 2);
             
-            // Ball trajectory prediction line
-            if (aiStatus.thinking && ball.dx !== 0 && ball.dy !== 0) {
-                ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([5, 5]);
+            // Animated thinking indicator
+            if (aiStatus.thinking) {
+                const thinkTime = Date.now() - aiStatus.thinkingStartTime;
+                const pulse = Math.sin(thinkTime / 200) * 0.5 + 0.5;
+                
+                // Pulsing thought bubble
+                ctx.fillStyle = `rgba(255, 255, 0, ${pulse * 0.8})`;
                 ctx.beginPath();
+                ctx.arc(aiX + 40, aiY - 30, 15 + (pulse * 5), 0, Math.PI * 2);
+                ctx.fill();
                 
-                let predX = ball.x;
-                let predY = ball.y;
-                let predVelX = ball.dx;
-                let predVelY = ball.dy;
+                ctx.fillStyle = 'black';
+                ctx.font = '8px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('?', aiX + 40, aiY - 26);
                 
-                ctx.moveTo(predX, predY);
-                
-                // Simple prediction
-                for (let i = 0; i < 30; i++) {
-                    predX += predVelX;
-                    predY += predVelY;
+                // Ball trajectory prediction line with animation
+                if (ball.dx !== 0 && ball.dy !== 0) {
+                    ctx.strokeStyle = `rgba(0, 255, 0, ${pulse * 0.5})`;
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
                     
-                    if (predY <= 0 || predY >= canvas.height) {
-                        predVelY = -predVelY;
+                    let predX = ball.x;
+                    let predY = ball.y;
+                    let predVelX = ball.dx;
+                    let predVelY = ball.dy;
+                    
+                    ctx.moveTo(predX, predY);
+                    
+                    // Animated prediction line
+                    const steps = 20 + Math.floor(pulse * 10);
+                    for (let i = 0; i < steps; i++) {
+                        predX += predVelX;
+                        predY += predVelY;
+                        
+                        if (predY <= 0 || predY >= canvas.height) {
+                            predVelY = -predVelY;
+                        }
+                        
+                        ctx.lineTo(predX, predY);
+                        
+                        if (predX >= player2.x) break;
                     }
                     
-                    ctx.lineTo(predX, predY);
-                    
-                    if (predX >= player2.x) break;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+            
+            // Movement indicator with animation
+            if (aiStatus.lastMoveTime > 0 && Date.now() - aiStatus.lastMoveTime < 1000) {
+                const moveAge = Date.now() - aiStatus.lastMoveTime;
+                const moveOpacity = Math.max(0, 1 - (moveAge / 1000));
+                
+                const moveColor = aiStatus.lastMove === 'up' ? 
+                    `rgba(0, 150, 255, ${moveOpacity})` : 
+                    `rgba(255, 150, 0, ${moveOpacity})`;
+                
+                // Animated arrow indicator
+                const arrowY = aiStatus.lastMove === 'up' ? aiY - 25 : aiY + player2.height + 15;
+                const arrowSize = 8 + (moveOpacity * 4);
+                
+                ctx.fillStyle = moveColor;
+                ctx.beginPath();
+                
+                if (aiStatus.lastMove === 'up') {
+                    // Up arrow
+                    ctx.moveTo(aiX + 20, arrowY);
+                    ctx.lineTo(aiX + 20 - arrowSize, arrowY + arrowSize);
+                    ctx.lineTo(aiX + 20 + arrowSize, arrowY + arrowSize);
+                } else {
+                    // Down arrow
+                    ctx.moveTo(aiX + 20, arrowY);
+                    ctx.lineTo(aiX + 20 - arrowSize, arrowY - arrowSize);
+                    ctx.lineTo(aiX + 20 + arrowSize, arrowY - arrowSize);
                 }
                 
-                ctx.stroke();
-                ctx.setLineDash([]);
+                ctx.closePath();
+                ctx.fill();
             }
         }
     }

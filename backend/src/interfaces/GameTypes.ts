@@ -155,7 +155,10 @@ export type GameSocketEvent =
   | 'ai_status_request'
   | 'physics_update'
   | 'score_update'
-  | 'ball_scored';
+  | 'ball_scored'
+  | 'thinking_started'
+  | 'thinking_completed'
+  | 'ai_reaction';
 
 export interface GameSocketMessage {
   event: GameSocketEvent;
@@ -259,4 +262,30 @@ export interface GameEndEvent {
   gameDuration: number;
   totalRallies: number;
   averageRallyLength: number;
+}
+
+// AI Visual Indicator Events
+export interface AIThinkingStartedEvent {
+  gameId: string;
+  timestamp: number;
+  ballPosition: { x: number; y: number };
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
+export interface AIThinkingCompletedEvent {
+  gameId: string;
+  timestamp: number;
+  decision: 'up' | 'down' | 'none';
+  targetPosition: number;
+  confidence: number;
+  processingTime: number;
+}
+
+export interface AIReactionEvent {
+  gameId: string;
+  reactionType: 'move_up' | 'move_down';
+  intensity: 'active' | 'idle';
+  reactionTime: number;
+  timestamp: number;
+  difficulty: 'easy' | 'medium' | 'hard';
 }
