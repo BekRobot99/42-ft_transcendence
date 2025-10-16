@@ -5,13 +5,13 @@ services:
       # context: ./backend/security/waf  
       # dockerfile: dockerfile
     ports:
-        - "8080:443"  # Exposes Nginx HTTPS port
-        - "8000:80"  #Optionally expose HTTP for redirection
+        - "8080:443"
+        - "8000:80"
     volumes:
       - ./backend/security/waf/nginx.conf:/etc/nginx/templates/conf.d/default.conf.template:ro
       - ./backend/security/waf/modsecurity/config.conf:/etc/nginx/templates/modsecurity.d/modsecurity.conf.template:ro
       - ./backend/security/waf/logs:/var/log/modsecurity
-      - ./certificates:/etc/nginx/certs:ro
+      - ./certificates:/etc/nginx/certs:ro      #TODO: REPLACE BIND-MOUNTS WITH NAMED VOLUMES
     container_name: ft_transcendence_waf
     depends_on:
       - frontend
@@ -22,9 +22,6 @@ services:
     build:
       context: . # Build context is the root directory for the frontend Dockerfile
       dockerfile: dockerfile # Specifies the frontend Dockerfile (lowercase)
-    # ports:
-    #   - "8080:443" #REMOVE IF USING WAF
-    #   - "8000:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certificates:/etc/nginx/certs:ro # Mount SSL certificates
