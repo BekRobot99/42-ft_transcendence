@@ -419,6 +419,32 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 console.log(`AI reacting: ${message.reactionType} (${message.reactionTime}ms)`);
                 break;
 
+            case 'game_sync':
+                // Handle synchronized paddle positions
+                if (message.players) {
+                    // Smoothly update player positions
+                    if (message.players.player1) {
+                        const targetY = message.players.player1.y;
+                        const currentY = player1.y;
+                        const velocity = message.players.player1.velocity || 0;
+                        
+                        // Smooth interpolation for human player
+                        const lerpFactor = 0.8; // Adjust for smoothness
+                        player1.y = currentY + (targetY - currentY) * lerpFactor;
+                    }
+                    
+                    if (message.players.player2) {
+                        const targetY = message.players.player2.y;
+                        const currentY = player2.y;
+                        const velocity = message.players.player2.velocity || 0;
+                        
+                        // Smooth interpolation for AI player
+                        const lerpFactor = 0.9; // Slightly smoother for AI
+                        player2.y = currentY + (targetY - currentY) * lerpFactor;
+                    }
+                }
+                break;
+
             default:
                 console.log('Unknown AI game message:', message);
         }
@@ -463,30 +489,48 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     }
 
     function update() {
-        // Move player 1 paddle (always human-controlled)
+        // Move player 1 paddle (always human-controlled) with enhanced synchronization
         if ((keysPressed['w'] || keysPressed['W']) && player1.y > 0) {
+            const oldY = player1.y;
             player1.y -= PADDLE_SPEED;
-            // Send paddle movement to AI if in AI mode
+            
+            // Send enhanced paddle movement data for synchronization
             if (isAIMode && aiSocket && aiGameId) {
                 aiSocket.send(JSON.stringify({
                     event: 'paddle_move',
                     gameId: aiGameId,
                     playerId: 'human_player',
                     timestamp: Date.now(),
-                    data: { y: player1.y }
+                    data: { 
+                        y: player1.y,
+                        direction: 'up',
+                        velocity: PADDLE_SPEED,
+                        intensity: 1,
+                        duration: 16, // Frame duration
+                        previousY: oldY
+                    }
                 }));
             }
         }
         if ((keysPressed['s'] || keysPressed['S']) && player1.y < canvas.height - player1.height) {
+            const oldY = player1.y;
             player1.y += PADDLE_SPEED;
-            // Send paddle movement to AI if in AI mode
+            
+            // Send enhanced paddle movement data for synchronization
             if (isAIMode && aiSocket && aiGameId) {
                 aiSocket.send(JSON.stringify({
                     event: 'paddle_move',
                     gameId: aiGameId,
                     playerId: 'human_player',
                     timestamp: Date.now(),
-                    data: { y: player1.y }
+                    data: { 
+                        y: player1.y,
+                        direction: 'down',
+                        velocity: PADDLE_SPEED,
+                        intensity: 1,
+                        duration: 16, // Frame duration
+                        previousY: oldY
+                    }
                 }));
             }
         }
