@@ -222,6 +222,13 @@ class AIPlayer {
     makeDecision() {
         if (!this.gameState)
             return;
+        // Emit thinking start event for visual feedback
+        this.emit('thinking_started', {
+            gameId: this.gameId,
+            timestamp: Date.now(),
+            ballPosition: { x: this.gameState.ballX, y: this.gameState.ballY },
+            difficulty: this.difficulty.name
+        });
         const paddleCenter = this.gameState.paddleY + (this.gameState.paddleHeight / 2);
         const ballY = this.gameState.ballY;
         const ballX = this.gameState.ballX;
@@ -237,6 +244,15 @@ class AIPlayer {
         targetY = this.applyDifficultyModifiers(targetY, paddleCenter);
         // Determine movement with enhanced logic
         const move = this.calculateOptimalMove(targetY, paddleCenter);
+        // Emit thinking completion event for visual feedback
+        this.emit('thinking_completed', {
+            gameId: this.gameId,
+            timestamp: Date.now(),
+            decision: move,
+            targetPosition: targetY,
+            confidence: this.calculateDecisionConfidence(targetY, paddleCenter),
+            processingTime: Date.now() - this.lastUpdateTime
+        });
         // Simulate human-like keyboard input patterns
         this.simulateKeyboardInput(move);
     }
@@ -536,6 +552,15 @@ class AIPlayer {
             // Track metrics for main input
             this.keyboardMetrics.totalKeyPresses++;
             this.keyboardMetrics.totalHoldTime += inputCharacteristics.keyHoldTime;
+            // Emit visual reaction event before keyboard input
+            this.emit('ai_reaction', {
+                gameId: this.gameId,
+                reactionType: move === 'up' ? 'move_up' : 'move_down',
+                intensity: 'active',
+                reactionTime: inputCharacteristics.keyPressDelay,
+                timestamp: Date.now(),
+                difficulty: this.difficulty.name
+            });
             // Main input event with enhanced data
             const enhancedKeyboardEvent = {
                 ...keyboardEvent,
@@ -731,6 +756,27 @@ class AIPlayer {
         if (scoreDiff === -1)
             return 'pressure'; // Slight deficit, apply pressure
         return 'balanced'; // Tied game, balanced play
+    }
+    /**
+     * Calculate AI decision confidence based on position accuracy and game context
+     */
+    calculateDecisionConfidence(targetY, currentCenter) {
+        if (!this.gameState)
+            return 0;
+        const distance = Math.abs(targetY - currentCenter);
+        const maxDistance = this.gameState.canvasHeight;
+        const positionConfidence = 1 - (distance / maxDistance);
+        // Factor in ball speed - slower balls = higher confidence
+        const ballSpeed = Math.sqrt(this.gameState.ballVelX ** 2 + this.gameState.ballVelY ** 2);
+        const maxSpeed = 10; // Typical max ball speed
+        const speedConfidence = Math.max(0, 1 - (ballSpeed / maxSpeed));
+        // Factor in difficulty - higher difficulty = more confident decisions
+        const difficultyConfidence = this.difficulty.accuracy;
+        // Weighted average of confidence factors
+        const overallConfidence = (positionConfidence * 0.4) +
+            (speedConfidence * 0.3) +
+            (difficultyConfidence * 0.3);
+        return Math.min(1, Math.max(0, overallConfidence));
     }
 }
 exports.AIPlayer = AIPlayer;

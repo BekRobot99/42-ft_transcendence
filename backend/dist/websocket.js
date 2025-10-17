@@ -7,6 +7,7 @@ exports.activeUsers = void 0;
 exports.default = realtimeRoutes;
 const database_1 = __importDefault(require("./config/database"));
 const AIPlayer_1 = require("./services/AIPlayer");
+const GameSynchronizer_1 = require("./services/GameSynchronizer");
 // Store currently active users
 exports.activeUsers = new Set();
 // Map of sockets for each user (a user may have multiple sockets, e.g., tabs)
@@ -15,6 +16,7 @@ const userSockets = new Map();
 const gameRooms = new Map();
 const playerGameMap = new Map(); // userId -> gameId
 const aiPlayers = new Map(); // gameId -> AIPlayer instance
+const gameSynchronizers = new Map(); // gameId -> GameSynchronizer instance
 async function notifyStatusChange(userId, status, fastify) {
     try {
         // Find all friends of the user who just changed status
@@ -118,8 +120,37 @@ function createAIGameRoom(humanPlayerId, difficulty) {
     playerGameMap.set(humanPlayerId, gameId);
     // Create and configure AI player
     const aiPlayer = new AIPlayer_1.AIPlayer(difficulty);
-    // Set up AI event handlers
+    // Set up AI event handlers with synchronization
     aiPlayer.onAIKeyboardInput = (event) => {
+        // Add AI input to synchronizer for smooth movement
+        const synchronizer = gameSynchronizers.get(gameId);
+        if (synchronizer) {
+            const aiInput = {
+                action: event.action,
+                timestamp: event.timestamp,
+                source: 'ai',
+                intensity: 1,
+                duration: event.holdDuration || 16
+            };
+            synchronizer.addPlayerInput('player2', aiInput);
+            // Update AI paddle position based on current game state
+            const room = gameRooms.get(gameId);
+            if (room && event.action !== 'none') {
+                const currentY = room.gameState.paddles.player2.y;
+                const moveAmount = 6; // AI movement speed
+                let targetY = currentY;
+                if (event.action === 'up') {
+                    targetY = Math.max(0, currentY - moveAmount);
+                }
+                else if (event.action === 'down') {
+                    targetY = Math.min(room.gameState.canvas.height - room.gameState.paddles.player2.height, currentY + moveAmount);
+                }
+                synchronizer.updatePaddlePosition('player2', targetY);
+                // Update room state with synchronized position
+                const syncState = synchronizer.getGameState();
+                room.gameState.paddles.player2.y = syncState.players.player2.paddlePosition.y;
+            }
+        }
         const message = JSON.stringify({
             type: 'ai_move',
             gameId: gameId,
@@ -147,7 +178,64 @@ function createAIGameRoom(humanPlayerId, difficulty) {
         });
         broadcastToGame(gameId, message);
     };
+    // Add visual event listeners for AI activity indicators
+    aiPlayer.on('thinking_started', (data) => {
+        const message = JSON.stringify({
+            type: 'ai_thinking_started',
+            gameId: gameId,
+            ballPosition: data.ballPosition,
+            difficulty: data.difficulty,
+            timestamp: data.timestamp
+        });
+        broadcastToGame(gameId, message);
+    });
+    aiPlayer.on('thinking_completed', (data) => {
+        const message = JSON.stringify({
+            type: 'ai_thinking_completed',
+            gameId: gameId,
+            decision: data.decision,
+            targetPosition: data.targetPosition,
+            confidence: data.confidence,
+            processingTime: data.processingTime,
+            timestamp: data.timestamp
+        });
+        broadcastToGame(gameId, message);
+    });
+    aiPlayer.on('ai_reaction', (data) => {
+        const message = JSON.stringify({
+            type: 'ai_reaction',
+            gameId: gameId,
+            reactionType: data.reactionType,
+            intensity: data.intensity,
+            reactionTime: data.reactionTime,
+            difficulty: data.difficulty,
+            timestamp: data.timestamp
+        });
+        broadcastToGame(gameId, message);
+    });
     aiPlayers.set(gameId, aiPlayer);
+    // Create and configure Game Synchronizer for smooth controls
+    const synchronizer = new GameSynchronizer_1.GameSynchronizer(gameRoom.gameState.canvas.width, gameRoom.gameState.canvas.height);
+    // Start synchronization with broadcast to all players
+    synchronizer.startSync((syncState) => {
+        const message = JSON.stringify({
+            type: 'game_sync',
+            gameId: gameId,
+            players: {
+                player1: {
+                    y: syncState.players.player1.paddlePosition.y,
+                    velocity: syncState.players.player1.velocity.y
+                },
+                player2: {
+                    y: syncState.players.player2.paddlePosition.y,
+                    velocity: syncState.players.player2.velocity.y
+                }
+            },
+            timestamp: syncState.syncTimestamp
+        });
+        broadcastToGame(gameId, message);
+    });
+    gameSynchronizers.set(gameId, synchronizer);
     return gameId;
 }
 // Handle incoming game messages
@@ -165,11 +253,25 @@ function handleGameMessage(connection, userId, message) {
     }
     switch (message.event) {
         case 'paddle_move':
-            // Handle human player paddle movement
+            // Handle human player paddle movement with synchronization
             const player = room.players.find(p => p.id === userId.toString());
-            if (player && !player.isAI) {
-                player.paddleY = Math.max(0, Math.min(room.gameState.canvas.height - room.gameState.paddles.player1.height, message.data.y));
-                // Update game state and notify AI
+            const synchronizer = gameSynchronizers.get(gameId);
+            if (player && !player.isAI && synchronizer) {
+                // Add input to synchronizer for smooth processing
+                const playerInput = {
+                    action: message.data.direction || 'none',
+                    timestamp: Date.now(),
+                    source: 'keyboard',
+                    intensity: message.data.intensity || 1,
+                    duration: message.data.duration || 16
+                };
+                synchronizer.addPlayerInput('player1', playerInput);
+                // Update paddle position through synchronizer
+                const targetY = Math.max(0, Math.min(room.gameState.canvas.height - room.gameState.paddles.player1.height, message.data.y));
+                synchronizer.updatePaddlePosition('player1', targetY);
+                // Get synchronized state for AI
+                const syncState = synchronizer.getGameState();
+                player.paddleY = syncState.players.player1.paddlePosition.y;
                 room.gameState.paddles.player1.y = player.paddleY;
                 room.gameState.lastUpdate = Date.now();
                 if (aiPlayer && room.gameState.gameActive) {
@@ -325,7 +427,10 @@ function handleGameMessage(connection, userId, message) {
                     canvasHeight: room.gameState.canvas.height,
                     canvasWidth: room.gameState.canvas.width,
                     opponentPaddleY: room.gameState.paddles.player1.y,
-                    score: room.gameState.score,
+                    score: {
+                        ai: room.gameState.score.player2,
+                        human: room.gameState.score.player1
+                    },
                     gameActive: room.gameState.gameActive
                 });
             }
@@ -337,6 +442,12 @@ function handleGameMessage(connection, userId, message) {
                 console.log(`Game ${gameId} ended - AI Performance:`, finalStats);
                 aiPlayer.deactivate();
                 aiPlayers.delete(gameId);
+            }
+            // Clean up synchronizer
+            const gameSynchronizer = gameSynchronizers.get(gameId);
+            if (gameSynchronizer) {
+                gameSynchronizer.stopSync();
+                gameSynchronizers.delete(gameId);
             }
             gameRooms.delete(gameId);
             playerGameMap.delete(userId);
@@ -457,6 +568,12 @@ async function realtimeRoutes(fastify) {
                 if (aiPlayer) {
                     aiPlayer.deactivate();
                     aiPlayers.delete(gameId);
+                }
+                // Clean up synchronizer on disconnect
+                const cleanupSynchronizer = gameSynchronizers.get(gameId);
+                if (cleanupSynchronizer) {
+                    cleanupSynchronizer.stopSync();
+                    gameSynchronizers.delete(gameId);
                 }
                 gameRooms.delete(gameId);
                 playerGameMap.delete(userId);

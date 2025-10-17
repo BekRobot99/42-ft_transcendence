@@ -10,6 +10,8 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certificates:/etc/nginx/certs:ro # Mount SSL certificates
     container_name: ft_transcendence_nginx
+    networks:
+      - app_network
     depends_on:
       - backend
     restart: unless-stopped
@@ -23,6 +25,8 @@ services:
     volumes:
       - ./backend/database:/app/database # Persist SQLite database
     container_name: ft_transcendence_backend
+    networks:
+      - app_network
     environment:
       - NODE_ENV=production
       - JWT_SECRET=your_super_secret_jwt_key_change_in_production_123456
@@ -31,6 +35,10 @@ services:
       - GOOGLE_CLIENT_SECRET=your_google_client_secret
       - GOOGLE_REDIRECT_URI=https://localhost:8080/api/auth/google/callback
     restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge
 
 volumes:
   database_data: # We can define a named volume if prefered, instead of bind mount

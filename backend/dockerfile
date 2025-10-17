@@ -1,22 +1,27 @@
 # Stage 1: Build the backend
-FROM node:lts-alpine AS builder
+FROM node:18.19.1 AS builder
 
 WORKDIR /app
 
 # Copy package.json and lock file
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (matching your working environment)
 RUN npm install
+
+# Show debug info to verify versions match your environment
+RUN echo "Node version: $(node -v)"
+RUN echo "NPM version: $(npm -v)"
+RUN echo "TypeScript version: $(./node_modules/.bin/tsc --version)"
 
 # Copy the rest of the backend code
 COPY . .
 
-# Build (if using TypeScript or build step)
-RUN npm run build
+# Build using local TypeScript (same command that worked locally)
+RUN ./node_modules/.bin/tsc --project tsconfig.json
 
 # Stage 2: Run the backend
-FROM node:lts-alpine
+FROM node:18-slim
 
 WORKDIR /app
 
@@ -28,5 +33,5 @@ COPY --from=builder /app/dist ./dist
 # Expose backend port
 EXPOSE 4000
 
-# Start backend (adjust command if using NestJS / Express)
+# Start backend
 CMD ["node", "dist/server.js"]

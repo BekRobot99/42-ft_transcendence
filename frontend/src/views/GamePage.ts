@@ -815,7 +815,6 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 ctx.fill();
             }
         }
-    }
 
     let animationFrameId: number;
     update();
