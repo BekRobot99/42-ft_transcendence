@@ -2,6 +2,8 @@ import { FastifyInstance } from 'fastify';
 import db from './config/database';
 import { AIPlayer } from './services/AIPlayer';
 import { GameSynchronizer, PlayerInput } from './services/GameSynchronizer';
+import { GameStateValidator, ValidationResult } from './services/GameStateValidator';
+import { GameErrorHandler, GameError, GameErrorType } from './services/GameErrorHandler';
 import { 
     GameSocketMessage, 
     GameRoom, 
@@ -21,6 +23,69 @@ const gameRooms = new Map<string, GameRoom>();
 const playerGameMap = new Map<number, string>(); // userId -> gameId
 const aiPlayers = new Map<string, AIPlayer>(); // gameId -> AIPlayer instance
 const gameSynchronizers = new Map<string, GameSynchronizer>(); // gameId -> GameSynchronizer instance
+const gameStateValidator = new GameStateValidator(); // Global state validator
+const gameErrorHandler = new GameErrorHandler(); // Global error handler
+
+// Helper function to safely execute game operations with error handling
+async function safeExecute<T>(
+    operation: () => Promise<T> | T,
+    errorType: GameErrorType,
+    context: { gameId?: string; playerId?: string; operation: string }
+): Promise<T | null> {
+    try {
+        return await operation();
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        await gameErrorHandler.logError(
+            errorType,
+            `${context.operation} failed: ${errorMessage}`,
+            { 
+                originalError: error,
+                context 
+            },
+            context.gameId,
+            context.playerId
+        );
+        return null;
+    }
+}
+
+// Helper function to safely send WebSocket messages with error handling
+async function safeSend(
+    connection: any,
+    message: any,
+    gameId?: string,
+    playerId?: string
+): Promise<boolean> {
+    try {
+        if (!connection || connection.readyState !== connection.OPEN) {
+            await gameErrorHandler.logError(
+                'websocket_connection_lost',
+                'Attempted to send message on closed connection',
+                { messageType: message.type || 'unknown' },
+                gameId,
+                playerId
+            );
+            return false;
+        }
+
+        const messageStr = typeof message === 'string' ? message : JSON.stringify(message);
+        connection.send(messageStr);
+        return true;
+    } catch (error) {
+        await gameErrorHandler.logError(
+            'websocket_send_failed',
+            'Failed to send WebSocket message',
+            { 
+                error: error instanceof Error ? error.message : 'Unknown error',
+                messageType: message.type || 'unknown'
+            },
+            gameId,
+            playerId
+        );
+        return false;
+    }
+}
 
 async function notifyStatusChange(userId: number, status: 'online' | 'offline', fastify: FastifyInstance) {
     try {
@@ -63,30 +128,40 @@ async function notifyStatusChange(userId: number, status: 'online' | 'offline', 
 }
 
 // Helper function to broadcast to all players in a game room
-function broadcastToGame(gameId: string, message: string, excludePlayerId?: number) {
+async function broadcastToGame(gameId: string, message: string, excludePlayerId?: number) {
     const room = gameRooms.get(gameId);
-    if (!room) return;
+    if (!room) {
+        await gameErrorHandler.logError(
+            'unknown_error',
+            'Attempted to broadcast to non-existent game room',
+            { gameId },
+            gameId
+        );
+        return;
+    }
 
-    room.players.forEach(player => {
+    const promises = room.players.map(async (player) => {
         if (excludePlayerId && player.id === excludePlayerId.toString()) return;
         
         const playerId = parseInt(player.id);
         const sockets = userSockets.get(playerId);
         if (sockets) {
-            sockets.forEach(socket => {
-                if (socket.readyState === 1) {
-                    socket.send(message);
-                }
-            });
+            const socketPromises = Array.from(sockets).map(socket =>
+                safeSend(socket, message, gameId, playerId.toString())
+            );
+            await Promise.all(socketPromises);
         }
     });
+
+    await Promise.all(promises);
 }
 
 // Create a new game room with AI opponent
-function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'medium' | 'hard'): string {
-    const gameId = `ai_game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    const gameRoom: GameRoom = {
+async function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'medium' | 'hard'): Promise<string | null> {
+    return await safeExecute(async () => {
+        const gameId = `ai_game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const gameRoom: GameRoom = {
         id: gameId,
         players: [
             {
@@ -263,15 +338,20 @@ function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'medium' |
         broadcastToGame(gameId, message);
     });
     
-    gameSynchronizers.set(gameId, synchronizer);
-    
-    return gameId;
+        gameSynchronizers.set(gameId, synchronizer);
+        
+        return gameId;
+    }, 'ai_player_crashed', {
+        operation: 'createAIGameRoom',
+        playerId: humanPlayerId.toString()
+    });
 }
 
 // Handle incoming game messages
-function handleGameMessage(connection: any, userId: number, message: GameSocketMessage) {
-    const gameId = playerGameMap.get(userId);
-    if (!gameId) {
+async function handleGameMessage(connection: any, userId: number, message: GameSocketMessage) {
+    return await safeExecute(async () => {
+        const gameId = playerGameMap.get(userId);
+        if (!gameId) {
         connection.send(JSON.stringify({ error: 'Not in a game' }));
         return;
     }
@@ -335,10 +415,33 @@ function handleGameMessage(connection: any, userId: number, message: GameSocketM
                     });
                 }
                 
-                // Broadcast updated game state
+                // Validate game state before broadcasting
+                const validationResult = gameStateValidator.validateGameState(
+                    gameId, 
+                    room.gameState, 
+                    room.players
+                );
+                
+                if (!validationResult.isValid) {
+                    console.warn(`Game ${gameId} validation failed:`, validationResult.errors);
+                    
+                    // Send validation errors to clients for debugging
+                    broadcastToGame(gameId, JSON.stringify({
+                        type: 'validation_error',
+                        errors: validationResult.errors,
+                        warnings: validationResult.warnings,
+                        timestamp: Date.now()
+                    }), userId);
+                }
+                
+                // Broadcast updated game state with validation info
                 broadcastToGame(gameId, JSON.stringify({
                     type: 'game_state_update',
                     gameState: room.gameState,
+                    validation: {
+                        isValid: validationResult.isValid,
+                        warnings: validationResult.warnings
+                    },
                     timestamp: Date.now()
                 }), userId);
             }
@@ -496,6 +599,61 @@ function handleGameMessage(connection: any, userId: number, message: GameSocketM
             }
             break;
 
+        case 'validate_state':
+            // Handle frontend state validation requests
+            if (room && message.data) {
+                const frontendState = message.data.gameState;
+                
+                if (frontendState) {
+                    // Compare frontend state with backend state
+                    const comparisonResult = gameStateValidator.compareStates(
+                        gameId,
+                        frontendState,
+                        room.gameState
+                    );
+                    
+                    // Send validation results back to requesting client
+                    connection.send(JSON.stringify({
+                        type: 'state_validation_result',
+                        gameId: gameId,
+                        validation: comparisonResult,
+                        backendState: room.gameState,
+                        timestamp: Date.now()
+                    }));
+                    
+                    // If there are critical issues, broadcast to all clients
+                    if (!comparisonResult.isValid) {
+                        broadcastToGame(gameId, JSON.stringify({
+                            type: 'state_sync_required',
+                            gameId: gameId,
+                            authoritative: room.gameState,
+                            issues: comparisonResult.errors,
+                            timestamp: Date.now()
+                        }), userId);
+                    }
+                }
+            }
+            break;
+
+        case 'request_state_sync':
+            // Force synchronize client state with server
+            if (room) {
+                const validationResult = gameStateValidator.validateGameState(
+                    gameId,
+                    room.gameState,
+                    room.players
+                );
+                
+                connection.send(JSON.stringify({
+                    type: 'authoritative_state',
+                    gameId: gameId,
+                    gameState: room.gameState,
+                    validation: validationResult,
+                    timestamp: Date.now()
+                }));
+            }
+            break;
+
         case 'leave_game':
             // Clean up game room and AI with final stats
             if (aiPlayer) {
@@ -516,6 +674,9 @@ function handleGameMessage(connection: any, userId: number, message: GameSocketM
             gameRooms.delete(gameId);
             playerGameMap.delete(userId);
             
+            // Cleanup error tracking for this game
+            gameErrorHandler.cleanupGame(gameId);
+            
             broadcastToGame(gameId, JSON.stringify({
                 type: 'player_left',
                 playerId: userId,
@@ -523,6 +684,11 @@ function handleGameMessage(connection: any, userId: number, message: GameSocketM
             }));
             break;
     }
+    }, 'websocket_message_invalid', {
+        operation: 'handleGameMessage',
+        gameId: playerGameMap.get(userId),
+        playerId: userId.toString()
+    });
 }
 //realtimeRoutes = websocketRoutes
 export default async function realtimeRoutes(fastify: FastifyInstance) {
@@ -613,24 +779,43 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
                 if (message.event === 'join_game') {
                     // Create new AI game or join existing game
                     if (message.data.gameType === 'ai') {
-                        const gameId = createAIGameRoom(userId, message.data.difficulty || 'medium');
+                        const gameId = await createAIGameRoom(userId, message.data.difficulty || 'medium');
                         
-                        connection.send(JSON.stringify({
-                            type: 'game_joined',
-                            gameId: gameId,
-                            playerSide: 'left', // Human player is always left
-                            aiDifficulty: message.data.difficulty || 'medium',
-                            timestamp: Date.now()
-                        }));
+                        if (gameId) {
+                            connection.send(JSON.stringify({
+                                type: 'game_joined',
+                                gameId: gameId,
+                                playerSide: 'left', // Human player is always left
+                                aiDifficulty: message.data.difficulty || 'medium',
+                                timestamp: Date.now()
+                            }));
+                        } else {
+                            await safeSend(connection, {
+                                type: 'game_join_failed',
+                                error: 'Failed to create AI game room',
+                                timestamp: Date.now()
+                            });
+                        }
                     }
                 } else {
                     // Handle other game events
-                    handleGameMessage(connection, userId, message);
+                    await handleGameMessage(connection, userId, message);
                 }
                 
             } catch (error) {
+                await gameErrorHandler.logError(
+                    'websocket_message_invalid',
+                    'Failed to process WebSocket message',
+                    { 
+                        error: error instanceof Error ? error.message : 'Unknown error',
+                        rawMessage: messageBuffer.toString() 
+                    },
+                    undefined,
+                    userId?.toString()
+                );
+                
                 fastify.log.error('Error processing game message:', error);
-                connection.send(JSON.stringify({ error: 'Invalid message format' }));
+                await safeSend(connection, { error: 'Invalid message format' }, undefined, userId?.toString());
             }
         });
 
@@ -655,6 +840,9 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
                 
                 gameRooms.delete(gameId);
                 playerGameMap.delete(userId);
+                
+                // Cleanup error tracking for this game
+                gameErrorHandler.cleanupGame(gameId);
             }
 
             // Remove from user sockets
@@ -670,5 +858,47 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
         connection.on('error', (error: unknown) => {
             fastify.log.error('Game socket error:', error);
         });
+    });
+
+    // Health and error monitoring endpoint
+    fastify.get('/api/game-health', async (request, reply) => {
+        try {
+            const healthMetrics = gameErrorHandler.getHealthMetrics();
+            const errorStats = gameErrorHandler.getErrorStats();
+            const recentErrors = gameErrorHandler.getRecentErrors(10);
+            const isHealthy = gameErrorHandler.isSystemHealthy();
+
+            // Update current statistics
+            gameErrorHandler.updateHealthStats(
+                activeUsers.size,
+                gameRooms.size,
+                healthMetrics.averageLatency
+            );
+
+            return {
+                status: isHealthy ? 'healthy' : 'unhealthy',
+                metrics: healthMetrics,
+                errorStats,
+                recentErrors: recentErrors.map(err => ({
+                    id: err.id,
+                    type: err.type,
+                    severity: err.severity,
+                    message: err.message,
+                    timestamp: err.timestamp,
+                    gameId: err.gameId,
+                    recoveryAction: err.recoveryAction
+                })),
+                timestamp: Date.now()
+            };
+        } catch (error) {
+            await gameErrorHandler.logError(
+                'unknown_error',
+                'Failed to generate health report',
+                { error: error instanceof Error ? error.message : 'Unknown error' }
+            );
+            
+            reply.status(500);
+            return { error: 'Failed to retrieve health metrics' };
+        }
     });
 }

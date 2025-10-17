@@ -108,6 +108,16 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     const INITIAL_BALL_SPEED = 3;
     const BALL_SPEED_INCREASE_FACTOR = 1.1;
 
+    // State validation variables
+    let lastValidationTime = 0;
+    const VALIDATION_INTERVAL = 10000; // Validate every 10 seconds
+
+    // Error handling variables
+    let connectionErrors = 0;
+    let lastErrorTime = 0;
+    const MAX_CONNECTION_ERRORS = 5;
+    const ERROR_DISPLAY_DURATION = 3000; // 3 seconds
+
     canvas.width = 800;
     canvas.height = 600;
 
@@ -445,6 +455,159 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 }
                 break;
 
+            case 'validation_error':
+                // Handle validation errors from backend
+                if (message.errors && message.errors.length > 0) {
+                    console.warn('Game state validation errors:', message.errors);
+                    
+                    // Show validation warning to user
+                    const criticalErrors = message.errors.filter((err: any) => 
+                        err.severity === 'critical' || err.severity === 'high'
+                    );
+                    
+                    if (criticalErrors.length > 0 && ctx) {
+                        // Display validation error overlay
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        ctx.fillStyle = 'white';
+                        ctx.font = '16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Game State Validation Error', canvas.width / 2, 30);
+                        ctx.font = '12px Arial';
+                        ctx.fillText('Requesting sync...', canvas.width / 2, 50);
+                        ctx.restore();
+                        
+                        // Request state sync from server
+                        setTimeout(() => {
+                            if (aiSocket && aiGameId) {
+                                aiSocket.send(JSON.stringify({
+                                    event: 'request_state_sync',
+                                    gameId: aiGameId,
+                                    playerId: 'human_player',
+                                    timestamp: Date.now(),
+                                    data: {}
+                                }));
+                            }
+                        }, 1000);
+                    }
+                }
+                break;
+
+            case 'state_validation_result':
+                // Handle validation comparison results
+                if (message.validation) {
+                    console.log('State validation result:', message.validation);
+                    
+                    if (!message.validation.isValid && message.validation.warnings) {
+                        const positionWarnings = message.validation.warnings.filter((w: any) => 
+                            w.code.includes('POSITION_DESYNC')
+                        );
+                        
+                        if (positionWarnings.length > 0) {
+                            console.log('Position desync detected, correcting...');
+                            
+                            // Correct positions with server data
+                            if (message.backendState) {
+                                if (message.backendState.ball) {
+                                    ball.x = message.backendState.ball.x;
+                                    ball.y = message.backendState.ball.y;
+                                    ball.dx = message.backendState.ball.velocityX;
+                                    ball.dy = message.backendState.ball.velocityY;
+                                }
+                                
+                                if (message.backendState.paddles) {
+                                    if (message.backendState.paddles.player1) {
+                                        player1.y = message.backendState.paddles.player1.y;
+                                    }
+                                    if (message.backendState.paddles.player2) {
+                                        player2.y = message.backendState.paddles.player2.y;
+                                    }
+                                }
+                                
+                                if (message.backendState.score) {
+                                    player1.score = message.backendState.score.player1;
+                                    player2.score = message.backendState.score.player2;
+                                    updateScoreDisplay();
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case 'state_sync_required':
+                // Handle forced state synchronization
+                console.log('State sync required:', message.issues);
+                
+                if (message.authoritative) {
+                    // Force update to authoritative server state
+                    const authState = message.authoritative;
+                    
+                    if (authState.ball) {
+                        ball.x = authState.ball.x;
+                        ball.y = authState.ball.y;
+                        ball.dx = authState.ball.velocityX;
+                        ball.dy = authState.ball.velocityY;
+                    }
+                    
+                    if (authState.paddles) {
+                        if (authState.paddles.player1) {
+                            player1.y = authState.paddles.player1.y;
+                        }
+                        if (authState.paddles.player2) {
+                            player2.y = authState.paddles.player2.y;
+                        }
+                    }
+                    
+                    if (authState.score) {
+                        player1.score = authState.score.player1;
+                        player2.score = authState.score.player2;
+                        updateScoreDisplay();
+                    }
+                    
+                    console.log('Game state synchronized with server');
+                }
+                break;
+
+            case 'authoritative_state':
+                // Handle authoritative state from server
+                if (message.gameState) {
+                    const serverState = message.gameState;
+                    
+                    // Force sync all game elements
+                    if (serverState.ball) {
+                        ball.x = serverState.ball.x;
+                        ball.y = serverState.ball.y;
+                        ball.dx = serverState.ball.velocityX;
+                        ball.dy = serverState.ball.velocityY;
+                    }
+                    
+                    if (serverState.paddles) {
+                        if (serverState.paddles.player1) {
+                            player1.y = serverState.paddles.player1.y;
+                        }
+                        if (serverState.paddles.player2) {
+                            player2.y = serverState.paddles.player2.y;
+                        }
+                    }
+                    
+                    if (serverState.score) {
+                        player1.score = serverState.score.player1;
+                        player2.score = serverState.score.player2;
+                        updateScoreDisplay();
+                    }
+                    
+                    console.log('Received authoritative state from server');
+                    
+                    // Log validation results if present
+                    if (message.validation) {
+                        console.log('State validation:', message.validation);
+                    }
+                }
+                break;
+
             default:
                 console.log('Unknown AI game message:', message);
         }
@@ -486,6 +649,61 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             ball.dx = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
             ball.dy = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
         }, 1000); // 1-second delay before game starts
+    }
+
+    // Function to validate current game state with server
+    function validateGameState() {
+        if (!aiSocket || !aiGameId) return;
+        
+        const currentGameState = {
+            ball: {
+                x: ball.x,
+                y: ball.y,
+                velocityX: ball.dx,
+                velocityY: ball.dy,
+                speed: Math.sqrt(ball.dx ** 2 + ball.dy ** 2)
+            },
+            canvas: {
+                width: canvas.width,
+                height: canvas.height
+            },
+            paddles: {
+                player1: {
+                    y: player1.y,
+                    height: PADDLE_HEIGHT,
+                    width: PADDLE_WIDTH,
+                    speed: PADDLE_SPEED
+                },
+                player2: {
+                    y: player2.y,
+                    height: PADDLE_HEIGHT,
+                    width: PADDLE_WIDTH,
+                    speed: PADDLE_SPEED
+                }
+            },
+            score: {
+                player1: player1.score,
+                player2: player2.score
+            },
+            gameActive: true,
+            isPaused: false,
+            lastUpdate: Date.now()
+        };
+        
+        // Send validation request to server
+        try {
+            aiSocket.send(JSON.stringify({
+                event: 'validate_state',
+                gameId: aiGameId,
+                playerId: 'human_player',
+                timestamp: Date.now(),
+                data: {
+                    gameState: currentGameState
+                }
+            }));
+        } catch (error) {
+            console.error('Failed to send state validation request:', error);
+        }
     }
 
     function update() {
@@ -649,6 +867,13 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         }
 
         draw();
+        // Periodic state validation
+        const currentTime = Date.now();
+        if (isAIMode && aiSocket && aiGameId && (currentTime - lastValidationTime > VALIDATION_INTERVAL)) {
+            validateGameState();
+            lastValidationTime = currentTime;
+        }
+
         animationFrameId = requestAnimationFrame(update);
     }
 

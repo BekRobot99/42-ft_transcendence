@@ -158,7 +158,9 @@ export type GameSocketEvent =
   | 'ball_scored'
   | 'thinking_started'
   | 'thinking_completed'
-  | 'ai_reaction';
+  | 'ai_reaction'
+  | 'validate_state'
+  | 'request_state_sync';
 
 export interface GameSocketMessage {
   event: GameSocketEvent;
@@ -288,4 +290,37 @@ export interface AIReactionEvent {
   reactionTime: number;
   timestamp: number;
   difficulty: 'easy' | 'medium' | 'hard';
+}
+
+// State Validation Events
+export interface StateValidationRequest {
+  gameId: string;
+  gameState: GameSessionState;
+  requestId?: string;
+  timestamp: number;
+}
+
+export interface StateValidationResult {
+  gameId: string;
+  requestId?: string;
+  isValid: boolean;
+  errors: Array<{
+    code: string;
+    message: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    field: string;
+  }>;
+  warnings: Array<{
+    code: string;
+    message: string;
+    field: string;
+  }>;
+  timestamp: number;
+}
+
+export interface StateSyncEvent {
+  gameId: string;
+  authoritativeState: GameSessionState;
+  reason: 'desync_detected' | 'manual_request' | 'validation_failure';
+  timestamp: number;
 }
