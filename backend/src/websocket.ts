@@ -4,6 +4,9 @@ import { AIPlayer } from './services/AIPlayer';
 import { GameSynchronizer, PlayerInput } from './services/GameSynchronizer';
 import { GameStateValidator, ValidationResult } from './services/GameStateValidator';
 import { GameErrorHandler, GameError, GameErrorType } from './services/GameErrorHandler';
+import { PerformanceMonitor } from './services/PerformanceMonitor';
+import { PerformanceDashboard } from './services/PerformanceDashboard';
+import { PerformanceAnalytics } from './services/PerformanceAnalytics';
 import { 
     GameSocketMessage, 
     GameRoom, 
@@ -25,6 +28,9 @@ const aiPlayers = new Map<string, AIPlayer>(); // gameId -> AIPlayer instance
 const gameSynchronizers = new Map<string, GameSynchronizer>(); // gameId -> GameSynchronizer instance
 const gameStateValidator = new GameStateValidator(); // Global state validator
 const gameErrorHandler = new GameErrorHandler(); // Global error handler
+const performanceMonitor = new PerformanceMonitor(); // Global performance monitor
+const performanceDashboard = new PerformanceDashboard(performanceMonitor); // Performance dashboard
+const performanceAnalytics = new PerformanceAnalytics(performanceMonitor); // Performance analytics
 
 // Helper function to safely execute game operations with error handling
 async function safeExecute<T>(
@@ -208,6 +214,9 @@ async function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'med
     
     // Set up AI event handlers with synchronization
     aiPlayer.onAIKeyboardInput = (event: AIKeyboardEvent) => {
+        const aiDecisionStartTime = performance.now();
+        performanceMonitor.mark('ai_decision_start');
+        
         // Add AI input to synchronizer for smooth movement
         const synchronizer = gameSynchronizers.get(gameId);
         if (synchronizer) {
@@ -250,6 +259,12 @@ async function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'med
             difficulty: event.difficulty
         });
         broadcastToGame(gameId, message);
+        
+        // Track AI decision performance
+        const aiDecisionEndTime = performance.now();
+        const decisionTime = aiDecisionEndTime - aiDecisionStartTime;
+        performanceMonitor.measure('ai_decision', 'ai_decision_start');
+        performanceMonitor.trackAIDecision(decisionTime, 1);
     };
 
     aiPlayer.onAIActivated = (data: { difficulty: string }) => {
@@ -349,6 +364,9 @@ async function createAIGameRoom(humanPlayerId: number, difficulty: 'easy' | 'med
 
 // Handle incoming game messages
 async function handleGameMessage(connection: any, userId: number, message: GameSocketMessage) {
+    const messageStartTime = performance.now();
+    performanceMonitor.mark(`message_${message.event}_start`);
+    
     return await safeExecute(async () => {
         const gameId = playerGameMap.get(userId);
         if (!gameId) {
@@ -391,10 +409,13 @@ async function handleGameMessage(connection: any, userId: number, message: GameS
                 synchronizer.updatePaddlePosition('player1', targetY);
                 
                 // Get synchronized state for AI
+                const gameUpdateStartTime = performance.now();
                 const syncState = synchronizer.getGameState();
                 player.paddleY = syncState.players.player1.paddlePosition.y;
                 room.gameState.paddles.player1.y = player.paddleY;
                 room.gameState.lastUpdate = Date.now();
+                const gameUpdateEndTime = performance.now();
+                performanceMonitor.trackGameUpdate(gameUpdateEndTime - gameUpdateStartTime);
                 
                 if (aiPlayer && room.gameState.gameActive) {
                     aiPlayer.updateGameState({
@@ -416,11 +437,14 @@ async function handleGameMessage(connection: any, userId: number, message: GameS
                 }
                 
                 // Validate game state before broadcasting
+                const validationStartTime = performance.now();
                 const validationResult = gameStateValidator.validateGameState(
                     gameId, 
                     room.gameState, 
                     room.players
                 );
+                const validationEndTime = performance.now();
+                performanceMonitor.trackValidation(validationEndTime - validationStartTime);
                 
                 if (!validationResult.isValid) {
                     console.warn(`Game ${gameId} validation failed:`, validationResult.errors);
@@ -689,9 +713,249 @@ async function handleGameMessage(connection: any, userId: number, message: GameS
         gameId: playerGameMap.get(userId),
         playerId: userId.toString()
     });
+    
+    // Track message processing performance
+    const messageEndTime = performance.now();
+    const processingTime = messageEndTime - messageStartTime;
+    performanceMonitor.measure(`message_${message.event}`, `message_${message.event}_start`);
+    performanceMonitor.trackNetworkLatency(processingTime);
+    performanceDashboard.updateConnectionCount(activeUsers.size);
 }
 //realtimeRoutes = websocketRoutes
 export default async function realtimeRoutes(fastify: FastifyInstance) {
+    // Initialize performance monitoring systems
+    performanceMonitor.startMonitoring();
+    performanceDashboard.startDashboard();
+    performanceAnalytics.startAnalytics();
+    
+    console.log('🔍 Performance monitoring enabled for ft_transcendence');
+    console.log('📈 Performance analytics and optimization system active');
+
+    // Performance monitoring endpoint
+    fastify.get('/api/performance/metrics', async (request, reply) => {
+        const startTime = performance.now();
+        
+        try {
+            const summary = performanceMonitor.getPerformanceSummary();
+            const dashboard = performanceDashboard.getDashboardSnapshot();
+            const healthOverview = performanceDashboard.getSystemHealthOverview();
+            
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime);
+            performanceMonitor.trackNetworkLatency(responseTime);
+            
+            return {
+                summary,
+                dashboard,
+                healthOverview,
+                responseTime: Math.round(responseTime * 100) / 100,
+                timestamp: Date.now()
+            };
+        } catch (error) {
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime, true);
+            
+            reply.status(500);
+            return { error: 'Failed to retrieve performance metrics' };
+        }
+    });
+
+    // Performance dashboard data endpoint
+    fastify.get('/api/performance/dashboard', async (request, reply) => {
+        const startTime = performance.now();
+        
+        try {
+            const snapshot = performanceDashboard.getDashboardSnapshot();
+            const trends = {
+                cpu: performanceDashboard.getPerformanceTrends('cpu'),
+                memory: performanceDashboard.getPerformanceTrends('memory'),
+                ai: performanceDashboard.getPerformanceTrends('ai'),
+                game: performanceDashboard.getPerformanceTrends('game'),
+                network: performanceDashboard.getPerformanceTrends('network')
+            };
+            
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime);
+            
+            return {
+                ...snapshot,
+                trends,
+                responseTime: Math.round(responseTime * 100) / 100
+            };
+        } catch (error) {
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime, true);
+            
+            reply.status(500);
+            return { error: 'Failed to retrieve dashboard data' };
+        }
+    });
+
+    // Performance analytics endpoint
+    fastify.get('/api/performance/analytics', async (request, reply) => {
+        const startTime = performance.now();
+        
+        try {
+            const analyticsSummary = performanceAnalytics.getAnalyticsSummary();
+            const analyticsReport = performanceAnalytics.generateAnalyticsReport();
+            
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime);
+            
+            return {
+                summary: analyticsSummary,
+                report: analyticsReport,
+                responseTime: Math.round(responseTime * 100) / 100,
+                timestamp: Date.now()
+            };
+        } catch (error) {
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime, true);
+            
+            reply.status(500);
+            return { error: 'Failed to retrieve analytics data' };
+        }
+    });
+
+    // Performance optimization recommendations endpoint
+    fastify.get('/api/performance/recommendations', async (request, reply) => {
+        const startTime = performance.now();
+        
+        try {
+            const report = performanceAnalytics.generateAnalyticsReport();
+            const recommendations = report.recommendations;
+            const opportunities = report.opportunities;
+            
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime);
+            
+            return {
+                recommendations: recommendations.slice(0, 10), // Top 10
+                opportunities: opportunities
+                    .sort((a: any, b: any) => b.priority - a.priority)
+                    .slice(0, 5), // Top 5 opportunities
+                summary: {
+                    totalRecommendations: recommendations.length,
+                    highPriorityCount: recommendations.filter((r: any) => r.priority === 'high').length,
+                    estimatedTotalGain: opportunities.reduce((sum: number, o: any) => sum + o.potentialGain, 0)
+                },
+                responseTime: Math.round(responseTime * 100) / 100,
+                timestamp: Date.now()
+            };
+        } catch (error) {
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime, true);
+            
+            reply.status(500);
+            return { error: 'Failed to generate recommendations' };
+        }
+    });
+
+    // Performance report generation endpoint
+    fastify.get('/api/performance/report', async (request, reply) => {
+        const startTime = performance.now();
+        
+        try {
+            const timeWindow = (request.query as any)?.timeWindow ? 
+                parseInt((request.query as any).timeWindow) : 3600000; // Default 1 hour
+                
+            const report = performanceDashboard.generatePerformanceReport(timeWindow);
+            const bottlenecks = performanceMonitor.getBottleneckAnalysis();
+            
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime);
+            
+            return {
+                ...report,
+                bottlenecks,
+                generationTime: Math.round(responseTime * 100) / 100
+            };
+        } catch (error) {
+            const responseTime = performance.now() - startTime;
+            performanceDashboard.trackRequest(responseTime, true);
+            
+            reply.status(500);
+            return { error: 'Failed to generate performance report' };
+        }
+    });
+
+    // Performance WebSocket endpoint for real-time monitoring
+    fastify.get('/api/ws/performance', { websocket: true }, async (connection, request) => {
+        console.log('🔍 Performance monitoring WebSocket connection established');
+        
+        // Send initial dashboard snapshot
+        const initialSnapshot = performanceDashboard.getDashboardSnapshot();
+        connection.socket.send(JSON.stringify({
+            type: 'initialSnapshot',
+            data: initialSnapshot,
+            timestamp: Date.now()
+        }));
+
+        // Set up real-time performance updates
+        const performanceUpdateInterval = setInterval(() => {
+            try {
+                const summary = performanceMonitor.getPerformanceSummary();
+                const healthOverview = performanceDashboard.getSystemHealthOverview();
+                
+                connection.socket.send(JSON.stringify({
+                    type: 'performanceUpdate',
+                    data: {
+                        summary,
+                        healthOverview,
+                        connectionCount: activeUsers.size,
+                        gameCount: gameRooms.size
+                    },
+                    timestamp: Date.now()
+                }));
+            } catch (error) {
+                console.error('Error sending performance update:', error);
+            }
+        }, 2000); // Update every 2 seconds
+
+        // Listen for performance events
+        const onAlert = (alert: any) => {
+            connection.socket.send(JSON.stringify({
+                type: 'performanceAlert',
+                data: alert,
+                timestamp: Date.now()
+            }));
+        };
+
+        const onBottleneck = (bottlenecks: any) => {
+            connection.socket.send(JSON.stringify({
+                type: 'bottleneckDetected',
+                data: bottlenecks,
+                timestamp: Date.now()
+            }));
+        };
+
+        const onRecommendation = (recommendation: any) => {
+            connection.socket.send(JSON.stringify({
+                type: 'optimizationRecommendation',
+                data: recommendation,
+                timestamp: Date.now()
+            }));
+        };
+
+        // Subscribe to performance events
+        performanceMonitor.on('performanceAlert', onAlert);
+        performanceDashboard.on('bottleneckNotification', onBottleneck);
+        performanceDashboard.on('alertNotification', onRecommendation);
+
+        // Handle connection close
+        connection.socket.on('close', () => {
+            clearInterval(performanceUpdateInterval);
+            performanceMonitor.removeListener('performanceAlert', onAlert);
+            performanceDashboard.removeListener('bottleneckNotification', onBottleneck);
+            performanceDashboard.removeListener('alertNotification', onRecommendation);
+            console.log('🔍 Performance monitoring WebSocket connection closed');
+        });
+
+        connection.socket.on('error', (error: unknown) => {
+            console.error('Performance monitoring WebSocket error:', error);
+            clearInterval(performanceUpdateInterval);
+        });
+    });
     fastify.get('/api/ws/status', { websocket: true }, async (connection, request) => {
         let userId: number | null = null;
 
@@ -860,13 +1124,18 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
         });
     });
 
-    // Health and error monitoring endpoint
+    // Comprehensive system health endpoint with performance analytics
     fastify.get('/api/game-health', async (request, reply) => {
         try {
             const healthMetrics = gameErrorHandler.getHealthMetrics();
             const errorStats = gameErrorHandler.getErrorStats();
             const recentErrors = gameErrorHandler.getRecentErrors(10);
             const isHealthy = gameErrorHandler.isSystemHealthy();
+
+            // Get performance monitoring data
+            const performanceSummary = performanceMonitor.getPerformanceSummary();
+            const performanceHealth = performanceDashboard.getSystemHealthOverview();
+            const analyticsSummary = performanceAnalytics.getAnalyticsSummary();
 
             // Update current statistics
             gameErrorHandler.updateHealthStats(
@@ -875,10 +1144,39 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
                 healthMetrics.averageLatency
             );
 
+            // Determine overall system status
+            const performanceHealthy = performanceHealth.status === 'healthy';
+            const overallHealthy = isHealthy && performanceHealthy;
+
             return {
-                status: isHealthy ? 'healthy' : 'unhealthy',
+                status: overallHealthy ? 'healthy' : 'unhealthy',
+                systemHealth: {
+                    errors: {
+                        healthy: isHealthy,
+                        metrics: healthMetrics,
+                        stats: errorStats
+                    },
+                    performance: {
+                        healthy: performanceHealthy,
+                        overview: performanceHealth,
+                        summary: performanceSummary.overall,
+                        analytics: analyticsSummary
+                    },
+                    games: {
+                        activeGames: gameRooms.size,
+                        activeUsers: activeUsers.size,
+                        connections: Array.from(userSockets.values()).reduce((sum, set) => sum + set.size, 0)
+                    }
+                },
                 metrics: healthMetrics,
                 errorStats,
+                performance: {
+                    cpu: performanceSummary.categories.cpu?.current || 0,
+                    memory: performanceSummary.categories.memory?.current || 0,
+                    ai: performanceSummary.categories.ai?.current || 0,
+                    game: performanceSummary.categories.game?.current || 0,
+                    network: performanceSummary.categories.network?.current || 0
+                },
                 recentErrors: recentErrors.map(err => ({
                     id: err.id,
                     type: err.type,
