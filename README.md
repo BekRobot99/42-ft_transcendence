@@ -1,22 +1,37 @@
-# 🏓 ft_transcendence - The Ultimate Ping Pong Experience
+# 🏓 ft_transcendence - Advanced AI Pong Game
 
 [![42 School](https://img.shields.io/badge/42-School-000000?style=flat&logo=42&logoColor=white)](https://42.fr/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Performance Monitoring](https://img.shields.io/badge/Performance-Monitoring-green)](./backend/src/services/PERFORMANCE_README.md)
 
-> **The final and most ambitious project at 42 School** - A full-stack, real-time multiplayer Ping Pong web application featuring both 2D and 3D gameplay modes!
+> **The final and most ambitious project at 42 School** - A full-stack, real-time multiplayer Pong web application featuring advanced AI opponents, comprehensive performance monitoring, and both 2D and 3D gameplay modes!
 
 ## 🎮 Features
 
+### Core Game Features
 - **🏓 Dual Game Modes**: Classic 2D Canvas Pong & Immersive 3D Babylon.js Pong
-- **👥 Real-time Multiplayer**: WebSocket-powered live gameplay
-- **🔐 Secure Authentication**: JWT tokens, Google OAuth integration, 2FA support
+- **🤖 Advanced AI Opponent**: Intelligent AI with multiple difficulty levels and adaptive strategies
+- **👥 Real-time Multiplayer**: WebSocket-powered live gameplay with low latency
 - **🏆 Tournament System**: Organize and participate in competitive tournaments
+
+### Performance & Monitoring
+- **📊 Real-time Performance Monitoring**: Comprehensive system performance tracking
+- **📈 Performance Analytics**: AI-powered pattern detection and optimization recommendations  
+- **🔍 Bottleneck Detection**: Automated identification of performance issues
+- **⚡ Performance Dashboard**: Live performance visualization and system health monitoring
+- **🚨 Intelligent Alerts**: Proactive performance issue detection and notifications
+
+### Security & Authentication
+- **🔐 Secure Authentication**: JWT tokens, Google OAuth integration, 2FA support
 - **👤 User Profiles**: Customizable avatars and player statistics
-- **🌐 Modern Web Stack**: TypeScript, Node.js, Fastify, SQLite
 - **🔒 HTTPS Ready**: SSL certificates and secure deployment
-- **🐳 Docker Containerized**: One-command deployment
+
+### Technology Stack
+- **🌐 Modern Web Stack**: TypeScript, Node.js, Fastify, SQLite
+- **� Docker Containerized**: One-command deployment
+- **� Responsive Design**: Mobile-friendly interface
 
 ## 🚀 Quick Start
 

@@ -1,13 +1,13 @@
 /**
- * Performance Monitor Service
+ * @fileoverview Performance Monitor Service - Comprehensive performance monitoring system
  * 
- * Comprehensive performance monitoring system for ft_transcendence.
+ * Real-time performance monitoring for ft_transcendence game system.
  * Tracks CPU usage, memory consumption, response times, frame rates,
  * and identifies bottlenecks across all game systems.
  * 
  * Features:
  * - Real-time performance metrics collection
- * - Bottleneck detection and analysis
+ * - Bottleneck detection and analysis  
  * - Performance optimization recommendations
  * - Historical performance data tracking
  * - Alert system for performance degradation
@@ -20,16 +20,28 @@
 import { EventEmitter } from 'events';
 import { performance } from 'perf_hooks';
 
-// Performance metric interfaces
+/**
+ * Performance metric data structure for monitoring system health and performance
+ * @interface PerformanceMetric
+ */
 export interface PerformanceMetric {
+  /** Unique identifier for the metric */
   id: string;
+  /** Human-readable metric name */
   name: string;
+  /** Category classification for grouping metrics */
   category: 'cpu' | 'memory' | 'network' | 'ai' | 'game' | 'system';
+  /** Current metric value */
   value: number;
+  /** Unit of measurement */
   unit: 'ms' | 'mb' | 'fps' | 'percent' | 'count' | 'bytes';
+  /** Timestamp when metric was recorded */
   timestamp: number;
+  /** Optional alert thresholds */
   threshold?: {
+    /** Warning level threshold */
     warning: number;
+    /** Critical level threshold */
     critical: number;
   };
 }
@@ -102,19 +114,42 @@ interface PerformanceConfig {
   enableOptimizationSuggestions: boolean;
 }
 
+/**
+ * Real-time performance monitoring system for game infrastructure
+ * 
+ * Provides comprehensive monitoring of system resources, game performance,
+ * AI decision times, and network latency. Includes automatic bottleneck
+ * detection, performance alerts, and optimization recommendations.
+ * 
+ * @extends EventEmitter
+ * @fires PerformanceMonitor#performanceUpdate - Real-time metric updates
+ * @fires PerformanceMonitor#performanceAlert - System performance alerts
+ * @fires PerformanceMonitor#bottleneckDetected - Bottleneck detection events
+ * @fires PerformanceMonitor#optimizationRecommendation - Performance improvement suggestions
+ */
 export class PerformanceMonitor extends EventEmitter {
+  /** Configuration settings for performance monitoring */
   private config: PerformanceConfig;
+  /** Storage for historical performance metrics by category */
   private metrics: Map<string, PerformanceMetric[]> = new Map();
+  /** Active performance alerts */
   private alerts: PerformanceAlert[] = [];
+  /** Performance optimization recommendations */
   private recommendations: PerformanceRecommendation[] = [];
+  /** Flag indicating if monitoring is currently active */
   private isMonitoring: boolean = false;
+  /** Interval timer for periodic monitoring checks */
   private monitoringInterval?: NodeJS.Timeout;
+  /** Monitoring start timestamp for uptime calculations */
   private startTime: number;
+  /** Frame counter for FPS calculations */
   private frameCount: number = 0;
+  /** Last frame timestamp for FPS calculations */
   private lastFrameTime: number = 0;
   
-  // Performance tracking state
+  /** AI decision timing history for performance analysis */
   private aiDecisionTimes: number[] = [];
+  /** Game update timing history for performance analysis */
   private gameUpdateTimes: number[] = [];
   private networkLatencies: number[] = [];
   private validationTimes: number[] = [];
@@ -123,6 +158,10 @@ export class PerformanceMonitor extends EventEmitter {
   private bottlenecks: Map<string, BottleneckAnalysis> = new Map();
   private performanceMarks: Map<string, number> = new Map();
 
+  /**
+   * Initialize performance monitoring system with configuration
+   * @param config - Optional performance monitoring configuration
+   */
   constructor(config?: Partial<PerformanceConfig>) {
     super();
     
