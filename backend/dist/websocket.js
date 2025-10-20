@@ -183,7 +183,11 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
                 const room = gameRooms.get(gameId);
                 if (room && event.action !== 'none') {
                     const currentY = room.gameState.paddles.player2.y;
-                    const moveAmount = 6; // AI movement speed
+                    // AI movement speed based on difficulty (increased for better gameplay)
+                    const baseMoveAmount = 12; // Base speed (doubled from 6)
+                    const difficultyMultiplier = event.difficulty === 'easy' ? 0.8 :
+                        event.difficulty === 'hard' ? 1.3 : 1.0;
+                    const moveAmount = baseMoveAmount * difficultyMultiplier;
                     let targetY = currentY;
                     if (event.action === 'up') {
                         targetY = Math.max(0, currentY - moveAmount);
@@ -327,6 +331,13 @@ async function handleGameMessage(connection, userId, message) {
                     // Update paddle position through synchronizer
                     const targetY = Math.max(0, Math.min(room.gameState.canvas.height - room.gameState.paddles.player1.height, message.data.y));
                     synchronizer.updatePaddlePosition('player1', targetY);
+                    // Update ball state if provided (for client-authoritative ball physics)
+                    if (message.data.ball) {
+                        room.gameState.ball.x = message.data.ball.x || room.gameState.ball.x;
+                        room.gameState.ball.y = message.data.ball.y || room.gameState.ball.y;
+                        room.gameState.ball.velocityX = message.data.ball.velocityX || room.gameState.ball.velocityX;
+                        room.gameState.ball.velocityY = message.data.ball.velocityY || room.gameState.ball.velocityY;
+                    }
                     // Get synchronized state for AI
                     const gameUpdateStartTime = performance.now();
                     const syncState = synchronizer.getGameState();

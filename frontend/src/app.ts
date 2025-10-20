@@ -245,7 +245,15 @@ class App {
             
             game2DButton.addEventListener('click', () => {
                 gamePageContainer.innerHTML = '';
-                this.currentViewCleanup = renderGamePage(gamePageContainer);
+                // Read URL parameters for game mode
+                const urlParams = new URLSearchParams(window.location.search);
+                const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
+                const difficulty = (urlParams.get('difficulty') as 'easy' | 'medium' | 'hard') || 'medium';
+                const options: any = { mode: mode };
+                if (mode === 'ai') {
+                    options.aiDifficulty = difficulty;
+                }
+                this.currentViewCleanup = renderGamePage(gamePageContainer, options);
             });
 
             // 3D Game Button

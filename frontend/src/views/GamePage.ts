@@ -23,6 +23,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     }
 
     const isAIMode = gameOptions.mode === 'ai';
+    console.log('🎮 Game Mode:', gameOptions.mode, '| AI Mode:', isAIMode, '| Difficulty:', gameOptions.aiDifficulty);
     const player1Alias = gameOptions.player1Name || translate('Player 1', 'Spieler 1', 'Joueur 1');
     const player2Alias = isAIMode ? `AI (${gameOptions.aiDifficulty || 'medium'})` : 
                          (gameOptions.player2Name || translate('Player 2', 'Spieler 2', 'Joueur 2'));
@@ -153,6 +154,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     let aiSocket: WebSocket | null = null;
     let aiGameId: string | null = null;
     let aiStatsInterval: number | null = null;
+    let frameCounter = 0;
     
     // AI status indicators and visual feedback
     let aiStatus = {
@@ -256,12 +258,17 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
 
     // Initialize AI connection if in AI mode
     if (isAIMode) {
+        console.log('🤖 Initializing AI game mode...');
         initializeAIGame();
     }
 
     function initializeAIGame() {
         try {
-            aiSocket = new WebSocket(`ws://localhost:8080/api/ws/game`);
+            // Use wss:// for secure WebSocket connection over HTTPS
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/api/ws/game`;
+            console.log('🔌 Connecting to AI WebSocket:', wsUrl);
+            aiSocket = new WebSocket(wsUrl);
             
             aiSocket.onopen = () => {
                 console.log('AI WebSocket connected');
@@ -281,21 +288,25 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             aiSocket.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+                    console.log('📨 Received message:', message.type, message);
                     handleAIGameMessage(message);
                 } catch (error) {
                     console.error('Error parsing AI game message:', error);
                 }
             };
 
-            aiSocket.onclose = () => {
-                console.log('AI WebSocket disconnected');
+            aiSocket.onclose = (event) => {
+                console.log('🔌 AI WebSocket disconnected', { code: event.code, reason: event.reason, wasClean: event.wasClean });
+                if (event.code === 1008) {
+                    console.error('❌ Authentication failed! Make sure you are logged in.');
+                }
                 if (aiStatsInterval) {
                     clearInterval(aiStatsInterval);
                 }
             };
 
             aiSocket.onerror = (error) => {
-                console.error('AI WebSocket error:', error);
+                console.error('❌ AI WebSocket error:', error);
             };
         } catch (error) {
             console.error('Failed to connect to AI game server:', error);
@@ -306,7 +317,20 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         switch (message.type) {
             case 'game_joined':
                 aiGameId = message.gameId;
-                console.log(`Joined AI game: ${aiGameId}`);
+                console.log(`✅ Joined AI game: ${aiGameId}`);
+                
+                // Send player_ready to activate the AI
+                if (aiSocket && aiGameId) {
+                    aiSocket.send(JSON.stringify({
+                        event: 'player_ready',
+                        gameId: aiGameId,
+                        playerId: 'human_player',
+                        timestamp: Date.now(),
+                        data: {}
+                    }));
+                    console.log('🎮 Sent player_ready event to activate AI');
+                }
+                
                 // Start requesting AI stats periodically
                 if (aiStatsInterval) clearInterval(aiStatsInterval);
                 aiStatsInterval = window.setInterval(() => {
@@ -324,6 +348,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
 
             case 'ai_move':
                 // Handle AI paddle movement
+                console.log('🤖 AI move received:', message.move, 'current Y:', player2.y);
                 if (message.move === 'up') {
                     player2.y = Math.max(0, player2.y - PADDLE_SPEED);
                     aiStatus.lastMove = 'up';
@@ -334,6 +359,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                     aiStatus.lastMove = 'none';
                 }
                 aiStatus.lastMoveTime = Date.now();
+                console.log('🤖 AI new Y:', player2.y);
                 break;
 
             case 'ai_performance_stats':
@@ -363,6 +389,17 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                     player2.score = message.score.player2;
                     updateScoreDisplay();
                     console.log(`Score updated by ${message.scorer}: ${player1.score} - ${player2.score}`);
+                }
+                break;
+
+            case 'game_sync':
+                // Handle synchronized game state from backend (includes AI paddle position)
+                if (message.players && message.players.player2) {
+                    // Update AI paddle position from backend
+                    const aiPaddleY = message.players.player2.paddlePosition?.y || message.players.player2.paddleY;
+                    if (typeof aiPaddleY === 'number') {
+                        player2.y = aiPaddleY;
+                    }
                 }
                 break;
 
@@ -725,7 +762,14 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                         velocity: PADDLE_SPEED,
                         intensity: 1,
                         duration: 16, // Frame duration
-                        previousY: oldY
+                        previousY: oldY,
+                        // Include ball state for AI
+                        ball: {
+                            x: ball.x,
+                            y: ball.y,
+                            velocityX: ball.dx,
+                            velocityY: ball.dy
+                        }
                     }
                 }));
             }
@@ -747,7 +791,14 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                         velocity: PADDLE_SPEED,
                         intensity: 1,
                         duration: 16, // Frame duration
-                        previousY: oldY
+                        previousY: oldY,
+                        // Include ball state for AI
+                        ball: {
+                            x: ball.x,
+                            y: ball.y,
+                            velocityX: ball.dx,
+                            velocityY: ball.dy
+                        }
                     }
                 }));
             }
@@ -771,6 +822,31 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         // Wall collision (top/bottom)
         if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
             ball.dy *= -1;
+        }
+
+        // Send periodic updates to AI (every 3 frames, ~20 times per second at 60fps)
+        frameCounter++;
+        if (isAIMode && aiSocket && aiGameId && aiSocket.readyState === WebSocket.OPEN && frameCounter % 3 === 0) {
+            aiSocket.send(JSON.stringify({
+                event: 'paddle_move',
+                gameId: aiGameId,
+                playerId: 'human_player',
+                timestamp: Date.now(),
+                data: {
+                    y: player1.y,
+                    direction: 'none',
+                    velocity: 0,
+                    intensity: 0,
+                    duration: 16,
+                    previousY: player1.y,
+                    ball: {
+                        x: ball.x,
+                        y: ball.y,
+                        velocityX: ball.dx,
+                        velocityY: ball.dy
+                    }
+                }
+            }));
         }
 
         // Paddle collision detection
@@ -1040,9 +1116,10 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 ctx.fill();
             }
         }
-    }
 
     let animationFrameId: number;
+    
+    // Initialize the game
     update();
     startGame();
 

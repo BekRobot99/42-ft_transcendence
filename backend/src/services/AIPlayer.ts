@@ -89,7 +89,7 @@ export class AIPlayer {
   public onDifficultyChanged: ((data: { newDifficulty: string }) => void) | null = null;
   
   // Precise 1-second constraint implementation
-  private readonly UPDATE_INTERVAL = 1000; // Exactly 1 second - critical requirement
+  private readonly UPDATE_INTERVAL = 50; // 50ms = 20 updates per second for responsive AI gameplay
   private readonly TIMING_TOLERANCE = 50; // Allow 50ms variance for system load
   
   // Gameplay balance configuration

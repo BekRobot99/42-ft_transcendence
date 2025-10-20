@@ -45,7 +45,7 @@ class AIPlayer {
         this.onAIDeactivated = null;
         this.onDifficultyChanged = null;
         // Precise 1-second constraint implementation
-        this.UPDATE_INTERVAL = 1000; // Exactly 1 second - critical requirement
+        this.UPDATE_INTERVAL = 50; // 50ms = 20 updates per second for responsive AI gameplay
         this.TIMING_TOLERANCE = 50; // Allow 50ms variance for system load
         // Gameplay balance configuration
         this.BALANCE_CONFIG = {
