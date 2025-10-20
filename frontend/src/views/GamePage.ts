@@ -105,7 +105,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     const PADDLE_HEIGHT = 100;
     const BALL_RADIUS = 7;
     const PADDLE_SPEED = 6;
-    const WINNING_SCORE = 1;
+    const WINNING_SCORE = 11; // First to 11 points wins
     const INITIAL_BALL_SPEED = 3;
     const BALL_SPEED_INCREASE_FACTOR = 1.1;
 
@@ -155,6 +155,8 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     let aiGameId: string | null = null;
     let aiStatsInterval: number | null = null;
     let frameCounter = 0;
+    let aiTargetY = 300; // Target Y position for smooth interpolation
+    let aiCurrentY = 300; // Current interpolated Y position
     
     // AI status indicators and visual feedback
     let aiStatus = {
@@ -395,10 +397,11 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             case 'game_sync':
                 // Handle synchronized game state from backend (includes AI paddle position)
                 if (message.players && message.players.player2) {
-                    // Update AI paddle position from backend
-                    const aiPaddleY = message.players.player2.paddlePosition?.y || message.players.player2.paddleY;
+                    // Update AI paddle target position - check all possible property names
+                    const aiPaddleY = message.players.player2.y || message.players.player2.paddlePosition?.y || message.players.player2.paddleY;
                     if (typeof aiPaddleY === 'number') {
-                        player2.y = aiPaddleY;
+                        aiTargetY = aiPaddleY;
+                        console.log('game_sync: aiTargetY updated to', aiTargetY);
                     }
                 }
                 break;
@@ -681,11 +684,14 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     }
 
     function startGame() {
+        // For AI games, start immediately. For PvP, add small delay
+        const delay = isAIMode ? 100 : 1000;
         setTimeout(() => {
             // Start the ball in a random direction
             ball.dx = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
             ball.dy = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
-        }, 1000); // 1-second delay before game starts
+            console.log(`🎾 Ball started with velocity (${ball.dx}, ${ball.dy})`);
+        }, delay);
     }
 
     // Function to validate current game state with server
@@ -812,10 +818,20 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             if (keysPressed['ArrowDown'] && player2.y < canvas.height - player2.height) {
                 player2.y += PADDLE_SPEED;
             }
-        }
-        // Note: In AI mode, player2 paddle movement is handled by AI messages
-
-        // Move ball
+        } else {
+            // Smooth lerp to reduce shaking, but snap to target if very close
+            const diff = Math.abs(aiTargetY - player2.y);
+            if (diff < 2) {
+                // Very close - snap to eliminate shaking
+                player2.y = aiTargetY;
+            } else if (diff < 20) {
+                // Small difference - use light smoothing
+                player2.y += (aiTargetY - player2.y) * 0.4;
+            } else {
+                // Large difference - move faster
+                player2.y += (aiTargetY - player2.y) * 0.6;
+            }
+        }        // Move ball
         ball.x += ball.dx;
         ball.y += ball.dy;
 

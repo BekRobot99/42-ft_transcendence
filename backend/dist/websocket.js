@@ -151,14 +151,14 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
                     player2: { y: 250, height: 100, width: 10, speed: 5 }
                 },
                 score: { player1: 0, player2: 0 },
-                gameActive: false,
+                gameActive: true, // AI games start immediately - no need to wait for player_ready
                 isPaused: false,
                 lastUpdate: Date.now()
             },
             createdAt: new Date(),
             lastActivity: new Date(),
             gameType: 'ai',
-            status: 'waiting'
+            status: 'starting' // AI games are ready to start immediately
         };
         gameRooms.set(gameId, gameRoom);
         playerGameMap.set(humanPlayerId, gameId);
@@ -183,10 +183,10 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
                 const room = gameRooms.get(gameId);
                 if (room && event.action !== 'none') {
                     const currentY = room.gameState.paddles.player2.y;
-                    // AI movement speed based on difficulty (increased for better gameplay)
-                    const baseMoveAmount = 12; // Base speed (doubled from 6)
-                    const difficultyMultiplier = event.difficulty === 'easy' ? 0.8 :
-                        event.difficulty === 'hard' ? 1.3 : 1.0;
+                    // AI movement speed based on difficulty (tuned for competitive gameplay)
+                    const baseMoveAmount = 15; // Increased base speed for more responsive AI
+                    const difficultyMultiplier = event.difficulty === 'easy' ? 0.75 :
+                        event.difficulty === 'hard' ? 1.5 : 1.0;
                     const moveAmount = baseMoveAmount * difficultyMultiplier;
                     let targetY = currentY;
                     if (event.action === 'up') {
@@ -245,6 +245,7 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
             broadcastToGame(gameId, message);
         });
         aiPlayer.on('thinking_completed', (data) => {
+            console.log(`📢 thinking_completed event received! Decision: ${data.decision}, targetPos: ${data.targetPosition}`);
             const message = JSON.stringify({
                 type: 'ai_thinking_completed',
                 gameId: gameId,
@@ -255,6 +256,32 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
                 timestamp: data.timestamp
             });
             broadcastToGame(gameId, message);
+            // Convert AI decision to actual paddle movement
+            const room = gameRooms.get(gameId);
+            console.log(`🎯 Room exists: ${!!room}, decision: ${data.decision}`);
+            if (room && data.decision !== 'none') {
+                const direction = data.decision === 'up' ? -1 : 1; // up = -1, down = 1
+                // Apply AI movement to paddle (simulate key press)
+                const currentY = room.gameState.paddles.player2.y;
+                const paddleSpeed = 5; // Same as human paddle speed
+                const newY = Math.max(0, Math.min(room.gameState.canvas.height - room.gameState.paddles.player2.height, currentY + (direction * paddleSpeed)));
+                // Update game state
+                room.gameState.paddles.player2.y = newY;
+                // Update synchronizer
+                const sync = gameSynchronizers.get(gameId);
+                if (sync) {
+                    sync.updatePaddlePosition('player2', newY);
+                }
+                // Broadcast paddle movement
+                const moveMessage = JSON.stringify({
+                    type: 'paddle_move',
+                    gameId: gameId,
+                    player: 'player2',
+                    y: newY,
+                    timestamp: Date.now()
+                });
+                broadcastToGame(gameId, moveMessage);
+            }
         });
         aiPlayer.on('ai_reaction', (data) => {
             const message = JSON.stringify({
@@ -269,6 +296,36 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
             broadcastToGame(gameId, message);
         });
         aiPlayers.set(gameId, aiPlayer);
+        // Activate AI immediately for AI games (no need to wait for player_ready)
+        aiPlayer.activate();
+        console.log(`🤖 AI player activated immediately for game ${gameId}`);
+        // Create AI game loop that continuously updates the AI
+        const aiGameLoop = setInterval(() => {
+            const room = gameRooms.get(gameId);
+            if (!room || !room.gameState.gameActive) {
+                clearInterval(aiGameLoop);
+                console.log(`🤖 AI game loop stopped for ${gameId}`);
+                return;
+            }
+            // Feed current game state to AI every frame
+            aiPlayer.updateGameState({
+                ballX: room.gameState.ball.x,
+                ballY: room.gameState.ball.y,
+                ballVelX: room.gameState.ball.velocityX,
+                ballVelY: room.gameState.ball.velocityY,
+                paddleY: room.gameState.paddles.player2.y,
+                paddleHeight: room.gameState.paddles.player2.height,
+                canvasHeight: room.gameState.canvas.height,
+                canvasWidth: room.gameState.canvas.width,
+                opponentPaddleY: room.gameState.paddles.player1.y,
+                score: {
+                    ai: room.gameState.score.player2,
+                    human: room.gameState.score.player1
+                },
+                gameActive: room.gameState.gameActive
+            });
+        }, 16); // 60 FPS game loop
+        console.log(`🤖 AI game loop started for ${gameId} (60 FPS)`);
         // Create and configure Game Synchronizer for smooth controls
         const synchronizer = new GameSynchronizer_1.GameSynchronizer(gameRoom.gameState.canvas.width, gameRoom.gameState.canvas.height);
         // Start synchronization with broadcast to all players
@@ -299,6 +356,7 @@ async function createAIGameRoom(humanPlayerId, difficulty) {
 }
 // Handle incoming game messages
 async function handleGameMessage(connection, userId, message) {
+    console.log(`📨 Received event: ${message.event} from user ${userId}`);
     const messageStartTime = performance.now();
     performanceMonitor.mark(`message_${message.event}_start`);
     return await safeExecute(async () => {
@@ -346,7 +404,9 @@ async function handleGameMessage(connection, userId, message) {
                     room.gameState.lastUpdate = Date.now();
                     const gameUpdateEndTime = performance.now();
                     performanceMonitor.trackGameUpdate(gameUpdateEndTime - gameUpdateStartTime);
+                    console.log(`🔍 AI Player exists: ${!!aiPlayer}, game active: ${room.gameState.gameActive}`);
                     if (aiPlayer && room.gameState.gameActive) {
+                        console.log(`🔍 Calling aiPlayer.updateGameState()`);
                         aiPlayer.updateGameState({
                             ballX: room.gameState.ball.x,
                             ballY: room.gameState.ball.y,
@@ -392,14 +452,18 @@ async function handleGameMessage(connection, userId, message) {
                 }
                 break;
             case 'player_ready':
+                console.log(`🎮 player_ready received for user ${userId}`);
                 const readyPlayer = room.players.find(p => p.id === userId.toString());
                 if (readyPlayer) {
                     readyPlayer.ready = true;
+                    console.log(`🎮 Player ${userId} marked as ready`);
                     // Check if all players are ready (AI is always ready)
                     const allReady = room.players.every(p => p.ready);
+                    console.log(`🎮 All players ready: ${allReady}, room status: ${room.status}`);
                     if (allReady && room.status === 'waiting') {
                         room.status = 'starting';
                         room.gameState.gameActive = true;
+                        console.log(`🎮 Game started! gameActive set to true`);
                         // Activate AI player
                         if (aiPlayer) {
                             aiPlayer.activate();
@@ -484,7 +548,7 @@ async function handleGameMessage(connection, userId, message) {
                         timestamp: Date.now()
                     }));
                     // Check for game end conditions
-                    const winningScore = 5; // Standard Pong winning score
+                    const winningScore = 11; // Standard Pong winning score (first to 11)
                     if (room.gameState.score.player1 >= winningScore || room.gameState.score.player2 >= winningScore) {
                         const winner = room.gameState.score.player1 >= winningScore ? 'human' : 'ai';
                         room.gameState.gameActive = false;
@@ -885,8 +949,11 @@ async function realtimeRoutes(fastify) {
                 if (message.event === 'join_game') {
                     // Create new AI game or join existing game
                     if (message.data.gameType === 'ai') {
+                        console.log(`🎮 Creating AI game room for user ${userId} with difficulty ${message.data.difficulty || 'medium'}`);
                         const gameId = await createAIGameRoom(userId, message.data.difficulty || 'medium');
+                        console.log(`🎮 Game ID created: ${gameId}`);
                         if (gameId) {
+                            console.log(`🎮 Sending game_joined message to client`);
                             connection.send(JSON.stringify({
                                 type: 'game_joined',
                                 gameId: gameId,
@@ -894,6 +961,7 @@ async function realtimeRoutes(fastify) {
                                 aiDifficulty: message.data.difficulty || 'medium',
                                 timestamp: Date.now()
                             }));
+                            console.log(`🎮 game_joined message sent!`);
                         }
                         else {
                             await safeSend(connection, {

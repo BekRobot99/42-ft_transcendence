@@ -89,7 +89,7 @@ export class AIPlayer {
   public onDifficultyChanged: ((data: { newDifficulty: string }) => void) | null = null;
   
   // Precise 1-second constraint implementation
-  private readonly UPDATE_INTERVAL = 50; // 50ms = 20 updates per second for responsive AI gameplay
+  private readonly UPDATE_INTERVAL = 30; // 30ms = 33 updates per second for very responsive AI gameplay
   private readonly TIMING_TOLERANCE = 50; // Allow 50ms variance for system load
   
   // Gameplay balance configuration
@@ -105,23 +105,23 @@ export class AIPlayer {
   private readonly DIFFICULTIES: Record<string, AIDifficulty> = {
     easy: {
       name: 'easy',
-      reactionTime: 650,     // Slightly faster than before for better gameplay
-      accuracy: 0.65,        // Improved from 60% to make it less frustrating
-      speed: 0.75,          // Slightly faster movement
-      predictionDepth: 1    // Still basic prediction only
+      reactionTime: 350,     // Faster reaction - more responsive
+      accuracy: 0.75,        // 75% accuracy - decent play
+      speed: 1.0,           // Human-level speed
+      predictionDepth: 1    // Basic prediction only
     },
     medium: {
       name: 'medium',
-      reactionTime: 350,     // Faster reactions for challenging gameplay
-      accuracy: 0.82,        // Fine-tuned for competitive balance
-      speed: 0.95,          // Nearly human-level speed
+      reactionTime: 200,     // Quick reactions - challenging
+      accuracy: 0.88,        // 88% accuracy - very competitive
+      speed: 1.2,           // 20% faster than human
       predictionDepth: 2    // Good prediction capability
     },
     hard: {
       name: 'hard',
-      reactionTime: 180,     // Very fast but not impossible reactions
-      accuracy: 0.92,        // Reduced from 95% to be beatable
-      speed: 1.15,          // Faster than human but not overwhelming
+      reactionTime: 80,      // Ultra-fast reactions - very difficult
+      accuracy: 0.96,        // 96% accuracy - near perfect
+      speed: 1.6,           // 60% faster than human - extremely challenging
       predictionDepth: 3    // Full advanced prediction
     }
   };
@@ -146,6 +146,7 @@ export class AIPlayer {
       this.eventHandlers.set(event, []);
     }
     this.eventHandlers.get(event)!.push(handler);
+    console.log(`✅ Registered handler for event: ${event}, total handlers: ${this.eventHandlers.get(event)!.length}`);
   }
 
   /**
@@ -166,6 +167,7 @@ export class AIPlayer {
    */
   private emit(event: string, data?: any): void {
     const handlers = this.eventHandlers.get(event);
+    console.log(`🔔 Emitting event: ${event}, handlers count: ${handlers ? handlers.length : 0}`);
     if (handlers) {
       handlers.forEach(handler => {
         try {
@@ -174,6 +176,8 @@ export class AIPlayer {
           console.error(`Error in AI event handler for ${event}:`, error);
         }
       });
+    } else {
+      console.warn(`⚠️  No handlers registered for event: ${event}`);
     }
   }
 
@@ -212,53 +216,53 @@ export class AIPlayer {
    * Implements strict 1-second update constraint with performance monitoring
    */
   updateGameState(state: GameState): void {
+    console.log(`🎮 updateGameState called - isActive: ${this.isActive}, gameActive: ${state.gameActive}`);
     if (!this.isActive || !state.gameActive) {
+      console.log(`🎮 AI not active or game not active - returning`);
       return;
     }
     
     const now = Date.now();
     const timeSinceLastUpdate = now - this.lastUpdateTime;
     
-    // Strict 1-second enforcement with timing precision
-    if (timeSinceLastUpdate >= (this.UPDATE_INTERVAL - this.TIMING_TOLERANCE)) {
-      const processingStart = performance.now();
+    // Check if enough time has passed since last update
+    if (timeSinceLastUpdate < this.UPDATE_INTERVAL) {
+      this.skippedUpdates++;
+      console.debug(`AI update skipped - too early by ${this.UPDATE_INTERVAL - timeSinceLastUpdate}ms`);
+      return;
+    }
+    
+    // Enough time has passed, process the update
+    const processingStart = performance.now();
       
-      // Performance monitoring
-      if (timeSinceLastUpdate < this.UPDATE_INTERVAL) {
-        this.skippedUpdates++;
-        console.debug(`AI update skipped - too early by ${this.UPDATE_INTERVAL - timeSinceLastUpdate}ms`);
-        return;
-      }
-      
-      // Update state and timing
-      this.gameState = this.deepCopyGameState(state);
-      this.lastUpdateTime = now;
-      this.updateCount++;
+    // Update state and timing
+    this.gameState = this.deepCopyGameState(state);
+    this.lastUpdateTime = now;
+    this.updateCount++;
       
       // Log timing violations for debugging
       if (timeSinceLastUpdate > this.UPDATE_INTERVAL + this.TIMING_TOLERANCE) {
         console.warn(`AI update late by ${timeSinceLastUpdate - this.UPDATE_INTERVAL}ms - system under load?`);
       }
       
-      // Process decision with reaction delay
-      setTimeout(() => {
-        if (this.isActive && this.gameState) {
-          const decisionStart = performance.now();
-          this.makeDecision();
+      // Process decision immediately (no artificial delay)
+      // The UPDATE_INTERVAL already provides the timing control
+      if (this.isActive && this.gameState) {
+        const decisionStart = performance.now();
+        console.log(`🤖 AI making decision - ball at (${this.gameState.ballX}, ${this.gameState.ballY}), paddle at ${this.gameState.paddleY}`);
+        this.makeDecision();
           
-          // Track processing performance
-          this.lastProcessingTime = performance.now() - decisionStart;
-          this.averageProcessingTime = (this.averageProcessingTime * (this.updateCount - 1) + this.lastProcessingTime) / this.updateCount;
-        }
-      }, this.difficulty.reactionTime);
-      
-      // Overall processing time tracking
-      const processingEnd = performance.now();
-      const totalProcessingTime = processingEnd - processingStart;
-      
-      if (totalProcessingTime > 100) {
-        console.warn(`AI processing took ${totalProcessingTime.toFixed(2)}ms - consider optimization`);
+        // Track processing performance
+        this.lastProcessingTime = performance.now() - decisionStart;
+        this.averageProcessingTime = (this.averageProcessingTime * (this.updateCount - 1) + this.lastProcessingTime) / this.updateCount;
       }
+      
+    // Overall processing time tracking
+    const processingEnd = performance.now();
+    const totalProcessingTime = processingEnd - processingStart;
+      
+    if (totalProcessingTime > 100) {
+      console.warn(`AI processing took ${totalProcessingTime.toFixed(2)}ms - consider optimization`);
     }
   }
 
@@ -302,16 +306,21 @@ export class AIPlayer {
     const ballVelX = this.gameState.ballVelX;
     const ballVelY = this.gameState.ballVelY;
     
-    // Enhanced ball trajectory analysis
-    const prediction = this.calculateBallTrajectory(ballX, ballY, ballVelX, ballVelY);
-    let targetY = prediction.interceptY;
+    // SIMPLE DIRECT TRACKING: Just follow the ball!
+    // The AI paddle center should align with the ball Y position
+    let targetY = ballY - (this.gameState.paddleHeight / 2);
     
-    // Strategic positioning based on game situation
-    const gameStrategy = this.analyzeGameSituation();
-    targetY = this.applyGameStrategy(targetY, gameStrategy);
+    // Clamp to canvas bounds
+    targetY = Math.max(0, Math.min(this.gameState.canvasHeight - this.gameState.paddleHeight, targetY));
     
-    // Apply difficulty-based modifications
-    targetY = this.applyDifficultyModifiers(targetY, paddleCenter);
+    // Strategic positioning based on game situation (only if not locked)
+    if (targetY !== this.gameState.paddleY) {
+        const gameStrategy = this.analyzeGameSituation();
+        targetY = this.applyGameStrategy(targetY, gameStrategy);
+        
+        // Apply difficulty-based modifications
+        targetY = this.applyDifficultyModifiers(targetY, paddleCenter);
+    }
     
     // Determine movement with enhanced logic
     const move = this.calculateOptimalMove(targetY, paddleCenter);
@@ -499,7 +508,10 @@ export class AIPlayer {
    * Calculate optimal movement direction with enhanced logic
    */
   private calculateOptimalMove(targetY: number, currentCenter: number): AIMove {
-    const difference = targetY - currentCenter;
+    // targetY is paddle top, currentCenter is paddle center
+    // Convert targetY to target center for proper comparison
+    const targetCenter = targetY + (this.gameState!.paddleHeight / 2);
+    const difference = targetCenter - currentCenter;
     
     // Fine-tuned movement thresholds for better gameplay balance
     const moveThreshold = this.difficulty.name === 'easy' ? 22 : 
