@@ -3,6 +3,9 @@ FROM node:lts-alpine AS builder
 
 WORKDIR /app
 
+# Install build dependencies for native modules (sqlite3)
+RUN apk add --no-cache python3 make g++
+
 # Copy package.json and lock file
 COPY package*.json ./
 
@@ -20,13 +23,19 @@ FROM node:lts-alpine
 
 WORKDIR /app
 
+# Install runtime dependencies for sqlite3
+RUN apk add --no-cache libstdc++ python3 make g++ py3-setuptools
+
 # Copy only necessary files from builder
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
+# Rebuild native modules for the current architecture
+RUN npm rebuild sqlite3 --build-from-source
+
 # Expose backend port
-EXPOSE 4000
+EXPOSE 3000
 
 # Start backend (adjust command if using NestJS / Express)
 CMD ["node", "dist/server.js"]
