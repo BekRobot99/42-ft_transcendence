@@ -13,6 +13,7 @@ import { setupDatabase } from "./config/database";
 import authRoutes from "./api/auth";
 import tournamentRoutes from "./api/tournament";
 import realtimeRoutes from './websocket';
+import chatRoutes from './api/chatRoutes';
 
 const app = Fastify({
     logger: true,
@@ -102,6 +103,7 @@ app.get('/api/health', async (request: any, reply: any) => {
 app.register(authRoutes);
 app.register(tournamentRoutes);
 app.register(realtimeRoutes);
+app.register(chatRoutes);
 
 const startServer  = async () => {
     try {
