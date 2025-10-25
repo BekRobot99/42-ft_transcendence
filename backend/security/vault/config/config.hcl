@@ -3,3 +3,17 @@ listener "tcp" {
     tls_disable = 1
     # ENABLE TLS CERT AND KEY IN PRODUCTION
 }
+
+api_addr = "https://vault:8200"
+cluster_addr = "https://vault:8201"
+
+storage "raft" {
+    path = "/vault/data"
+}
+
+audit {
+    type = "file"
+    options = { path = "/vault/logs/audit.log }
+}
+
+disable_mlock = false
