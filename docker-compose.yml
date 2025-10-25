@@ -37,6 +37,14 @@ services:
     container_name: ft_transcendence_vault
     networks:
       - internal
+    volumes:
+      - vault-data:/backend/security/vault/data
+      - /backend/security/vault/config:/vault/config:ro
+      - /backend/security/vault/tls:/vault/tls:ro
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - internal
     restart: unless-stopped
 
   backend:
@@ -55,7 +63,14 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://localhost:8080/auth/google/callback}
+    networks:
+      - internal
     restart: unless-stopped
 
 volumes:
   database_data: # We can define a named volume if prefered, instead of bind mount
+  vault_data:
+
+networks:
+  internal:
+    driver: bridge
