@@ -11,9 +11,4 @@ storage "raft" {
     path = "/vault/data"
 }
 
-audit {
-    type = "file"
-    options = { path = "/vault/logs/audit.log }
-}
-
 disable_mlock = false

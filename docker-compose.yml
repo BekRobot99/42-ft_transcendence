@@ -34,15 +34,17 @@ services:
     restart: unless-stopped
 
   vault:
-    image: hashicorp/vault:1.20.4
-    command: ["server", "-config=/backend/security/vault/config/vault.hcl"]
+    build:
+      context: ./backend/security/vault
+    # image: hashicorp/vault:1.20.4   #WHEN THE DOCKER FILE IS NOT USED
     environment:
       - VAULT_ADDR=https://vault:8200
+      - VAULT_SKIP_CHOWN=true
+    command: ["server", "-config=/vault/config/config.hcl"]
     container_name: ft_transcendence_vault
     volumes:
-      - vault_data:/backend/security/vault/data
-      - /backend/security/vault/config:/vault/config:ro
-      - /backend/security/vault/tls:/vault/tls:ro
+      - vault_data:/vault/data
+      - vault_logs:/vault/logs
     cap_add:
       - IPC_LOCK
     networks:
@@ -72,6 +74,7 @@ services:
 volumes:
   database_data: # We can define a named volume if prefered, instead of bind mount
   vault_data:
+  vault_logs:
 
 networks:
   internal:
