@@ -29,4 +29,6 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 4000
 
 # Start backend (adjust command if using NestJS / Express)
+USER root
+
 CMD ["node", "dist/server.js"]
