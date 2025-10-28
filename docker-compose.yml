@@ -27,18 +27,12 @@ services:
     restart: unless-stopped
 
   vault:
-    build:
-      context: ./backend/security/vault
-    # image: hashicorp/vault:1.20.4   #WHEN THE DOCKER FILE IS NOT USED
+    image: hashicorp/vault:1.20.4
     environment:
-      - VAULT_ADDR=https://vault:8200
-    command: ["server", "-config=/vault/config/config.hcl"]
+      - VAULT_ADDR=http://vault:8200
+      - VAULT_DEV_ROOT_TOKEN_ID=root
+    command: ["server", "-dev", "-dev-root-token-id=root", "-dev-listen-address=0.0.0.0:8200"]
     container_name: ft_transcendence_vault
-    volumes:
-      - vault_data:/vault/data
-      - vault_logs:/vault/logs
-    cap_add:
-      - IPC_LOCK
     networks:
       - internal
     restart: unless-stopped
@@ -52,21 +46,17 @@ services:
     volumes:
       - backend_data:/app/database
     container_name: ft_transcendence_backend
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET:-your_super_secret_jwt_key_change_in_production_123456}
       - PORT=3000
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-https://localhost:8080/auth/google/callback}
     networks:
       - internal
     restart: unless-stopped
 
 volumes:
   backend_data:
-  vault_data:
-  vault_logs:
   waf_logs:
 
 networks:
