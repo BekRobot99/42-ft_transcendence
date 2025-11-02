@@ -10,7 +10,7 @@ export interface LanguageDropdownOptions {
 
 export function createLanguageDropdown(app: any, options: LanguageDropdownOptions = {}): HTMLElement {
     const {
-        className = 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2',
+        className = 'autumn-language-dropdown',
         position = 'right',
         containerClassName,
         onLanguageChange
@@ -22,6 +22,7 @@ export function createLanguageDropdown(app: any, options: LanguageDropdownOption
                                  position === 'left' ? 'flex justify-start' : 
                                  'flex justify-center';
     container.className = containerClassName || defaultContainerClass;
+    container.style.marginBottom = '1.5rem';
 
     // Create dropdown
     const langDropdown = document.createElement('select');

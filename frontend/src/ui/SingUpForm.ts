@@ -20,32 +20,45 @@ export class SignUpForm {
    constructor(app: any) {
         this.app = app;
         this.formContainer = document.createElement('div');
-        this.formContainer.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000] w-full space-y-4';
+        this.formContainer.className = 'autumn-container fade-in';
         this.buildForm();
     }
 
     /** Build all form elements */
     private buildForm(): void {
-         const langSelectorContainer = createLanguageDropdown(this.app);
+        // Back button
+        const backButton = document.createElement('button');
+        backButton.className = 'autumn-back-button';
+        backButton.type = 'button';
+        backButton.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            ${translate('Back', 'Zurück', 'Retour')}
+        `;
+        backButton.addEventListener('click', () => {
+            this.app.renderView('/');
+        });
+
+        const langSelectorContainer = createLanguageDropdown(this.app);
         // Username field
         const usernameGroup = document.createElement('div');
-        usernameGroup.className = 'space-y-2';
+        usernameGroup.className = 'autumn-form-group';
 
         const usernameLabel = document.createElement('label');
-        usernameLabel.className = 'block text-sm font-medium text-gray-700';
+        usernameLabel.className = 'autumn-label';
         usernameLabel.htmlFor = 'signup-username';
         usernameLabel.textContent = translate('Username', 'Benutzername', 'Nom d\'utilisateur');
 
         this.usernameField = document.createElement('input');
         this.usernameField.type = 'text';
         this.usernameField.id = 'signup-username';
-        this.usernameField.className =
-            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.usernameField.className = 'autumn-input';
         this.usernameField.maxLength = 16;
         this.usernameField.autocomplete = 'username';
 
         this.clientErrorMessage = document.createElement('p');
-        this.clientErrorMessage.className = 'text-red-600 text-sm hidden';
+        this.clientErrorMessage.className = 'autumn-error hidden';
 
         usernameGroup.appendChild(usernameLabel);
         usernameGroup.appendChild(this.usernameField);
@@ -53,22 +66,21 @@ export class SignUpForm {
 
         // Password field
         const passwordGroup = document.createElement('div');
-        passwordGroup.className = 'space-y-2';
+        passwordGroup.className = 'autumn-form-group';
 
         const passwordLabel = document.createElement('label');
-        passwordLabel.className = 'block text-sm font-medium text-gray-700';
+        passwordLabel.className = 'autumn-label';
         passwordLabel.htmlFor = 'signup-password';
         passwordLabel.textContent = translate('Password', 'Passwort', 'Mot de passe');
 
         this.passwordField = document.createElement('input');
         this.passwordField.type = 'password';
         this.passwordField.id = 'signup-password';
-        this.passwordField.className =
-            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.passwordField.className = 'autumn-input';
         this.passwordField.autocomplete = 'new-password';
 
         this.validationInfo = document.createElement('div');
-        this.validationInfo.className = 'space-y-1 mt-2';
+        this.validationInfo.className = 'validation-checklist';
 
         const validations = [
             { id: 'length', text: translate('At least 10 characters', 'Mindestens 10 Zeichen', 'Au moins 10 caractères') },
@@ -80,12 +92,12 @@ export class SignUpForm {
 
         validations.forEach(rule => {
             const validationItem = document.createElement('div');
-            validationItem.className = 'flex items-center space-x-2';
+            validationItem.className = 'validation-item';
             validationItem.innerHTML = `
-                <svg class="w-4 h-4 text-gray-400" id="${rule.id}-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="validation-icon invalid" id="${rule.id}-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     ${this.crossIconPath}
                 </svg>
-                <span class="text-sm text-gray-600">${rule.text}</span>
+                <span>${rule.text}</span>
             `;
             this.validationInfo.appendChild(validationItem);
         });
@@ -95,18 +107,17 @@ export class SignUpForm {
 
         // Confirm Password field
         const confirmPasswordGroup = document.createElement('div');
-        confirmPasswordGroup.className = 'space-y-2';
+        confirmPasswordGroup.className = 'autumn-form-group';
 
         const confirmPasswordLabel = document.createElement('label');
-        confirmPasswordLabel.className = 'block text-sm font-medium text-gray-700';
+        confirmPasswordLabel.className = 'autumn-label';
         confirmPasswordLabel.htmlFor = 'signup-confirm-password';
         confirmPasswordLabel.textContent = translate('Confirm Password', 'Passwort bestätigen', 'Confirmer le mot de passe');
 
         this.confirmPasswordField = document.createElement('input');
         this.confirmPasswordField.type = 'password';
         this.confirmPasswordField.id = 'signup-confirm-password';
-        this.confirmPasswordField.className =
-            'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.confirmPasswordField.className = 'autumn-input';
         this.confirmPasswordField.autocomplete = 'new-password';
 
         confirmPasswordGroup.appendChild(confirmPasswordLabel);
@@ -114,20 +125,16 @@ export class SignUpForm {
 
         // Submit button
         this.submitButton = document.createElement('button');
-        this.submitButton.className = 'w-full relative inline-block px-4 py-3 font-medium group';
-        this.submitButton.innerHTML = `
-            <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-            <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
-            <span class="relative text-black group-hover:text-white">${translate('Register', 'Registrieren', 'S\'inscrire')}</span>
-        `;
+        this.submitButton.className = 'autumn-button';
+        this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
         this.submitButton.type = 'submit';
 
         // Server messages
         this.serverErrorMessage = document.createElement('p');
-        this.serverErrorMessage.className = 'text-red-600 text-sm hidden mt-2 text-center';
+        this.serverErrorMessage.className = 'autumn-error hidden';
 
         this.successMessage = document.createElement('p');
-        this.successMessage.className = 'text-green-600 text-sm hidden mt-2 text-center';
+        this.successMessage.className = 'autumn-success hidden';
 
         // Wrap everything in a form
         const form = document.createElement('form');
@@ -142,6 +149,7 @@ export class SignUpForm {
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
 
+        this.formContainer.appendChild(backButton);
         this.formContainer.appendChild(langSelectorContainer);
         this.formContainer.appendChild(form);
         this.addFieldListeners();
@@ -205,7 +213,8 @@ export class SignUpForm {
         event.preventDefault();
         this.resetServerMessages();
         this.submitButton.disabled = true;
-        this.submitButton.querySelector('span.relative')!.textContent = translate('Registering...', 'Registrierung...', 'Inscription...');
+        this.submitButton.classList.add('loading');
+        this.submitButton.textContent = translate('Registering...', 'Registrierung...', 'Inscription...');
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
@@ -215,7 +224,8 @@ export class SignUpForm {
               this.serverErrorMessage.textContent = translate('Passwords do not match.', 'Die Passwörter stimmen nicht überein.', 'Les mots de passe ne correspondent pas.');
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
-            this.submitButton.querySelector('span.relative')!.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+            this.submitButton.classList.remove('loading');
+            this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
             return;
         }
 
@@ -248,10 +258,11 @@ export class SignUpForm {
             this.serverErrorMessage.classList.remove('hidden');
         } finally {
             this.submitButton.disabled = false;
-                 if (!this.successMessage.classList.contains('hidden')) {
+            this.submitButton.classList.remove('loading');
+            if (!this.successMessage.classList.contains('hidden')) {
                 // Keep "Registering..." text on success until redirect
             } else {
-                this.submitButton.querySelector('span.relative')!.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+                this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
             }
         }
     }
@@ -259,15 +270,19 @@ export class SignUpForm {
     /** Update validation icons */
     private updateValidation(id: string, isValid: boolean): void {
         const iconSvgElement = document.getElementById(`${id}-check`) as SVGSVGElement | null;
+        const validationItem = iconSvgElement?.closest('.validation-item');
+        
         if (iconSvgElement) {
             if (isValid) {
                 iconSvgElement.innerHTML = this.checkIconPath;
-                iconSvgElement.classList.remove('text-gray-400', 'text-red-500');
-                iconSvgElement.classList.add('text-green-500');
+                iconSvgElement.classList.remove('invalid');
+                iconSvgElement.classList.add('valid');
+                validationItem?.classList.add('valid');
             } else {
                 iconSvgElement.innerHTML = this.crossIconPath;
-                iconSvgElement.classList.remove('text-green-500');
-                iconSvgElement.classList.add('text-gray-400');
+                iconSvgElement.classList.remove('valid');
+                iconSvgElement.classList.add('invalid');
+                validationItem?.classList.remove('valid');
             }
         }
     }

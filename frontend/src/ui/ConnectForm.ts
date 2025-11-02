@@ -16,31 +16,45 @@ export class ConnectForm {
     constructor(app: any) {
         this.app = app;
         this.formContainer = document.createElement('div');
-        this.formContainer.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000] w-full space-y-4';
+        this.formContainer.className = 'autumn-container fade-in';
         this.buildForm();
     }
 
     private buildForm(): void {
+        // Back button
+        const backButton = document.createElement('button');
+        backButton.className = 'autumn-back-button';
+        backButton.type = 'button';
+        backButton.innerHTML = `
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            ${translate('Back', 'Zurück', 'Retour')}
+        `;
+        backButton.addEventListener('click', () => {
+            this.app.renderView('/');
+        });
+
         const langSelectorContainer = createLanguageDropdown(this.app);
 
         // Username input
         const usernameGroup = document.createElement('div');
-        usernameGroup.className = 'space-y-2';
+        usernameGroup.className = 'autumn-form-group';
 
         const usernameLabel = document.createElement('label');
-        usernameLabel.className = 'block text-sm font-medium text-gray-700';
+        usernameLabel.className = 'autumn-label';
         usernameLabel.htmlFor = 'username-signin';
         usernameLabel.textContent = translate('Username', 'Benutzername', 'Nom d\'utilisateur');
 
         this.usernameField = document.createElement('input');
         this.usernameField.type = 'text';
         this.usernameField.id = 'username-signin';
-        this.usernameField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.usernameField.className = 'autumn-input';
         this.usernameField.maxLength = 16;
         this.usernameField.autocomplete = 'username';
 
         this.clientErrorMessage = document.createElement('p');
-        this.clientErrorMessage.className = 'text-red-600 text-sm hidden';
+        this.clientErrorMessage.className = 'autumn-error hidden';
 
         usernameGroup.appendChild(usernameLabel);
         usernameGroup.appendChild(this.usernameField);
@@ -48,17 +62,17 @@ export class ConnectForm {
 
         // Password input
         const passwordGroup = document.createElement('div');
-        passwordGroup.className = 'space-y-2';
+        passwordGroup.className = 'autumn-form-group';
 
         const passwordLabel = document.createElement('label');
-        passwordLabel.className = 'block text-sm font-medium text-gray-700';
+        passwordLabel.className = 'autumn-label';
         passwordLabel.htmlFor = 'password-signin';
         passwordLabel.textContent = translate('Password', 'Passwort', 'Mot de passe');
 
         this.passwordField = document.createElement('input');
         this.passwordField.type = 'password';
         this.passwordField.id = 'password-signin';
-        this.passwordField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.passwordField.className = 'autumn-input';
         this.passwordField.autocomplete = 'current-password';
 
         passwordGroup.appendChild(passwordLabel);
@@ -66,15 +80,15 @@ export class ConnectForm {
 
         // 2FA input (hidden by default)
         this.mfaInputWrapper = document.createElement('div');
-        this.mfaInputWrapper.className = 'space-y-2 hidden';
+        this.mfaInputWrapper.className = 'autumn-form-group hidden';
         const twofaLabel = document.createElement('label');
-        twofaLabel.className = 'block text-sm font-medium text-gray-700';
+        twofaLabel.className = 'autumn-label';
         twofaLabel.htmlFor = 'twofa-signin';
         twofaLabel.textContent = translate('2FA Code', '2FA-Code', 'Code 2FA');
         this.mfaInput = document.createElement('input');
         this.mfaInput.type = 'text';
         this.mfaInput.id = 'twofa-signin';
-        this.mfaInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+        this.mfaInput.className = 'autumn-input';
         this.mfaInput.autocomplete = 'one-time-code';
         this.mfaInput.maxLength = 6;
         this.mfaInputWrapper.appendChild(twofaLabel);
@@ -82,20 +96,16 @@ export class ConnectForm {
 
         // Sign In button
         this.submitButton = document.createElement('button');
-        this.submitButton.className = 'w-full relative inline-block px-4 py-3 font-medium group';
-        this.submitButton.innerHTML = `
-            <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-            <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
-            <span class="relative text-black group-hover:text-white">${translate('Sign In', 'Anmelden', 'Se connecter')}</span>
-        `;
+        this.submitButton.className = 'autumn-button';
+        this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
         this.submitButton.type = 'submit';
 
         // Server error and success message containers
         this.serverErrorMessage = document.createElement('p');
-        this.serverErrorMessage.className = 'text-red-600 text-sm hidden mt-2 text-center';
+        this.serverErrorMessage.className = 'autumn-error hidden';
         
         this.successMessage = document.createElement('p');
-        this.successMessage.className = 'text-green-600 text-sm hidden mt-2 text-center';
+        this.successMessage.className = 'autumn-success hidden';
 
         const form = document.createElement('form');
         form.className = 'space-y-4';
@@ -108,6 +118,7 @@ export class ConnectForm {
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
 
+        this.formContainer.appendChild(backButton);
         this.formContainer.appendChild(langSelectorContainer);
         this.formContainer.appendChild(form);
         this.addFieldListeners();
@@ -157,7 +168,8 @@ export class ConnectForm {
         event.preventDefault();
         this.resetServerMessages();
         this.submitButton.disabled = true;
-        this.submitButton.querySelector('span.relative')!.textContent = translate('Signing In...', 'Anmeldung...', 'Connexion...');
+        this.submitButton.classList.add('loading');
+        this.submitButton.textContent = translate('Signing In...', 'Anmeldung...', 'Connexion...');
 
         const username = this.usernameField.value;
         const password = this.passwordField.value;
@@ -167,7 +179,8 @@ export class ConnectForm {
             this.serverErrorMessage.textContent = translate('Username and password are required.', 'Benutzername und Passwort sind erforderlich.', 'Le nom d\'utilisateur et le mot de passe sont requis.');
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
-            this.submitButton.querySelector('span.relative')!.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+            this.submitButton.classList.remove('loading');
+            this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
             return;
         }
 
@@ -219,10 +232,11 @@ export class ConnectForm {
             this.serverErrorMessage.classList.remove('hidden');
         } finally {
             this.submitButton.disabled = false;
-             if (!this.successMessage.classList.contains('hidden')) {
+            this.submitButton.classList.remove('loading');
+            if (!this.successMessage.classList.contains('hidden')) {
                 // If successful, keep the "signing in" message until redirect
             } else {
-                this.submitButton.querySelector('span.relative')!.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+                this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
             }
         }
     }
