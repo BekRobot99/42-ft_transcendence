@@ -14,6 +14,8 @@ import authRoutes from "./api/auth";
 import tournamentRoutes from "./api/tournament";
 import realtimeRoutes from './websocket';
 import chatRoutes from './api/chatRoutes';
+import chatBlockRoutes from './api/chatBlockRoutes';
+import chatNotificationRoutes from './api/chatNotificationRoutes';
 
 const app = Fastify({
     logger: true,
@@ -104,6 +106,8 @@ app.register(authRoutes);
 app.register(tournamentRoutes);
 app.register(realtimeRoutes);
 app.register(chatRoutes);
+app.register(chatBlockRoutes);
+app.register(chatNotificationRoutes);
 
 const startServer  = async () => {
     try {

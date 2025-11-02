@@ -12,6 +12,27 @@ interface AuthenticatedRequest extends FastifyRequest {
  * Chat API Routes
  * Handles REST endpoints for chat functionality
  */
+
+// Rate limiting map for message sending
+const messageSendLimits = new Map<number, { count: number; resetTime: number }>();
+
+function checkRateLimit(userId: number, maxMessages: number = 20, windowMs: number = 60000): boolean {
+    const now = Date.now();
+    const userLimit = messageSendLimits.get(userId);
+
+    if (!userLimit || now > userLimit.resetTime) {
+        messageSendLimits.set(userId, { count: 1, resetTime: now + windowMs });
+        return true;
+    }
+
+    if (userLimit.count >= maxMessages) {
+        return false;
+    }
+
+    userLimit.count++;
+    return true;
+}
+
 export default async function chatRoutes(app: FastifyInstance) {
     
     /**
@@ -108,6 +129,14 @@ export default async function chatRoutes(app: FastifyInstance) {
             const authRequest = request as AuthenticatedRequest;
             const senderId = authRequest.user.userId;
             const { receiver_id, message, message_type = 'text' } = request.body;
+
+            // Check rate limit
+            if (!checkRateLimit(senderId)) {
+                return reply.status(429).send({
+                    success: false,
+                    message: 'Too many messages. Please wait a moment.'
+                });
+            }
 
             if (!receiver_id || !message) {
                 return reply.status(400).send({
@@ -273,6 +302,105 @@ export default async function chatRoutes(app: FastifyInstance) {
             reply.status(500).send({
                 success: false,
                 message: 'Failed to fetch user status'
+            });
+        }
+    });
+
+    /**
+     * GET /api/chat/unread
+     * Get total unread message count
+     */
+    app.get('/api/chat/unread', {
+        preHandler: app.authenticate
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const authRequest = request as AuthenticatedRequest;
+            const userId = authRequest.user.userId;
+
+            const unreadCount = await ChatService.getUnreadCount(userId);
+
+            reply.status(200).send({
+                success: true,
+                unread_count: unreadCount
+            });
+        } catch (error: any) {
+            console.error('Error fetching unread count:', error);
+            reply.status(500).send({
+                success: false,
+                message: 'Failed to fetch unread count'
+            });
+        }
+    });
+
+    /**
+     * DELETE /api/chat/conversation/:userId
+     * Delete conversation with a user
+     */
+    app.delete<{
+        Params: { userId: string };
+    }>('/api/chat/conversation/:userId', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        try {
+            const authRequest = request as AuthenticatedRequest;
+            const currentUserId = authRequest.user.userId;
+            const otherUserId = parseInt(request.params.userId);
+
+            if (isNaN(otherUserId)) {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'Invalid user ID'
+                });
+            }
+
+            await ChatService.deleteConversation(currentUserId, otherUserId);
+
+            reply.status(200).send({
+                success: true,
+                message: 'Conversation deleted successfully'
+            });
+        } catch (error: any) {
+            console.error('Error deleting conversation:', error);
+            reply.status(500).send({
+                success: false,
+                message: 'Failed to delete conversation'
+            });
+        }
+    });
+
+    /**
+     * GET /api/chat/search
+     * Search for users to chat with
+     */
+    app.get<{
+        Querystring: { q: string; limit?: string };
+    }>('/api/chat/search', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        try {
+            const authRequest = request as AuthenticatedRequest;
+            const userId = authRequest.user.userId;
+            const searchTerm = request.query.q || '';
+            const limit = request.query.limit ? parseInt(request.query.limit) : 10;
+
+            if (!searchTerm || searchTerm.length < 2) {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'Search term must be at least 2 characters'
+                });
+            }
+
+            const users = await ChatService.searchUsers(searchTerm, userId, limit);
+
+            reply.status(200).send({
+                success: true,
+                users
+            });
+        } catch (error: any) {
+            console.error('Error searching users:', error);
+            reply.status(500).send({
+                success: false,
+                message: 'Failed to search users'
             });
         }
     });

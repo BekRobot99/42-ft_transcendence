@@ -9,6 +9,7 @@ import { attachHomePageListeners, renderHomePage } from './views/HomePage.js';
 import { renderSettingsPage } from './views/SettingsPage.js';
 import { renderGamePage } from './views/GamePage.js';
 import { renderGamePage3D } from './views/GamePage3D.js';
+import { ChatPage } from './views/ChatPage.js';
 
 
 class App {
@@ -164,7 +165,7 @@ class App {
             return this.renderView('/game');
         }
         // Only redirect to / if not authenticated and trying to access a protected page
-        const protectedPaths = ['/game', '/settings', '/friends', '/tournament'];
+        const protectedPaths = ['/game', '/settings', '/friends', '/tournament', '/chat'];
         if (!this.isAuthenticated && (protectedPaths.some(p => path.startsWith(p)) || path.startsWith('/profile/'))) {
             history.replaceState({ path: '/' }, '', '/');
             return this.renderView('/');
@@ -311,6 +312,12 @@ class App {
         } else if (path === '/friends') {
             await renderSocialView(this.pageContentElement);
             
+        } else if (path === '/chat') {
+            if (this.currentUser) {
+                const chatPage = new ChatPage(this.currentUser.id);
+                this.pageContentElement.appendChild(chatPage.render());
+                this.currentViewCleanup = () => chatPage.destroy();
+            }
         } else { // Default to home view
             renderHomePage(this.pageContentElement, this);
             // Re-attach event listeners for the home view buttons

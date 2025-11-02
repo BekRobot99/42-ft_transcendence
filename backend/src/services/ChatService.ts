@@ -102,10 +102,45 @@ export class ChatService extends EventEmitter {
     }
 
     /**
+     * Validate and sanitize message content
+     */
+    private validateMessage(message: string): { valid: boolean; error?: string; sanitized?: string } {
+        // Check message length
+        if (!message || message.trim().length === 0) {
+            return { valid: false, error: 'Message cannot be empty' };
+        }
+
+        if (message.length > 1000) {
+            return { valid: false, error: 'Message is too long (max 1000 characters)' };
+        }
+
+        // Basic XSS prevention - remove HTML tags
+        const sanitized = message.replace(/<[^>]*>/g, '');
+
+        // Check for spam patterns (excessive repetition)
+        const words = sanitized.split(/\s+/);
+        const uniqueWords = new Set(words);
+        if (words.length > 10 && uniqueWords.size / words.length < 0.3) {
+            return { valid: false, error: 'Message appears to be spam' };
+        }
+
+        return { valid: true, sanitized };
+    }
+
+    /**
      * Send a message from one user to another
      */
     async sendMessage(senderId: number, receiverId: number, message: string, messageType: 'text' | 'system' | 'game_invite' = 'text'): Promise<ChatMessage | null> {
         return new Promise((resolve, reject) => {
+            // Validate message
+            const validation = this.validateMessage(message);
+            if (!validation.valid) {
+                reject(new Error(validation.error));
+                return;
+            }
+
+            const sanitizedMessage = validation.sanitized!;
+
             // Check if sender is blocked by receiver
             this.isUserBlocked(receiverId, senderId).then(isBlocked => {
                 if (isBlocked) {
@@ -118,7 +153,7 @@ export class ChatService extends EventEmitter {
                     VALUES (?, ?, ?, ?)
                 `;
 
-                databaseConnection.run(query, [senderId, receiverId, message, messageType], function(err) {
+                databaseConnection.run(query, [senderId, receiverId, sanitizedMessage, messageType], function(err) {
                     if (err) {
                         console.error('Error sending message:', err.message);
                         reject(err);
@@ -362,6 +397,109 @@ export class ChatService extends EventEmitter {
                     reject(err);
                 } else {
                     resolve(row || null);
+                }
+            });
+        });
+    }
+
+    /**
+     * Get total unread message count for a user
+     */
+    async getUnreadCount(userId: number): Promise<number> {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT COUNT(*) as count FROM chat_messages
+                WHERE receiver_id = ? AND is_read = 0
+            `;
+
+            databaseConnection.get(query, [userId], (err, row: any) => {
+                if (err) {
+                    console.error('Error fetching unread count:', err.message);
+                    reject(err);
+                } else {
+                    resolve(row?.count || 0);
+                }
+            });
+        });
+    }
+
+    /**
+     * Delete a conversation (all messages between two users)
+     */
+    async deleteConversation(userId1: number, userId2: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const query = `
+                DELETE FROM chat_messages
+                WHERE (sender_id = ? AND receiver_id = ?)
+                   OR (sender_id = ? AND receiver_id = ?)
+            `;
+
+            databaseConnection.run(query, [userId1, userId2, userId2, userId1], (err) => {
+                if (err) {
+                    console.error('Error deleting conversation:', err.message);
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * Send a system message (for tournament notifications, etc.)
+     */
+    async sendSystemMessage(userId: number, message: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const query = `
+                INSERT INTO chat_messages (sender_id, receiver_id, message, message_type)
+                VALUES (0, ?, ?, 'system')
+            `;
+
+            databaseConnection.run(query, [userId, message], (err) => {
+                if (err) {
+                    console.error('Error sending system message:', err.message);
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * Send tournament notification to all participants
+     */
+    async sendTournamentNotification(userIds: number[], message: string): Promise<void> {
+        const promises = userIds.map(userId => this.sendSystemMessage(userId, message));
+        await Promise.all(promises);
+    }
+
+    /**
+     * Search users by username for new conversations
+     */
+    async searchUsers(searchTerm: string, currentUserId: number, limit: number = 10): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            const query = `
+                SELECT u.id, u.username, u.avatar_path,
+                       COALESCE(uos.is_online, 0) as is_online,
+                       uos.last_seen
+                FROM users u
+                LEFT JOIN user_online_status uos ON u.id = uos.user_id
+                WHERE u.username LIKE ?
+                  AND u.id != ?
+                  AND u.id NOT IN (
+                      SELECT blocked_id FROM blocked_users WHERE blocker_id = ?
+                  )
+                ORDER BY u.username
+                LIMIT ?
+            `;
+
+            databaseConnection.all(query, [`%${searchTerm}%`, currentUserId, currentUserId, limit], (err, rows: any[]) => {
+                if (err) {
+                    console.error('Error searching users:', err.message);
+                    reject(err);
+                } else {
+                    resolve(rows);
                 }
             });
         });
