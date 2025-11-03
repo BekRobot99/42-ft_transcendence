@@ -3,7 +3,7 @@ import ChatService from '../services/ChatService';
 
 interface AuthenticatedRequest extends FastifyRequest {
     user: {
-        userId: number;
+        id: number;
         username: string;
     };
 }
@@ -44,7 +44,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const userId = authRequest.user.userId;
+            const userId = authRequest.user.id;
 
             const conversations = await ChatService.getUserConversations(userId);
             
@@ -73,7 +73,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const currentUserId = authRequest.user.userId;
+            const currentUserId = authRequest.user.id;
             const otherUserId = parseInt(request.params.userId);
             const limit = request.query.limit ? parseInt(request.query.limit) : 50;
             const offset = request.query.offset ? parseInt(request.query.offset) : 0;
@@ -127,7 +127,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const senderId = authRequest.user.userId;
+            const senderId = authRequest.user.id;
             const { receiver_id, message, message_type = 'text' } = request.body;
 
             // Check rate limit
@@ -178,7 +178,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const blockerId = authRequest.user.userId;
+            const blockerId = authRequest.user.id;
             const { user_id } = request.body;
 
             if (!user_id) {
@@ -221,7 +221,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const blockerId = authRequest.user.userId;
+            const blockerId = authRequest.user.id;
             const { user_id } = request.body;
 
             if (!user_id) {
@@ -255,7 +255,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const userId = authRequest.user.userId;
+            const userId = authRequest.user.id;
 
             const blockedUsers = await ChatService.getBlockedUsers(userId);
 
@@ -315,7 +315,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const userId = authRequest.user.userId;
+            const userId = authRequest.user.id;
 
             const unreadCount = await ChatService.getUnreadCount(userId);
 
@@ -343,7 +343,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const currentUserId = authRequest.user.userId;
+            const currentUserId = authRequest.user.id;
             const otherUserId = parseInt(request.params.userId);
 
             if (isNaN(otherUserId)) {
@@ -379,7 +379,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         try {
             const authRequest = request as AuthenticatedRequest;
-            const userId = authRequest.user.userId;
+            const userId = authRequest.user.id;
             const searchTerm = request.query.q || '';
             const limit = request.query.limit ? parseInt(request.query.limit) : 10;
 
@@ -391,6 +391,8 @@ export default async function chatRoutes(app: FastifyInstance) {
             }
 
             const users = await ChatService.searchUsers(searchTerm, userId, limit);
+
+            console.log(`🔍 Search results for "${searchTerm}" by user ${userId}:`, users);
 
             reply.status(200).send({
                 success: true,

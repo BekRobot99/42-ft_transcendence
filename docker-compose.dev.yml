@@ -16,7 +16,7 @@ services:
       - ./frontend/assets:/usr/share/nginx/html/assets
       - ./frontend/dist:/usr/share/nginx/html/dist # Nginx serves the dist folder updated by ts-watcher
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./certs:/etc/nginx/certs:ro # Mount SSL certificates
+      - ./certificates:/etc/nginx/certs:ro # Mount SSL certificates
     depends_on:
       - ts-watcher # Ensures ts-watcher starts, though Nginx will serve available files regardless
       - backend # Depends on the backend (renamed)
