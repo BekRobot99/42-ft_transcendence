@@ -4,24 +4,39 @@
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Performance Monitoring](https://img.shields.io/badge/Performance-Monitoring-green)](./backend/src/services/PERFORMANCE_README.md)
 
-> **The final and most ambitious project at 42 School** - A full-stack, real-time multiplayer Ping Pong web application featuring both 2D and 3D gameplay modes!
+> **The final and most ambitious project at 42 School** - A full-stack, real-time multiplayer Pong web application featuring advanced AI opponents, comprehensive performance monitoring, Google OAuth, real-time chat, and both 2D and 3D gameplay modes!
 
 ## 🎮 Features
 
+### Core Game Features
 - **🏓 Dual Game Modes**: Classic 2D Canvas Pong & Immersive 3D Babylon.js Pong
-- **👥 Real-time Multiplayer**: WebSocket-powered live gameplay
-- **🔐 Secure Authentication**: JWT tokens, Google OAuth integration, 2FA support
+- **🤖 Advanced AI Opponent**: Intelligent AI with multiple difficulty levels and adaptive strategies
+- **👥 Real-time Multiplayer**: WebSocket-powered live gameplay with low latency
 - **🏆 Tournament System**: Organize and participate in competitive tournaments
+- **💬 Real-time Chat**: Secure chat system with rate limiting and XSS prevention
+
+### Performance & Monitoring
+- **📊 Real-time Performance Monitoring**: Comprehensive system performance tracking
+- **📈 Performance Analytics**: AI-powered pattern detection and optimization recommendations  
+- **🔍 Bottleneck Detection**: Automated identification of performance issues
+- **⚡ Performance Dashboard**: Live performance visualization and system health monitoring
+- **🚨 Intelligent Alerts**: Proactive performance issue detection and notifications
+
+### Security & Authentication
+- **🔐 Secure Authentication**: JWT tokens, Google OAuth integration, 2FA support
 - **👤 User Profiles**: Customizable avatars and player statistics
-- **🌐 Modern Web Stack**: TypeScript, Node.js, Fastify, SQLite
 - **🔒 HTTPS Ready**: SSL certificates and secure deployment
+
+### Technology Stack
+- **🌐 Modern Web Stack**: TypeScript, Node.js, Fastify, SQLite
 - **🐳 Docker Containerized**: One-command deployment
+- **📱 Responsive Design**: Mobile-friendly interface
 
 ## 🚀 Quick Start
 
 ### Option 1: Using Make Commands (Recommended)
-
 ```bash
 # Clone the repository
 git clone https://github.com/BekRobot99/42-ft_transcendence.git
