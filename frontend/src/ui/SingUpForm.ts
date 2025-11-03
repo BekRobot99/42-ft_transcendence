@@ -225,7 +225,7 @@ export class SignUpForm {
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
             this.submitButton.classList.remove('loading');
-            this.submitButton.textContent = translate('Register', 'Registrieren', 'S\'inscrire');
+            this.submitButton.textContent = translate('Sign Up', 'Registrieren', 'S\'inscrire');
             return;
         }
 

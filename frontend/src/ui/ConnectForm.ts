@@ -97,7 +97,7 @@ export class ConnectForm {
         // Log In button
         this.submitButton = document.createElement('button');
         this.submitButton.className = 'autumn-button';
-        this.submitButton.textContent = translate('Log In', 'Anmelden', 'Se connecter');
+        this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
         this.submitButton.type = 'submit';
 
         // Server error and success message containers
