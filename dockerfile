@@ -35,6 +35,11 @@ COPY --from=builder /app/styles.css /usr/share/nginx/html/styles.css
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy TLS certificates
+COPY certificates /etc/nginx/certs
+
+USER root
+
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -38,4 +38,6 @@ RUN npm rebuild sqlite3 --build-from-source
 EXPOSE 3000
 
 # Start backend (adjust command if using NestJS / Express)
+USER root
+
 CMD ["node", "dist/server.js"]

@@ -16,6 +16,9 @@ PROJECT_NAME = ft_transcendence
 COMPOSE_FILE = docker-compose.yml
 DEV_COMPOSE_FILE = docker-compose.dev.yml
 DOCKER_COMPOSE := $(shell if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then echo docker compose; elif command -v docker-compose >/dev/null 2>&1; then echo docker-compose; else echo ""; fi)
+# DOCKER := docker
+
+# PROJECT_VOLUMES := backend_data vault_data vault_logs waf_logs
 
 # Default target
 .DEFAULT_GOAL := help
@@ -56,6 +59,46 @@ install: ## setup - Check and install prerequisites (Docker, Docker Compose)
 	@echo "$(GREEN)✅ Docker is installed$(RESET)"
 	@echo "$(GREEN)✅ Docker Compose is installed$(RESET)"
 	@echo "$(GREEN)🎉 All prerequisites are ready!$(RESET)"
+
+# rootless-check: ## setup - Ensure Docker runs in rootless mode within /goinfre
+# 	@echo "$(YELLOW)🔐 Verifying rootless Docker runtime...$(RESET)"
+# 	@root_dir=`$(DOCKER) info --format '{{.DockerRootDir}}' 2>/dev/null`; \
+# 	if [ -z "$$root_dir" ]; then \
+# 		echo "$(RED)❌ Unable to determine Docker root directory. Is Docker running?$(RESET)"; \
+# 		exit 1; \
+# 	fi; \
+# 	if ! $(DOCKER) info --format '{{json .SecurityOptions}}' 2>/dev/null | grep -qi rootless; then \
+# 		echo "$(RED)❌ Docker daemon is not running in rootless mode. Start it with dockerd-rootless-setuptool.sh start.$(RESET)"; \
+# 		exit 1; \
+# 	fi; \
+# 	if ! echo "$$root_dir" | grep -Eq '^/(g|sg)oinfre/'; then \
+# 		echo "$(RED)❌ Docker root directory ($$root_dir) is not in /goinfre or /sgoinfre.$(RESET)"; \
+# 		echo "$(YELLOW)➡️  Reinstall rootless Docker with DOCKER_DATA_ROOT pointing to /goinfre/$$USER/docker.$(RESET)"; \
+# 		exit 1; \
+# 	fi; \
+# 	echo "$(GREEN)✅ Rootless Docker runtime detected in $$root_dir$(RESET)"
+
+# ensure-busybox:
+# 	@$(DOCKER) image inspect busybox:latest >/dev/null 2>&1 || { \
+# 		echo "$(YELLOW)⬇️  Pulling busybox helper image...$(RESET)"; \
+# 		$(DOCKER) pull busybox:latest >/dev/null; \
+# 	}
+
+# prepare-volumes: ensure-busybox ## setup - Create named volumes and fix permissions
+# 	@echo "$(YELLOW)📦 Preparing named volumes...$(RESET)"
+# 	@for vol in $(PROJECT_VOLUMES); do \
+# 		if ! $(DOCKER) volume inspect $(PROJECT_NAME)_$$vol >/dev/null 2>&1; then \
+# 			$(DOCKER) volume create $(PROJECT_NAME)_$$vol >/dev/null; \
+# 			echo "  $(GREEN)Created volume $(PROJECT_NAME)_$$vol$(RESET)"; \
+# 		fi; \
+# 	done
+# 	@$(DOCKER) run --rm -v $(PROJECT_NAME)_vault_data:/vault/data busybox sh -c "mkdir -p /vault/data && chown -R 100:100 /vault/data && chmod 700 /vault/data" >/dev/null
+# 	@$(DOCKER) run --rm -v $(PROJECT_NAME)_vault_logs:/vault/logs busybox sh -c "mkdir -p /vault/logs && chown -R 100:100 /vault/logs && chmod 750 /vault/logs" >/dev/null
+# 	@$(DOCKER) run --rm -v $(PROJECT_NAME)_waf_logs:/var/log/modsecurity busybox sh -c "mkdir -p /var/log/modsecurity && chmod 750 /var/log/modsecurity" >/dev/null
+# 	@echo "$(GREEN)✅ Named volumes ready$(RESET)"
+
+# preflight: rootless-check prepare-volumes ## setup - Rootless sanity checks before running containers
+# 	@true
 
 # Production commands
 
@@ -261,4 +304,5 @@ deploy-info: ## prod - Show deployment information
 	@echo "  3. Manual deploy from Render dashboard"
 
 # Phony targets
+# .PHONY: help install rootless-check ensure-busybox prepare-volumes preflight build up start stop restart down dev-build dev dev-start dev-stop dev-restart dev-down status logs logs-backend logs-frontend dev-logs dev-logs-backend dev-logs-frontend shell-backend shell-frontend db clean clean-containers clean-images clean-volumes reset test info render-build render-start health deploy-info
 .PHONY: help install build up start stop restart down dev-build dev dev-start dev-stop dev-restart dev-down status logs logs-backend logs-frontend dev-logs dev-logs-backend dev-logs-frontend shell-backend shell-frontend db clean clean-containers clean-images clean-volumes reset test info render-build render-start health deploy-info

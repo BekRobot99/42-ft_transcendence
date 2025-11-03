@@ -48,6 +48,9 @@ make up
 
 # Visit https://localhost:8080
 ```
+<!--
+> ℹ️ `make up` automatically runs a rootless preflight that verifies Docker is running in `/goinfre` and prepares all named volumes with the right permissions. You can run it separately with `make preflight` if you want to sanity-check your setup.
+-->
 
 ### Option 2: Manual Docker Commands
 
@@ -199,6 +202,23 @@ make dev-down
 - 📋 Real-time log monitoring  
 - 🐚 Easy container shell access
 - 🗄️ Database inspection tools
+<!--
+## 🧰 Rootless Docker Workflow (42 Campus)
+
+This project is tuned for the 42 school constraints:
+
+- ✅ Docker daemon must run in **rootless mode** from `/goinfre` (or `/sgoinfre`).
+- ✅ Only **named volumes** are used—no bind mounts—so the campus storage policies are respected.
+- ✅ Containers run as UID `0` internally to avoid permission issues inside rootless directories.
+
+Run the automated checks and volume preparation anytime:
+
+```bash
+make preflight   # Verify rootless Docker + prep named volumes
+```
+
+If the check fails, follow the on-screen guidance to relocate your rootless Docker data to `/goinfre/$USER/docker` and restart the daemon via `dockerd-rootless-setuptool.sh`.
+-->
 
 ## 🔍 Monitoring & Debugging
 
