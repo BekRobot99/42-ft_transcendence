@@ -16,7 +16,7 @@ RUN npm install
 COPY . .
 
 # Build (if using TypeScript or build step)
-RUN npm run build
+RUN npx tsc
 
 # Stage 2: Run the backend
 FROM node:lts-alpine
@@ -32,7 +32,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 # Rebuild native modules for the current architecture
-RUN npm rebuild sqlite3 --build-from-source
+RUN npm rebuild sqlite3 --build-from-source && \
+     npm rebuild bcrypt --build-from-source
 
 # Expose backend port
 EXPOSE 3000
