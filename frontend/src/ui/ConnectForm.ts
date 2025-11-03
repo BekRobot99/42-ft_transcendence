@@ -94,10 +94,10 @@ export class ConnectForm {
         this.mfaInputWrapper.appendChild(twofaLabel);
         this.mfaInputWrapper.appendChild(this.mfaInput);
 
-        // Sign In button
+        // Log In button
         this.submitButton = document.createElement('button');
         this.submitButton.className = 'autumn-button';
-        this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+        this.submitButton.textContent = translate('Log In', 'Anmelden', 'Se connecter');
         this.submitButton.type = 'submit';
 
         // Server error and success message containers
@@ -180,7 +180,7 @@ export class ConnectForm {
             this.serverErrorMessage.classList.remove('hidden');
             this.submitButton.disabled = false;
             this.submitButton.classList.remove('loading');
-            this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+            this.submitButton.textContent = translate('Log In', 'Anmelden', 'Se connecter');
             return;
         }
 
@@ -236,7 +236,7 @@ export class ConnectForm {
             if (!this.successMessage.classList.contains('hidden')) {
                 // If successful, keep the "signing in" message until redirect
             } else {
-                this.submitButton.textContent = translate('Sign In', 'Anmelden', 'Se connecter');
+                this.submitButton.textContent = translate('Log In', 'Anmelden', 'Se connecter');
             }
         }
     }
