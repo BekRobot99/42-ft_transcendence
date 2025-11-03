@@ -49,6 +49,10 @@ export function renderNavigationBar(app: any): void {
         }
     });
 
+    // Chat button
+    const chatButton = createNavButton(translate('Chat', 'Chat', 'Chat'));
+    chatButton.addEventListener('click', (e) => app.navigateTo('/chat', e));
+
     // Friends button
      const friendsButton = createNavButton(translate('Friends', 'Freunde', 'Amis'));
     friendsButton.addEventListener('click', (e) => app.navigateTo('/friends', e));
@@ -69,6 +73,7 @@ export function renderNavigationBar(app: any): void {
         app.renderView('/');
     });
 
+    right.appendChild(chatButton);
     right.appendChild(friendsButton);
     right.appendChild(settingsButton);
     right.appendChild(logoutButton);

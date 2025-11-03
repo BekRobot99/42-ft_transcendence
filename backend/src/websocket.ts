@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import db from './config/database';
 import { AIPlayer } from './services/AIPlayer';
+import ChatService from './services/ChatService';
 import { GameSynchronizer, PlayerInput } from './services/GameSynchronizer';
 import { GameStateValidator, ValidationResult } from './services/GameStateValidator';
 import { GameErrorHandler, GameError, GameErrorType } from './services/GameErrorHandler';
@@ -1042,6 +1043,191 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
             clearInterval(performanceUpdateInterval);
         });
     });
+    // Chat WebSocket endpoint for real-time messaging
+    fastify.get('/api/ws/chat', { websocket: true }, async (connection, request) => {
+        let userId: number | null = null;
+
+        try {
+            // Authenticate the user
+            const decodedToken = await request.jwtVerify({ onlyCookie: true }) as { id: number; tfa?: string };
+            if (decodedToken.tfa !== 'complete') {
+                throw new Error('2FA not completed');
+            }
+            userId = decodedToken.id;
+
+            // Add connection to user sockets
+            if (!userSockets.has(userId)) {
+                userSockets.set(userId, new Set());
+            }
+            userSockets.get(userId)?.add(connection);
+
+            // Update user online status
+            await ChatService.updateOnlineStatus(userId, true);
+
+            // Notify all conversations that user is online
+            const conversations = await ChatService.getUserConversations(userId);
+            conversations.forEach(conv => {
+                const recipientSockets = userSockets.get(conv.user_id);
+                if (recipientSockets) {
+                    recipientSockets.forEach(socket => {
+                        if (socket.readyState === 1) {
+                            socket.send(JSON.stringify({
+                                type: 'user_online',
+                                userId: userId,
+                                timestamp: Date.now()
+                            }));
+                        }
+                    });
+                }
+            });
+
+        } catch (err) {
+            fastify.log.warn('Chat WebSocket authentication failed', { error: (err as Error).message });
+            connection.close(1008, 'Authentication failed');
+            return;
+        }
+
+        // Handle incoming chat messages
+        connection.on('message', async (messageBuffer: Buffer | string) => {
+            if (userId === null) return;
+
+            try {
+                const message = JSON.parse(messageBuffer.toString());
+
+                switch (message.type) {
+                    case 'send_message':
+                        const { receiver_id, message: messageText, message_type } = message.data;
+                        
+                        // Send message through ChatService
+                        const newMessage = await ChatService.sendMessage(
+                            userId, 
+                            receiver_id, 
+                            messageText,
+                            message_type || 'text'
+                        );
+
+                        if (newMessage) {
+                            // Send to sender (confirmation)
+                            connection.send(JSON.stringify({
+                                type: 'message_sent',
+                                message: newMessage,
+                                timestamp: Date.now()
+                            }));
+
+                            // Send to receiver (if online)
+                            const recipientSockets = userSockets.get(receiver_id);
+                            if (recipientSockets) {
+                                recipientSockets.forEach(socket => {
+                                    if (socket.readyState === 1) {
+                                        socket.send(JSON.stringify({
+                                            type: 'new_message',
+                                            message: newMessage,
+                                            timestamp: Date.now()
+                                        }));
+                                    }
+                                });
+                            }
+                        }
+                        break;
+
+                    case 'typing_start':
+                        const typingRecipientId = message.data.receiver_id;
+                        const typingRecipientSockets = userSockets.get(typingRecipientId);
+                        if (typingRecipientSockets) {
+                            typingRecipientSockets.forEach(socket => {
+                                if (socket.readyState === 1) {
+                                    socket.send(JSON.stringify({
+                                        type: 'user_typing',
+                                        userId: userId,
+                                        timestamp: Date.now()
+                                    }));
+                                }
+                            });
+                        }
+                        break;
+
+                    case 'typing_stop':
+                        const stopTypingRecipientId = message.data.receiver_id;
+                        const stopTypingRecipientSockets = userSockets.get(stopTypingRecipientId);
+                        if (stopTypingRecipientSockets) {
+                            stopTypingRecipientSockets.forEach(socket => {
+                                if (socket.readyState === 1) {
+                                    socket.send(JSON.stringify({
+                                        type: 'user_stopped_typing',
+                                        userId: userId,
+                                        timestamp: Date.now()
+                                    }));
+                                }
+                            });
+                        }
+                        break;
+
+                    case 'mark_read':
+                        const senderId = message.data.sender_id;
+                        await ChatService.markMessagesAsRead(userId, senderId);
+                        
+                        // Notify sender that messages were read
+                        const senderSockets = userSockets.get(senderId);
+                        if (senderSockets) {
+                            senderSockets.forEach(socket => {
+                                if (socket.readyState === 1) {
+                                    socket.send(JSON.stringify({
+                                        type: 'messages_read',
+                                        userId: userId,
+                                        timestamp: Date.now()
+                                    }));
+                                }
+                            });
+                        }
+                        break;
+                }
+            } catch (error) {
+                fastify.log.error('Error processing chat message:', error);
+                connection.send(JSON.stringify({ 
+                    type: 'error', 
+                    message: 'Failed to process message' 
+                }));
+            }
+        });
+
+        connection.on('close', async () => {
+            if (userId === null) return;
+
+            // Remove from user sockets
+            const sockets = userSockets.get(userId);
+            if (sockets) {
+                sockets.delete(connection);
+                
+                // If user has no more active connections, mark as offline
+                if (sockets.size === 0) {
+                    userSockets.delete(userId);
+                    await ChatService.updateOnlineStatus(userId, false);
+
+                    // Notify all conversations that user is offline
+                    const conversations = await ChatService.getUserConversations(userId);
+                    conversations.forEach(conv => {
+                        const recipientSockets = userSockets.get(conv.user_id);
+                        if (recipientSockets) {
+                            recipientSockets.forEach(socket => {
+                                if (socket.readyState === 1) {
+                                    socket.send(JSON.stringify({
+                                        type: 'user_offline',
+                                        userId: userId,
+                                        timestamp: Date.now()
+                                    }));
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
+
+        connection.on('error', (error: unknown) => {
+            fastify.log.error('Chat socket error:', error);
+        });
+    });
+
     fastify.get('/api/ws/status', { websocket: true }, async (connection, request) => {
         let userId: number | null = null;
 
