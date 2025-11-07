@@ -18,11 +18,7 @@ export function createLanguageDropdown(app: any, options: LanguageDropdownOption
 
     // Create container
     const container = document.createElement('div');
-    const defaultContainerClass = position === 'right' ? 'flex justify-end' : 
-                                 position === 'left' ? 'flex justify-start' : 
-                                 'flex justify-center';
-    container.className = containerClassName || defaultContainerClass;
-    container.style.marginBottom = '1.5rem';
+    container.className = containerClassName || 'language-dropdown';
 
     // Create dropdown
     const langDropdown = document.createElement('select');

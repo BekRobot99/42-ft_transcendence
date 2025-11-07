@@ -199,8 +199,6 @@ class App {
             const registerForm = new SignUpForm(this);
             this.pageContentElement.appendChild(registerForm.render());
 
-            this.pageContentElement.appendChild(createBackButton(translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil'), '/'));
-
         }else if (path.startsWith('/auth/google/callback')) {
             this.pageContentElement.innerHTML = `
                 <div class="text-center">
@@ -214,8 +212,6 @@ class App {
         } else if (path === '/signin') {
             const signInForm = new ConnectForm(this);
             this.pageContentElement.appendChild(signInForm.render());
-
-           this.pageContentElement.appendChild(createBackButton(translate('‹ Back to Home', '‹ Zurück zur Startseite', '‹ Retour à l\'accueil'), '/'));
 
             } else if (path.startsWith('/profile/')) {
             const username = path.substring('/profile/'.length);

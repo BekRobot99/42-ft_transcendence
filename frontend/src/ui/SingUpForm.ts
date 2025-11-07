@@ -40,7 +40,14 @@ export class SignUpForm {
             this.app.renderView('/');
         });
 
-        const langSelectorContainer = createLanguageDropdown(this.app);
+        const langSelectorContainer = createLanguageDropdown(this.app, {
+            position: 'right',
+            containerClassName: 'language-dropdown'
+        });
+
+        this.formContainer.appendChild(backButton);
+        this.formContainer.appendChild(langSelectorContainer);
+
         // Username field
         const usernameGroup = document.createElement('div');
         usernameGroup.className = 'autumn-form-group';
@@ -149,8 +156,6 @@ export class SignUpForm {
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
 
-        this.formContainer.appendChild(backButton);
-        this.formContainer.appendChild(langSelectorContainer);
         this.formContainer.appendChild(form);
         this.addFieldListeners();
     }

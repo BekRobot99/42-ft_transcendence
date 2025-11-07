@@ -11,10 +11,11 @@ export default defineConfig({
     strictPort: true,
     watch: {
       usePolling: true,
+      interval: 1000,
     },
     hmr: {
       host: 'localhost',
-      port: 5173,
+      clientPort: 8080,
       protocol: 'ws',
     },
     proxy: {
@@ -22,6 +23,7 @@ export default defineConfig({
         target: 'http://backend:3000',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/uploads': {
         target: 'http://backend:3000',

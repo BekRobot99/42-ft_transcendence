@@ -71,6 +71,7 @@ body.autumn-background::before {
     border: 2px solid rgba(255, 255, 255, 0.5);
     border-radius: 20px;
     padding: 2.5rem 2rem;
+    padding-top: 4rem;
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.4),
         0 8px 20px rgba(0, 0, 0, 0.3);
@@ -166,6 +167,7 @@ body.autumn-background::before {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    z-index: 10;
 }
 
 .autumn-back-button:hover {
@@ -467,32 +469,35 @@ body.autumn-background::before {
 }
 
 .language-dropdown {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1.5rem;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
 }
 
 .language-dropdown select {
-    background: #fff;
-    border: 2px solid #d1d5db;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(217, 119, 6, 0.3);
     border-radius: 8px;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
     color: #1a1a1a;
     font-family: 'Georgia', serif;
     font-weight: 500;
+    font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .language-dropdown select:hover {
-    border-color: #9ca3af;
+    border-color: #d97706;
+    background: rgba(255, 255, 255, 1);
 }
 
 .language-dropdown select:focus {
     outline: none;
-    border-color: var(--autumn-accent);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
 }
 
 .language-dropdown select option {

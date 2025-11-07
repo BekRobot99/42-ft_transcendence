@@ -16,11 +16,11 @@ export function renderHomePage(container: HTMLElement, app: any): void {
 
     const mainTitle = document.createElement('h1');
     mainTitle.className = 'autumn-title';
-    mainTitle.textContent = 'Mila Soklovacki';
+    mainTitle.textContent = 'ft_transcendence';
 
     const subtitle = document.createElement('p');
     subtitle.className = 'autumn-subtitle';
-    subtitle.textContent = 'Мајстор фронтенда'; // "Frontend Master" in Serbian Cyrillic
+    subtitle.textContent = translate("Sign in to start playing Pong!", "Melde dich an, um Pong zu spielen!", "Connectez-vous pour commencer à jouer au Pong !");
 
     headerSection.appendChild(mainTitle);
     headerSection.appendChild(subtitle);

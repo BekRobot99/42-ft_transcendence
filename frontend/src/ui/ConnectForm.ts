@@ -35,7 +35,13 @@ export class ConnectForm {
             this.app.renderView('/');
         });
 
-        const langSelectorContainer = createLanguageDropdown(this.app);
+        const langSelectorContainer = createLanguageDropdown(this.app, {
+            position: 'right',
+            containerClassName: 'language-dropdown'
+        });
+
+        this.formContainer.appendChild(backButton);
+        this.formContainer.appendChild(langSelectorContainer);
 
         // Username input
         const usernameGroup = document.createElement('div');
@@ -118,8 +124,6 @@ export class ConnectForm {
         form.appendChild(this.serverErrorMessage);
         form.appendChild(this.successMessage);
 
-        this.formContainer.appendChild(backButton);
-        this.formContainer.appendChild(langSelectorContainer);
         this.formContainer.appendChild(form);
         this.addFieldListeners();
     }
