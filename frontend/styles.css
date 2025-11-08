@@ -8,7 +8,7 @@
 :root {
     --autumn-primary: #d97706;
     --autumn-secondary: #92400e;
-    --autumn-accent: #f59e0b;
+    --autumn-accent: #ea8a3a;
     --autumn-light: #fef3c7;
     --autumn-dark: #451a03;
 
@@ -129,25 +129,31 @@ body.autumn-background::before {
 
 /* language button */
 .autumn-language-dropdown {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid rgba(217, 119, 6, 0.3);
+    background: rgba(254, 243, 199, 0.2);
+    border: 1px solid rgba(254, 243, 199, 0.3);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
-    color: #1a1a1a;
+    color: #fef3c7;
     cursor: pointer;
     transition: all 0.3s ease;
     outline: none;
+    font-weight: 600;
 }
 
 .autumn-language-dropdown:hover {
-    border-color: #d97706;
-    background: rgba(255, 255, 255, 1);
+    border-color: #ea8a3a;
+    background: rgba(254, 243, 199, 0.3);
 }
 
 .autumn-language-dropdown:focus {
-    border-color: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
+    border-color: #ea8a3a;
+    box-shadow: 0 0 0 2px rgba(234, 138, 58, 0.3);
+}
+
+.autumn-language-dropdown option {
+    background: #92400e;
+    color: #fef3c7;
 }
 
 /* back button */
@@ -210,11 +216,168 @@ body.autumn-background::before {
     border-color: #9ca3af;
 }
 
+/* added the navigation bar on top */
+.top-game-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(217, 119, 6, 0.2);
+    padding: 0.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.top-nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(186, 99, 23, 0.93) 0%, rgba(146, 64, 14, 0.93) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(217, 119, 6, 0.5);
+    padding: 0.75rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+.top-nav-links {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.top-nav-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.top-game-nav-left {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.top-game-nav-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.game-nav-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #fef3c7;
+    margin-right: 2rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 /* buttons */
+.autumn-button-nav {
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: #fef3c7;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: 'Georgia', serif;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.autumn-button-nav::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #ea8a3a;
+    transition: width 0.3s ease;
+}
+
+.autumn-button-nav:hover {
+    color: #ffffff;
+    background: rgba(217, 119, 6, 0.25);
+}
+
+.autumn-button-nav:hover::after {
+    width: 100%;
+}
+
+.autumn-button-nav:active {
+    transform: translateY(1px);
+}
+
+.autumn-button-light {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #ba6317 0%, #92400e 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Georgia', serif;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 4px 12px rgba(186, 99, 23, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    transform: translateY(0);
+}
+
+.autumn-button-light::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.autumn-button-light:hover::before {
+    left: 100%;
+}
+
+.autumn-button-light:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(186, 99, 23, 0.5),
+        0 3px 8px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #d97706 0%, #ba6317 100%);
+}
+
+.autumn-button-light:active {
+    transform: translateY(0);
+    box-shadow: 
+        0 2px 8px rgba(186, 99, 23, 0.4),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 .autumn-button {
     width: 100%;
     padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+    background: linear-gradient(135deg, #ba6317 0%, #92400e 100%);
     border: none;
     border-radius: 12px;
     color: white;
@@ -224,7 +387,7 @@ body.autumn-background::before {
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 
-        0 4px 12px rgba(217, 119, 6, 0.4),
+        0 4px 12px rgba(186, 99, 23, 0.4),
         0 2px 4px rgba(0, 0, 0, 0.2);
     position: relative;
     overflow: hidden;
@@ -249,15 +412,15 @@ body.autumn-background::before {
 .autumn-button:hover {
     transform: translateY(-2px);
     box-shadow: 
-        0 6px 20px rgba(217, 119, 6, 0.5),
+        0 6px 20px rgba(186, 99, 23, 0.5),
         0 3px 8px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #d97706 0%, #ba6317 100%);
 }
 
 .autumn-button:active {
     transform: translateY(0);
     box-shadow: 
-        0 2px 8px rgba(217, 119, 6, 0.4),
+        0 2px 8px rgba(186, 99, 23, 0.4),
         0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -268,17 +431,17 @@ body.autumn-background::before {
 }
 
 .autumn-button-secondary {
-    background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    background: linear-gradient(135deg, #ba6317 0%, #92400e 100%);
     border: none;
     box-shadow: 
-        0 4px 12px rgba(251, 146, 60, 0.4),
+        0 4px 12px rgba(186, 99, 23, 0.4),
         0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .autumn-button-secondary:hover {
-    background: linear-gradient(135deg, #fdba74 0%, #fb923c 100%);
+    background: linear-gradient(135deg, #d97706 0%, #ba6317 100%);
     box-shadow: 
-        0 6px 20px rgba(251, 146, 60, 0.5),
+        0 6px 20px rgba(186, 99, 23, 0.5),
         0 3px 8px rgba(0, 0, 0, 0.3);
     transform: translateY(-2px);
 }
@@ -447,6 +610,46 @@ body.autumn-background::before {
     animation: fadeIn 0.5s ease;
 }
 
+/* game page adjustments */
+.game-page-with-nav {
+    padding-top: 80px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 80px);
+    width: 100%;
+}
+
+.game-mode-title {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: #fef3c7;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    letter-spacing: 1px;
+    text-shadow: 
+        3px 3px 6px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(186, 99, 23, 0.4);
+    text-transform: uppercase;
+    width: 100%;
+}
+
+.game-mode-button-horizontal {
+    width: 200px;
+    padding: 0.875rem 1.25rem;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+    margin: 0 0.5rem;
+}
+
+.tournament-button-full {
+    width: 420px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1.05rem;
+}
+
 @media (max-width: 640px) {
     .autumn-container {
         padding: 1.5rem;
@@ -465,6 +668,49 @@ body.autumn-background::before {
     .autumn-button {
         padding: 0.875rem 1.25rem;
         font-size: 1rem;
+    }
+
+    .top-game-nav {
+        padding: 0.5rem 1rem;
+        flex-wrap: wrap;
+    }
+
+    .top-nav-bar {
+        padding: 0.5rem 1rem;
+        flex-wrap: wrap;
+    }
+
+    .top-game-nav-left {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .top-nav-links {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .game-nav-title {
+        font-size: 1rem;
+        margin-right: 1rem;
+    }
+
+    .game-mode-title {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .game-mode-button-horizontal {
+        width: 140px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .tournament-button-full {
+        width: 100%;
+        max-width: 300px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
     }
 }
 
