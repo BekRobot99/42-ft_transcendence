@@ -83,9 +83,9 @@ function renderCreationForm() {
                 </select>
             </div>
            <button type="submit" class="w-full relative inline-block px-4 py-3 font-medium group">
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
-                <span class="relative text-white">${translate('Create Tournament', 'Turnier erstellen', 'Créer le tournoi')}</span>
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+                <span class="relative text-black group-hover:text-white">${translate('Create Tournament', 'Turnier erstellen', 'Créer le tournoi')}</span>
             </button>
             <p id="create-error" class="text-red-600 text-sm hidden mt-2 text-center"></p>
         </form>
@@ -148,9 +148,9 @@ function renderLobby() {
         form.innerHTML = `
             <input type="text" name="alias" placeholder="${translate('Enter player alias', 'Spieler-Alias eingeben', 'Entrez l\'alias du joueur')}" required minlength="3" maxlength="16" class="flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <button type="submit" class="relative inline-block px-4 py-2 font-medium group">
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
-                <span class="relative text-white">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</span>
+                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
+                <span class="relative text-black group-hover:text-white">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</span>
             </button>
         `;
         actionsContainer.appendChild(form);
@@ -234,8 +234,8 @@ function renderBracket() {
 
                 if (match.status === 'pending' && match.player1_id && match.player2_id && me && me.id === tournamentState.creator_id) {
                      content += `<button data-match-id="${match.id}" class="play-match-btn mt-2 w-full relative inline-block px-2 py-1 font-medium group">
-                    <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-blue-600 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                    <span class="absolute inset-0 w-full h-full bg-blue-400 border-2 border-blue-600 group-hover:bg-blue-600"></span>
+                    <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
+                    <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
                     <span class="relative text-black group-hover:text-white text-sm font-bold">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</span>
                 </button>`;
                 } else if (match.status === 'completed') {

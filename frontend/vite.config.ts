@@ -23,7 +23,6 @@ export default defineConfig({
         target: 'http://backend:3000',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/uploads': {
         target: 'http://backend:3000',

@@ -10,6 +10,7 @@ import { renderSettingsPage } from './views/SettingsPage.js';
 import { renderGamePage } from './views/GamePage.js';
 import { renderGamePage3D } from './views/GamePage3D.js';
 import { ChatPage } from './views/ChatPage.js';
+import { createLanguageDropdown } from './ui/LanguageDropdown.js';
 
 
 class App {
@@ -222,26 +223,28 @@ class App {
                 this.navigateTo('/game');
             }
         } else if (path === '/game') {
-            const gamePageContainer = document.createElement('div');
-            gamePageContainer.className = 'space-y-6 flex flex-col items-center pt-10';
+            // Create top navigation bar for game selection
+            const topNav = document.createElement('div');
+            topNav.className = 'top-game-nav';
 
-            // Game mode selection
-            const gameTitle = document.createElement('h1');
-            gameTitle.className = 'text-3xl font-bold mb-6';
+            // Left side with title and buttons
+            const leftSection = document.createElement('div');
+            leftSection.className = 'top-game-nav-left';
+
+            const gameTitle = document.createElement('span');
+            gameTitle.className = 'game-nav-title';
             gameTitle.textContent = translate('Choose Game Mode', 'Spielmodus wählen', 'Choisir le mode de jeu');
-            gamePageContainer.appendChild(gameTitle);
+            leftSection.appendChild(gameTitle);
 
             // 2D Game Button
             const game2DButton = document.createElement('button');
-            game2DButton.className = 'relative inline-block px-6 py-3 font-medium group mr-4';
-            game2DButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
-                <span class="relative text-white text-xl">🎮 2D Pong</span>
-            `;
+            game2DButton.className = 'autumn-button-nav';
+            game2DButton.innerHTML = `🎮 2D Pong`;
             
             game2DButton.addEventListener('click', () => {
-                gamePageContainer.innerHTML = '';
+                if (!this.pageContentElement) return;
+                this.pageContentElement.innerHTML = '';
+                document.body.removeChild(topNav);
                 // Read URL parameters for game mode
                 const urlParams = new URLSearchParams(window.location.search);
                 const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
@@ -250,21 +253,19 @@ class App {
                 if (mode === 'ai') {
                     options.aiDifficulty = difficulty;
                 }
-                this.currentViewCleanup = renderGamePage(gamePageContainer, options);
+                this.currentViewCleanup = renderGamePage(this.pageContentElement, options);
             });
 
             // 3D Game Button
             const game3DButton = document.createElement('button');
-            game3DButton.className = 'relative inline-block px-6 py-3 font-medium group';
-            game3DButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-green-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-green-600 border-2 border-green-800 group-hover:bg-green-800"></span>
-                <span class="relative text-white text-xl">🎮 3D Pong</span>
-            `;
+            game3DButton.className = 'autumn-button-nav';
+            game3DButton.innerHTML = `🎮 3D Pong`;
             
             game3DButton.addEventListener('click', () => {
-                gamePageContainer.innerHTML = '';
-                this.currentViewCleanup = renderGamePage3D(gamePageContainer, {
+                if (!this.pageContentElement) return;
+                this.pageContentElement.innerHTML = '';
+                document.body.removeChild(topNav);
+                this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
                     player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
                     player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
                     onGameEnd: (result) => {
@@ -274,30 +275,113 @@ class App {
                 });
             });
 
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'flex space-x-4 mb-6';
-            buttonContainer.appendChild(game2DButton);
-            buttonContainer.appendChild(game3DButton);
-            gamePageContainer.appendChild(buttonContainer);
-
-            const tournamentButton = document.createElement('a');
-            tournamentButton.href = '#_';
-            tournamentButton.className = 'relative inline-block px-6 py-3 font-medium group';
-            tournamentButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
-                <span class="relative text-black group-hover:text-white text-xl">${translate('🏆 Start a Tournament', '🏆 Starte ein Tournier', '🏆 Démarrer un tournoi')}</span>
-            `;
+            // Tournament Button
+            const tournamentButton = document.createElement('button');
+            tournamentButton.className = 'autumn-button-nav';
+            tournamentButton.innerHTML = `🏆 ${translate('Tournament', 'Turnier', 'Tournoi')}`;
             
             tournamentButton.addEventListener('click', (e) => {
                 e.preventDefault();
+                document.body.removeChild(topNav);
                 this.navigateTo('/tournament');
             });
+
+            leftSection.appendChild(game2DButton);
+            leftSection.appendChild(game3DButton);
+            leftSection.appendChild(tournamentButton);
+
+            // Right side with language dropdown
+            const rightSection = document.createElement('div');
+            rightSection.className = 'top-game-nav-right';
+
+            // Import and create language dropdown
+            const langSelectorContainer = createLanguageDropdown(this, {
+                className: 'autumn-language-dropdown',
+                containerClassName: 'flex items-center'
+            });
+            rightSection.appendChild(langSelectorContainer);
+
+            topNav.appendChild(leftSection);
+            topNav.appendChild(rightSection);
+
+            // Insert nav at top of body
+            document.body.insertBefore(topNav, document.body.firstChild);
+
+            // Create main content area with centered game selection
+            const gamePageContainer = document.createElement('div');
+            gamePageContainer.className = 'game-page-with-nav flex flex-col items-center';
+
+            // Game mode selection title
+            const centerTitle = document.createElement('h1');
+            centerTitle.className = 'game-mode-title';
+            centerTitle.textContent = translate('Choose Game Mode', 'Spielmodus wählen', 'Choisir le mode de jeu');
+            gamePageContainer.appendChild(centerTitle);
+
+            // Row container for 2D and 3D buttons (horizontal)
+            const gameButtonsRow = document.createElement('div');
+            gameButtonsRow.className = 'flex gap-6 mb-6';
+
+            // 2D Game Button
+            const center2DButton = document.createElement('button');
+            center2DButton.className = 'autumn-button-light game-mode-button-horizontal';
+            center2DButton.innerHTML = `🎮 2D Pong`;
             
-            gamePageContainer.appendChild(tournamentButton);
+            center2DButton.addEventListener('click', () => {
+                if (!this.pageContentElement) return;
+                this.pageContentElement.innerHTML = '';
+                document.body.removeChild(topNav);
+                const urlParams = new URLSearchParams(window.location.search);
+                const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
+                const difficulty = (urlParams.get('difficulty') as 'easy' | 'medium' | 'hard') || 'medium';
+                const options: any = { mode: mode };
+                if (mode === 'ai') {
+                    options.aiDifficulty = difficulty;
+                }
+                this.currentViewCleanup = renderGamePage(this.pageContentElement, options);
+            });
+
+            // 3D Game Button
+            const center3DButton = document.createElement('button');
+            center3DButton.className = 'autumn-button-light game-mode-button-horizontal';
+            center3DButton.innerHTML = `🎮 3D Pong`;
+            
+            center3DButton.addEventListener('click', () => {
+                if (!this.pageContentElement) return;
+                this.pageContentElement.innerHTML = '';
+                document.body.removeChild(topNav);
+                this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
+                    player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
+                    player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
+                    onGameEnd: (result) => {
+                        alert(`${result.winnerName} wins! Score: ${result.score1} - ${result.score2}`);
+                        this.navigateTo('/game');
+                    }
+                });
+            });
+
+            gameButtonsRow.appendChild(center2DButton);
+            gameButtonsRow.appendChild(center3DButton);
+            gamePageContainer.appendChild(gameButtonsRow);
+
+            // Tournament Button (below, centered)
+            const centerTournamentButton = document.createElement('button');
+            centerTournamentButton.className = 'autumn-button-light tournament-button-full';
+            centerTournamentButton.innerHTML = `🏆 ${translate('Start a Tournament', 'Starte ein Turnier', 'Démarrer un tournoi')}`;
+            
+            centerTournamentButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.body.removeChild(topNav);
+                this.navigateTo('/tournament');
+            });
+
+            gamePageContainer.appendChild(centerTournamentButton);
             this.pageContentElement.appendChild(gamePageContainer);
 
-            this.currentViewCleanup = () => {};
+            this.currentViewCleanup = () => {
+                if (document.body.contains(topNav)) {
+                    document.body.removeChild(topNav);
+                }
+            };
 
         } else if (path === '/tournament') {
             this.currentViewCleanup = await renderTournamentView(this.pageContentElement);
