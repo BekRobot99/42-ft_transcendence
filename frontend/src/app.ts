@@ -239,12 +239,18 @@ class App {
             // 2D Game Button
             const game2DButton = document.createElement('button');
             game2DButton.className = 'autumn-button-nav';
-            game2DButton.innerHTML = `🎮 2D Pong`;
+            game2DButton.innerHTML = `2D Pong`;
             
             game2DButton.addEventListener('click', () => {
                 if (!this.pageContentElement) return;
                 this.pageContentElement.innerHTML = '';
                 document.body.removeChild(topNav);
+                // Clean up pumpkin
+                const pumpkin = document.getElementById('nav-pumpkin');
+                if (pumpkin) {
+                    cancelAnimationFrame(pumpkinAnimationId);
+                    pumpkin.parentNode?.removeChild(pumpkin);
+                }
                 // Read URL parameters for game mode
                 const urlParams = new URLSearchParams(window.location.search);
                 const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
@@ -259,12 +265,18 @@ class App {
             // 3D Game Button
             const game3DButton = document.createElement('button');
             game3DButton.className = 'autumn-button-nav';
-            game3DButton.innerHTML = `🎮 3D Pong`;
+            game3DButton.innerHTML = `3D Pong`;
             
             game3DButton.addEventListener('click', () => {
                 if (!this.pageContentElement) return;
                 this.pageContentElement.innerHTML = '';
                 document.body.removeChild(topNav);
+                // Clean up pumpkin
+                const pumpkin = document.getElementById('nav-pumpkin');
+                if (pumpkin) {
+                    cancelAnimationFrame(pumpkinAnimationId);
+                    pumpkin.parentNode?.removeChild(pumpkin);
+                }
                 this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
                     player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
                     player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
@@ -307,6 +319,44 @@ class App {
             // Insert nav at top of body
             document.body.insertBefore(topNav, document.body.firstChild);
 
+            // Create bouncing pumpkin
+            const pumpkin = document.createElement('img');
+            pumpkin.src = '/assets/pumpkin.png';
+            pumpkin.id = 'nav-pumpkin';
+            document.body.appendChild(pumpkin);
+
+            // Initialize pumpkin state
+            const pumpkinState = {
+                x: Math.random() * (window.innerWidth - 60),
+                y: Math.random() * (window.innerHeight - 60),
+                dx: (Math.random() > 0.5 ? 1 : -1) * 2,
+                dy: (Math.random() > 0.5 ? 1 : -1) * 2
+            };
+
+            // Animation function for the pumpkin
+            let pumpkinAnimationId: number;
+            function animatePumpkin() {
+                pumpkinState.x += pumpkinState.dx;
+                pumpkinState.y += pumpkinState.dy;
+
+                // Bounce off edges
+                if (pumpkinState.x <= 0 || pumpkinState.x >= window.innerWidth - 60) {
+                    pumpkinState.dx *= -1;
+                }
+                if (pumpkinState.y <= 0 || pumpkinState.y >= window.innerHeight - 60) {
+                    pumpkinState.dy *= -1;
+                }
+
+                pumpkin.style.left = `${pumpkinState.x}px`;
+                pumpkin.style.top = `${pumpkinState.y}px`;
+                pumpkin.style.transform = `rotate(${Date.now() / 100 % 360}deg)`;
+
+                pumpkinAnimationId = requestAnimationFrame(animatePumpkin);
+            }
+
+            // Start the animation
+            pumpkinAnimationId = requestAnimationFrame(animatePumpkin);
+
             // Create main content area with centered game selection
             const gamePageContainer = document.createElement('div');
             gamePageContainer.className = 'game-page-with-nav flex flex-col items-center';
@@ -324,12 +374,18 @@ class App {
             // 2D Game Button
             const center2DButton = document.createElement('button');
             center2DButton.className = 'autumn-button-light game-mode-button-horizontal';
-            center2DButton.innerHTML = `🎮 2D Pong`;
+            center2DButton.innerHTML = `2D Pong`;
             
             center2DButton.addEventListener('click', () => {
                 if (!this.pageContentElement) return;
                 this.pageContentElement.innerHTML = '';
                 document.body.removeChild(topNav);
+                // Clean up pumpkin
+                const pumpkin = document.getElementById('nav-pumpkin');
+                if (pumpkin) {
+                    cancelAnimationFrame(pumpkinAnimationId);
+                    pumpkin.parentNode?.removeChild(pumpkin);
+                }
                 const urlParams = new URLSearchParams(window.location.search);
                 const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
                 const difficulty = (urlParams.get('difficulty') as 'easy' | 'medium' | 'hard') || 'medium';
@@ -343,12 +399,18 @@ class App {
             // 3D Game Button
             const center3DButton = document.createElement('button');
             center3DButton.className = 'autumn-button-light game-mode-button-horizontal';
-            center3DButton.innerHTML = `🎮 3D Pong`;
+            center3DButton.innerHTML = `3D Pong`;
             
             center3DButton.addEventListener('click', () => {
                 if (!this.pageContentElement) return;
                 this.pageContentElement.innerHTML = '';
                 document.body.removeChild(topNav);
+                // Clean up pumpkin
+                const pumpkin = document.getElementById('nav-pumpkin');
+                if (pumpkin) {
+                    cancelAnimationFrame(pumpkinAnimationId);
+                    pumpkin.parentNode?.removeChild(pumpkin);
+                }
                 this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
                     player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
                     player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
@@ -366,7 +428,7 @@ class App {
             // Tournament Button (below, centered)
             const centerTournamentButton = document.createElement('button');
             centerTournamentButton.className = 'autumn-button-light tournament-button-full';
-            centerTournamentButton.innerHTML = `🏆 ${translate('Start a Tournament', 'Starte ein Turnier', 'Démarrer un tournoi')}`;
+            centerTournamentButton.innerHTML = `${translate('Start a Tournament', 'Starte ein Turnier', 'Démarrer un tournoi')}`;
             
             centerTournamentButton.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -378,8 +440,16 @@ class App {
             this.pageContentElement.appendChild(gamePageContainer);
 
             this.currentViewCleanup = () => {
+                // Remove navigation bar
                 if (document.body.contains(topNav)) {
                     document.body.removeChild(topNav);
+                }
+
+                // Clean up pumpkin
+                const pumpkin = document.getElementById('nav-pumpkin');
+                if (pumpkin) {
+                    cancelAnimationFrame(pumpkinAnimationId);
+                    pumpkin.parentNode?.removeChild(pumpkin);
                 }
             };
 

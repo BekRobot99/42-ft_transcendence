@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -24,8 +23,18 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow-x: hidden;
+    overflow: hidden;
     padding: 1rem;
+}
+
+#nav-pumpkin {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    z-index: 9999;
+    pointer-events: none;
+    will-change: transform, left, top;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
 }
 
 /* image background */
@@ -36,6 +45,7 @@ body.autumn-background {
     background-attachment: fixed;
     background-repeat: no-repeat;
     position: relative;
+    padding: 0;
 }
 
 body.autumn-background::before {
@@ -60,6 +70,7 @@ body.autumn-background::before {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
 }
 
 /* containers */
@@ -129,12 +140,12 @@ body.autumn-background::before {
 
 /* language button */
 .autumn-language-dropdown {
-    background: rgba(254, 243, 199, 0.2);
-    border: 1px solid rgba(254, 243, 199, 0.3);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(186, 99, 23, 0.3);
     border-radius: 8px;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
-    color: #fef3c7;
+    color: #1a1a1a;
     cursor: pointer;
     transition: all 0.3s ease;
     outline: none;
@@ -142,18 +153,18 @@ body.autumn-background::before {
 }
 
 .autumn-language-dropdown:hover {
-    border-color: #ea8a3a;
-    background: rgba(254, 243, 199, 0.3);
+    border-color: #ba6317;
+    background: rgba(255, 255, 255, 0.8);
 }
 
 .autumn-language-dropdown:focus {
-    border-color: #ea8a3a;
-    box-shadow: 0 0 0 2px rgba(234, 138, 58, 0.3);
+    border-color: #ba6317;
+    box-shadow: 0 0 0 2px rgba(186, 99, 23, 0.3);
 }
 
 .autumn-language-dropdown option {
-    background: #92400e;
-    color: #fef3c7;
+    background: #ffffff;
+    color: #1a1a1a;
 }
 
 /* back button */
@@ -222,16 +233,18 @@ body.autumn-background::before {
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 2px solid rgba(217, 119, 6, 0.2);
-    padding: 0.75rem 2rem;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 0.75rem 2rem !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .top-nav-bar {
@@ -239,16 +252,18 @@ body.autumn-background::before {
     top: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(135deg, rgba(186, 99, 23, 0.93) 0%, rgba(146, 64, 14, 0.93) 100%);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 2px solid rgba(217, 119, 6, 0.5);
-    padding: 0.75rem 2rem;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 0.75rem 2rem !important;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .top-nav-links {
@@ -288,8 +303,8 @@ body.autumn-background::before {
     padding: 0.5rem 0.75rem;
     background: transparent;
     border: none;
-    border-radius: 0;
-    color: #fef3c7;
+    border-radius: 8px;
+    color: #1a1a1a;
     font-size: 0.875rem;
     font-weight: 600;
     font-family: 'Georgia', serif;
@@ -297,23 +312,23 @@ body.autumn-background::before {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: visible;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: none;
 }
 
 .autumn-button-nav::after {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: 2px;
     left: 0;
     width: 0;
     height: 2px;
-    background: #ea8a3a;
+    background: #ba6317;
     transition: width 0.3s ease;
 }
 
 .autumn-button-nav:hover {
-    color: #ffffff;
-    background: rgba(217, 119, 6, 0.25);
+    color: #92400e;
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .autumn-button-nav:hover::after {
@@ -623,17 +638,16 @@ body.autumn-background::before {
 
 .game-mode-title {
     font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 3rem;
+    font-size: 4rem;
     font-weight: 900;
-    color: #fef3c7;
+    color: #ffffffbe;
     text-align: center;
     margin-bottom: 2.5rem;
-    letter-spacing: 1px;
-    text-shadow: 
-        3px 3px 6px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(186, 99, 23, 0.4);
-    text-transform: uppercase;
-    width: 100%;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    text-shadow:
+        0 1px 0 #ffffff42;
+    display: inline-block;
 }
 
 .game-mode-button-horizontal {
@@ -642,12 +656,42 @@ body.autumn-background::before {
     font-size: 1.05rem;
     flex-shrink: 0;
     margin: 0 0.5rem;
+    background: rgba(255,255,255,0.6);
+    color: #1a1a1a;
+    font-weight: 600;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.game-mode-button-horizontal:hover {
+    background: rgba(255,255,255,0.8);
+    color: #92400e;
+    border-color: #ba6317;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
 .tournament-button-full {
     width: 420px;
     padding: 0.875rem 1.5rem;
     font-size: 1.05rem;
+    background: rgba(255,255,255,0.6);
+    color: #1a1a1a;
+    font-weight: 600;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.tournament-button-full:hover {
+    background: rgba(255,255,255,0.8);
+    color: #92400e;
+    border-color: #ba6317;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
 @media (max-width: 640px) {
