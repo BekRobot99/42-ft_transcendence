@@ -33,24 +33,12 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         <div class="text-center flex flex-col items-center gap-4">
            <header class="w-full max-w-3xl">
                <h1 class="text-3xl font-bold mb-1 text-center">${translate('Ping Pong', 'Ping Pong', 'Ping Pong')}</h1>
-               <p class="text-gray-600 text-sm text-center">${translate('A friendly match — pick a mode and start playing.', 'Ein freundliches Match - wähle einen Modus und starte das Spiel.', 'Un match amical - choisissez un mode et commencez à jouer.')}</p>
+               <p class="text-gray-600 text-sm text-center">${translate('Get ready to play!', 'Mach dich bereit zum Spielen!', 'Préparez-vous à jouer!')}</p>
            </header>
 
-           ${!isAIMode ? `
-           <div class="mb-2 p-4 bg-gray-100 rounded-lg w-full max-w-md">
-               <h2 class="text-lg font-semibold mb-3 text-center">${translate('Game Mode', 'Spielmodus', 'Mode de jeu')}</h2>
-               <div class="flex gap-4 justify-center">
-                   <button id="humanModeBtn" class="autumn-button-light game-mode-button-small">
-                       ${translate('Human vs Human', 'Mensch vs Mensch', 'Humain vs Humain')}
-                   </button>
-                   <button id="aiModeBtn" class="autumn-button-light game-mode-button-small">
-                       ${translate('Human vs AI', 'Mensch vs KI', 'Humain vs IA')}
-                   </button>
-               </div>
-           </div>
-           ` : `
+           ${isAIMode ? `
            <div class="mb-2 p-4 bg-green-100 rounded-lg w-full max-w-md">
-               <h2 class="text-lg font-semibold mb-3 text-center">${translate('AI Mode', 'KI-Modus', 'Mode IA')}</h2>
+               <h2 class="text-lg font-semibold mb-3 text-center">${translate('AI Difficulty', 'KI-Schwierigkeit', 'Difficulté IA')}</h2>
                <div class="flex gap-2 justify-center mb-3">
                    <button id="easyBtn" class="px-3 py-1 text-sm ${gameOptions.aiDifficulty === 'easy' ? 'bg-green-600 text-white' : 'bg-gray-200'} rounded">
                        ${translate('Easy', 'Einfach', 'Facile')}
@@ -62,13 +50,8 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                        ${translate('Hard', 'Schwer', 'Difficile')}
                    </button>
                </div>
-               <div class="text-center">
-                   <button id="backToModeBtn" class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">
-                       ${translate('Back to Mode Selection', 'Zurück zur Modusauswahl', 'Retour à la sélection de mode')}
-                   </button>
-               </div>
            </div>
-           `}
+           ` : ''}
 
            <section class="w-full max-w-3xl">
                <div class="mb-3 flex items-center justify-between">
@@ -198,46 +181,10 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     document.addEventListener('keydown', keyDownHandler);
     document.addEventListener('keyup', keyUpHandler);
 
-    // Setup button handlers for game mode selection
-    const humanModeBtn = document.getElementById('humanModeBtn');
-    const aiModeBtn = document.getElementById('aiModeBtn');
-    const backToModeBtn = document.getElementById('backToModeBtn');
+    // Setup button handlers for AI difficulty selection
     const easyBtn = document.getElementById('easyBtn');
     const mediumBtn = document.getElementById('mediumBtn');
     const hardBtn = document.getElementById('hardBtn');
-
-    if (humanModeBtn) {
-        humanModeBtn.addEventListener('click', () => {
-            // Reload page with human mode
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.delete('mode');
-            currentUrl.searchParams.delete('difficulty');
-            window.history.pushState({}, '', currentUrl);
-            window.location.reload();
-        });
-    }
-
-    if (aiModeBtn) {
-        aiModeBtn.addEventListener('click', () => {
-            // Switch to AI mode with medium difficulty
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('mode', 'ai');
-            currentUrl.searchParams.set('difficulty', 'medium');
-            window.history.pushState({}, '', currentUrl);
-            window.location.reload();
-        });
-    }
-
-    if (backToModeBtn) {
-        backToModeBtn.addEventListener('click', () => {
-            // Go back to mode selection
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.delete('mode');
-            currentUrl.searchParams.delete('difficulty');
-            window.history.pushState({}, '', currentUrl);
-            window.location.reload();
-        });
-    }
 
     // AI difficulty buttons
     if (easyBtn) {

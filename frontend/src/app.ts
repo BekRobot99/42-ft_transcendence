@@ -236,56 +236,104 @@ class App {
             gameTitle.textContent = translate('Choose Game Mode', 'Spielmodus wählen', 'Choisir le mode de jeu');
             leftSection.appendChild(gameTitle);
 
-            // 2D Game Button
+            // to start a game and clean up
+            const startGame = (gameType: '2d' | '3d', mode: 'human' | 'ai') => {
+                if (!this.pageContentElement) return;
+                this.pageContentElement.innerHTML = '';
+                if (document.body.contains(topNav)) document.body.removeChild(topNav);
+                
+                // Clean up pumpkin
+                const pumpkin = document.getElementById('nav-pumpkin');
+                if (pumpkin) {
+                    cancelAnimationFrame(pumpkinAnimationId);
+                    pumpkin.parentNode?.removeChild(pumpkin);
+                }
+
+                if (gameType === '2d') {
+                    const options: any = { mode: mode };
+                    if (mode === 'ai') {
+                        options.aiDifficulty = 'medium';
+                    }
+                    this.currentViewCleanup = renderGamePage(this.pageContentElement, options);
+                } else {
+                    // 3D 
+                    this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
+                        player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
+                        player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
+                        onGameEnd: (result) => {
+                            alert(`${result.winnerName} wins! Score: ${result.score1} - ${result.score2}`);
+                            this.navigateTo('/game');
+                        }
+                    });
+                }
+            };
+
+            // 2D 
+            const game2DContainer = document.createElement('div');
+            game2DContainer.className = 'game-dropdown-container';
+            
             const game2DButton = document.createElement('button');
             game2DButton.className = 'autumn-button-nav';
-            game2DButton.innerHTML = `2D Pong`;
+            game2DButton.innerHTML = `2D Pong ▾`;
             
-            game2DButton.addEventListener('click', () => {
-                if (!this.pageContentElement) return;
-                this.pageContentElement.innerHTML = '';
-                document.body.removeChild(topNav);
-                // Clean up pumpkin
-                const pumpkin = document.getElementById('nav-pumpkin');
-                if (pumpkin) {
-                    cancelAnimationFrame(pumpkinAnimationId);
-                    pumpkin.parentNode?.removeChild(pumpkin);
-                }
-                // Read URL parameters for game mode
-                const urlParams = new URLSearchParams(window.location.search);
-                const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
-                const difficulty = (urlParams.get('difficulty') as 'easy' | 'medium' | 'hard') || 'medium';
-                const options: any = { mode: mode };
-                if (mode === 'ai') {
-                    options.aiDifficulty = difficulty;
-                }
-                this.currentViewCleanup = renderGamePage(this.pageContentElement, options);
+            const game2DDropdown = document.createElement('div');
+            game2DDropdown.className = 'game-dropdown-menu';
+            game2DDropdown.innerHTML = `
+                <button class="game-dropdown-item" data-mode="human">${translate('2 Player', '2 Spieler', '2 Joueurs')}</button>
+                <button class="game-dropdown-item" data-mode="ai">${translate('1 Player (AI)', '1 Spieler (KI)', '1 Joueur (IA)')}</button>
+            `;
+            
+            // toggle
+            game2DButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                game2DDropdown.classList.toggle('show');
+                // close
+                game3DDropdown.classList.remove('show');
             });
-
-            // 3D Game Button
-            const game3DButton = document.createElement('button');
-            game3DButton.className = 'autumn-button-nav';
-            game3DButton.innerHTML = `3D Pong`;
             
-            game3DButton.addEventListener('click', () => {
-                if (!this.pageContentElement) return;
-                this.pageContentElement.innerHTML = '';
-                document.body.removeChild(topNav);
-                // Clean up pumpkin
-                const pumpkin = document.getElementById('nav-pumpkin');
-                if (pumpkin) {
-                    cancelAnimationFrame(pumpkinAnimationId);
-                    pumpkin.parentNode?.removeChild(pumpkin);
-                }
-                this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
-                    player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
-                    player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
-                    onGameEnd: (result) => {
-                        alert(`${result.winnerName} wins! Score: ${result.score1} - ${result.score2}`);
-                        this.navigateTo('/game'); // Return to game selection
-                    }
+            game2DDropdown.querySelectorAll('.game-dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const mode = (e.target as HTMLElement).getAttribute('data-mode') as 'human' | 'ai';
+                    game2DDropdown.classList.remove('show');
+                    startGame('2d', mode);
                 });
             });
+            
+            game2DContainer.appendChild(game2DButton);
+            game2DContainer.appendChild(game2DDropdown);
+
+            // 3D 
+            const game3DContainer = document.createElement('div');
+            game3DContainer.className = 'game-dropdown-container';
+            
+            const game3DButton = document.createElement('button');
+            game3DButton.className = 'autumn-button-nav';
+            game3DButton.innerHTML = `3D Pong ▾`;
+            
+            const game3DDropdown = document.createElement('div');
+            game3DDropdown.className = 'game-dropdown-menu';
+            game3DDropdown.innerHTML = `
+                <button class="game-dropdown-item" data-mode="human">${translate('2 Player', '2 Spieler', '2 Joueurs')}</button>
+            `;
+            
+            // toggle
+            game3DButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                game3DDropdown.classList.toggle('show');
+                // close
+                game2DDropdown.classList.remove('show');
+            });
+            
+            game3DDropdown.querySelectorAll('.game-dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const mode = (e.target as HTMLElement).getAttribute('data-mode') as 'human' | 'ai';
+                    game3DDropdown.classList.remove('show');
+                    startGame('3d', mode);
+                });
+            });
+            
+            game3DContainer.appendChild(game3DButton);
+            game3DContainer.appendChild(game3DDropdown);
 
             // Tournament Button
             const tournamentButton = document.createElement('button');
@@ -298,9 +346,15 @@ class App {
                 this.navigateTo('/tournament');
             });
 
-            leftSection.appendChild(game2DButton);
-            leftSection.appendChild(game3DButton);
+            leftSection.appendChild(game2DContainer);
+            leftSection.appendChild(game3DContainer);
             leftSection.appendChild(tournamentButton);
+
+            // close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                game2DDropdown.classList.remove('show');
+                game3DDropdown.classList.remove('show');
+            });
 
             // Right side with language dropdown
             const rightSection = document.createElement('div');
@@ -371,58 +425,75 @@ class App {
             const gameButtonsRow = document.createElement('div');
             gameButtonsRow.className = 'flex gap-6 mb-6';
 
-            // 2D Game Button
+            // 2D Game Button with Dropdown (center)
+            const center2DContainer = document.createElement('div');
+            center2DContainer.className = 'game-dropdown-container';
+            
             const center2DButton = document.createElement('button');
             center2DButton.className = 'autumn-button-light game-mode-button-horizontal';
-            center2DButton.innerHTML = `2D Pong`;
+            center2DButton.innerHTML = `2D Pong ▾`;
             
-            center2DButton.addEventListener('click', () => {
-                if (!this.pageContentElement) return;
-                this.pageContentElement.innerHTML = '';
-                document.body.removeChild(topNav);
-                // Clean up pumpkin
-                const pumpkin = document.getElementById('nav-pumpkin');
-                if (pumpkin) {
-                    cancelAnimationFrame(pumpkinAnimationId);
-                    pumpkin.parentNode?.removeChild(pumpkin);
-                }
-                const urlParams = new URLSearchParams(window.location.search);
-                const mode = (urlParams.get('mode') as 'human' | 'ai') || 'human';
-                const difficulty = (urlParams.get('difficulty') as 'easy' | 'medium' | 'hard') || 'medium';
-                const options: any = { mode: mode };
-                if (mode === 'ai') {
-                    options.aiDifficulty = difficulty;
-                }
-                this.currentViewCleanup = renderGamePage(this.pageContentElement, options);
+            const center2DDropdown = document.createElement('div');
+            center2DDropdown.className = 'game-dropdown-menu';
+            center2DDropdown.innerHTML = `
+                <button class="game-dropdown-item" data-mode="human">${translate('2 Player', '2 Spieler', '2 Joueurs')}</button>
+                <button class="game-dropdown-item" data-mode="ai">${translate('1 Player (AI)', '1 Spieler (KI)', '1 Joueur (IA)')}</button>
+            `;
+            
+            // Toggle dropdown on button click
+            center2DButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                center2DDropdown.classList.toggle('show');
+                // Close other dropdown
+                center3DDropdown.classList.remove('show');
             });
-
-            // 3D Game Button
-            const center3DButton = document.createElement('button');
-            center3DButton.className = 'autumn-button-light game-mode-button-horizontal';
-            center3DButton.innerHTML = `3D Pong`;
             
-            center3DButton.addEventListener('click', () => {
-                if (!this.pageContentElement) return;
-                this.pageContentElement.innerHTML = '';
-                document.body.removeChild(topNav);
-                // Clean up pumpkin
-                const pumpkin = document.getElementById('nav-pumpkin');
-                if (pumpkin) {
-                    cancelAnimationFrame(pumpkinAnimationId);
-                    pumpkin.parentNode?.removeChild(pumpkin);
-                }
-                this.currentViewCleanup = renderGamePage3D(this.pageContentElement, {
-                    player1Name: translate('Player 1', 'Spieler 1', 'Joueur 1'),
-                    player2Name: translate('Player 2', 'Spieler 2', 'Joueur 2'),
-                    onGameEnd: (result) => {
-                        alert(`${result.winnerName} wins! Score: ${result.score1} - ${result.score2}`);
-                        this.navigateTo('/game');
-                    }
+            center2DDropdown.querySelectorAll('.game-dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const mode = (e.target as HTMLElement).getAttribute('data-mode') as 'human' | 'ai';
+                    center2DDropdown.classList.remove('show');
+                    startGame('2d', mode);
                 });
             });
+            
+            center2DContainer.appendChild(center2DButton);
+            center2DContainer.appendChild(center2DDropdown);
 
-            gameButtonsRow.appendChild(center2DButton);
-            gameButtonsRow.appendChild(center3DButton);
+            // 3D Game Button with Dropdown (center, 2 Player only)
+            const center3DContainer = document.createElement('div');
+            center3DContainer.className = 'game-dropdown-container';
+            
+            const center3DButton = document.createElement('button');
+            center3DButton.className = 'autumn-button-light game-mode-button-horizontal';
+            center3DButton.innerHTML = `3D Pong ▾`;
+            
+            const center3DDropdown = document.createElement('div');
+            center3DDropdown.className = 'game-dropdown-menu';
+            center3DDropdown.innerHTML = `
+                <button class="game-dropdown-item" data-mode="human">${translate('2 Player', '2 Spieler', '2 Joueurs')}</button>
+            `;
+            
+            // Toggle dropdown on button click
+            center3DButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                center3DDropdown.classList.toggle('show');
+                // Close other dropdown
+                center2DDropdown.classList.remove('show');
+            });
+            
+            center3DDropdown.querySelectorAll('.game-dropdown-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const mode = (e.target as HTMLElement).getAttribute('data-mode') as 'human' | 'ai';
+                    center3DDropdown.classList.remove('show');
+                    startGame('3d', mode);
+                });
+            });
+            
+            center3DContainer.appendChild(center3DButton);
+            center3DContainer.appendChild(center3DDropdown);
+
+            gameButtonsRow.appendChild(center2DContainer);
+            gameButtonsRow.appendChild(center3DContainer);
             gamePageContainer.appendChild(gameButtonsRow);
 
             // Tournament Button (below, centered)
@@ -438,6 +509,13 @@ class App {
 
             gamePageContainer.appendChild(centerTournamentButton);
             this.pageContentElement.appendChild(gamePageContainer);
+
+            // Close center dropdowns when clicking outside (reuse same listener to close all)
+            const closeAllDropdowns = () => {
+                center2DDropdown.classList.remove('show');
+                center3DDropdown.classList.remove('show');
+            };
+            document.addEventListener('click', closeAllDropdowns);
 
             this.currentViewCleanup = () => {
                 // Remove navigation bar
