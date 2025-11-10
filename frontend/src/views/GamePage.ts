@@ -30,25 +30,28 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
 
     // Enhanced UI with AI mode support
     gameWrapper.innerHTML = `
-        <div class="text-center flex flex-col items-center">
-           <h1 class="text-3xl font-bold mb-2">${translate('Ping Pong', 'Ping Pong', 'Ping Pong')}</h1>
-           
+        <div class="text-center flex flex-col items-center gap-4">
+           <header class="w-full max-w-3xl">
+               <h1 class="text-3xl font-bold mb-1 text-center">${translate('Ping Pong', 'Ping Pong', 'Ping Pong')}</h1>
+               <p class="text-gray-600 text-sm text-center">${translate('A friendly match — pick a mode and start playing.', 'Ein freundliches Match - wähle einen Modus und starte das Spiel.', 'Un match amical - choisissez un mode et commencez à jouer.')}</p>
+           </header>
+
            ${!isAIMode ? `
-           <div class="mb-4 p-4 bg-gray-100 rounded-lg">
-               <h2 class="text-lg font-semibold mb-2">${translate('Game Mode', 'Spielmodus', 'Mode de jeu')}</h2>
-               <div class="flex gap-4 justify-center mb-4">
-                   <button id="humanModeBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+           <div class="mb-2 p-4 bg-gray-100 rounded-lg w-full max-w-md">
+               <h2 class="text-lg font-semibold mb-3 text-center">${translate('Game Mode', 'Spielmodus', 'Mode de jeu')}</h2>
+               <div class="flex gap-4 justify-center">
+                   <button id="humanModeBtn" class="autumn-button-light game-mode-button-small">
                        ${translate('Human vs Human', 'Mensch vs Mensch', 'Humain vs Humain')}
                    </button>
-                   <button id="aiModeBtn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                   <button id="aiModeBtn" class="autumn-button-light game-mode-button-small">
                        ${translate('Human vs AI', 'Mensch vs KI', 'Humain vs IA')}
                    </button>
                </div>
            </div>
            ` : `
-           <div class="mb-4 p-4 bg-green-100 rounded-lg">
-               <h2 class="text-lg font-semibold mb-2">${translate('AI Mode', 'KI-Modus', 'Mode IA')}</h2>
-               <div class="flex gap-2 justify-center mb-2">
+           <div class="mb-2 p-4 bg-green-100 rounded-lg w-full max-w-md">
+               <h2 class="text-lg font-semibold mb-3 text-center">${translate('AI Mode', 'KI-Modus', 'Mode IA')}</h2>
+               <div class="flex gap-2 justify-center mb-3">
                    <button id="easyBtn" class="px-3 py-1 text-sm ${gameOptions.aiDifficulty === 'easy' ? 'bg-green-600 text-white' : 'bg-gray-200'} rounded">
                        ${translate('Easy', 'Einfach', 'Facile')}
                    </button>
@@ -59,32 +62,38 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                        ${translate('Hard', 'Schwer', 'Difficile')}
                    </button>
                </div>
-               <button id="backToModeBtn" class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">
-                   ${translate('Back to Mode Selection', 'Zurück zur Modusauswahl', 'Retour à la sélection de mode')}
-               </button>
+               <div class="text-center">
+                   <button id="backToModeBtn" class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">
+                       ${translate('Back to Mode Selection', 'Zurück zur Modusauswahl', 'Retour à la sélection de mode')}
+                   </button>
+               </div>
            </div>
            `}
-           
-           <div class="mb-4">
-               <div class="flex justify-between items-center mb-2">
+
+           <section class="w-full max-w-3xl">
+               <div class="mb-3 flex items-center justify-between">
                    <span class="font-semibold">${player1Alias}</span>
                    <span class="text-xl font-bold" id="scoreDisplay">0 - 0</span>
                    <span class="font-semibold">${player2Alias}</span>
                </div>
+
+               <p class="text-gray-600 text-sm mb-3 text-center">
+                   ${isAIMode ?
+                       translate('W/S keys to control your paddle', 'W/S Tasten um dein Paddle zu steuern', 'Touches W/S pour contrôler votre raquette') :
+                       translate('Player 1: W/S keys | Player 2: Arrow Up/Down keys', 'Spieler 1: W/S Tasten | Spieler 2: Pfeiltasten Hoch/Runter', 'Joueur 1 : Touches W/S | Joueur 2 : Touches Haut/Bas')
+                   }
+               </p>
+
                ${isAIMode ? `
-               <div class="text-sm text-gray-600 mb-2">
+               <div class="text-sm text-gray-600 mb-2 text-center">
                    <span id="aiStatsDisplay">AI Performance: Loading...</span>
                </div>
                ` : ''}
-           </div>
-           
-            <p class="text-gray-600 mb-4">
-                ${isAIMode ? 
-                    translate('W/S keys to control your paddle', 'W/S Tasten um dein Paddle zu steuern', 'Touches W/S pour contrôler votre raquette') :
-                    translate('Player 1: W/S keys | Player 2: Arrow Up/Down keys', 'Spieler 1: W/S Tasten | Spieler 2: Pfeiltasten Hoch/Runter', 'Joueur 1 : Touches W/S | Joueur 2 : Touches Haut/Bas')
-                }
-            </p>
-            <canvas id="pongCanvas" class="bg-black border-2 border-white"></canvas>
+
+               <div class="flex justify-center">
+                   <canvas id="pongCanvas" class="bg-black border-2 border-white"></canvas>
+               </div>
+           </section>
         </div>
     `;
 

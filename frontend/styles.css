@@ -673,6 +673,36 @@ body.autumn-background::before {
     box-shadow: 0 8px 32px rgba(0,0,0,0.18);
 }
 
+/* smaller buttons */
+.game-mode-button-small {
+    width: 120px; 
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    margin: 0 0.4rem;
+    background: rgba(255,255,255,0.6);
+    color: #1a1a1a;
+    font-weight: 700;
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-mode-button-small:hover {
+    background: rgba(255,255,255,0.85);
+    color: #92400e;
+    border-color: #ba6317;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+}
+
 .tournament-button-full {
     width: 420px;
     padding: 0.875rem 1.5rem;
