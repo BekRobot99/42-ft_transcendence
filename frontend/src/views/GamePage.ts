@@ -28,7 +28,6 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     const player2Alias = isAIMode ? `AI (${gameOptions.aiDifficulty || 'medium'})` : 
                          (gameOptions.player2Name || translate('Player 2', 'Spieler 2', 'Joueur 2'));
 
-    // Enhanced UI with AI mode support
     gameWrapper.innerHTML = `
         <div class="text-center flex flex-col items-center gap-4">
            <header class="w-full max-w-3xl">
@@ -37,16 +36,16 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
            </header>
 
            ${isAIMode ? `
-           <div class="mb-2 p-4 bg-green-100 rounded-lg w-full max-w-md">
+           <div class="mb-2 w-full max-w-md">
                <h2 class="text-lg font-semibold mb-3 text-center">${translate('AI Difficulty', 'KI-Schwierigkeit', 'Difficulté IA')}</h2>
-               <div class="flex gap-2 justify-center mb-3">
-                   <button id="easyBtn" class="px-3 py-1 text-sm ${gameOptions.aiDifficulty === 'easy' ? 'bg-green-600 text-white' : 'bg-gray-200'} rounded">
+               <div class="flex gap-3 justify-center mb-3">
+                   <button id="easyBtn" class="ai-difficulty-btn ${gameOptions.aiDifficulty === 'easy' ? 'active' : ''}">
                        ${translate('Easy', 'Einfach', 'Facile')}
                    </button>
-                   <button id="mediumBtn" class="px-3 py-1 text-sm ${gameOptions.aiDifficulty === 'medium' || !gameOptions.aiDifficulty ? 'bg-yellow-600 text-white' : 'bg-gray-200'} rounded">
+                   <button id="mediumBtn" class="ai-difficulty-btn ${gameOptions.aiDifficulty === 'medium' || !gameOptions.aiDifficulty ? 'active' : ''}">
                        ${translate('Medium', 'Mittel', 'Moyen')}
                    </button>
-                   <button id="hardBtn" class="px-3 py-1 text-sm ${gameOptions.aiDifficulty === 'hard' ? 'bg-red-600 text-white' : 'bg-gray-200'} rounded">
+                   <button id="hardBtn" class="ai-difficulty-btn ${gameOptions.aiDifficulty === 'hard' ? 'active' : ''}">
                        ${translate('Hard', 'Schwer', 'Difficile')}
                    </button>
                </div>
@@ -181,6 +180,69 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     document.addEventListener('keydown', keyDownHandler);
     document.addEventListener('keyup', keyUpHandler);
 
+    // function to restart the game
+    function restartGame() {
+        player1.score = 0;
+        player2.score = 0;
+        updateScoreDisplay();
+        
+        // Reset ball
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        ball.dx = 0;
+        ball.dy = 0;
+        
+        player1.y = canvas.height / 2 - PADDLE_HEIGHT / 2;
+        player2.y = canvas.height / 2 - PADDLE_HEIGHT / 2;
+        
+        // close existing AI
+        if (aiSocket) {
+            if (aiGameId) {
+                try {
+                    aiSocket.send(JSON.stringify({
+                        event: 'leave_game',
+                        gameId: aiGameId,
+                        playerId: 'human_player',
+                        timestamp: Date.now(),
+                        data: {}
+                    }));
+                } catch (error) {
+                    console.error('Error sending leave_game message:', error);
+                }
+            }
+            aiSocket.close();
+            aiSocket = null;
+        }
+        
+        if (aiStatsInterval) {
+            clearInterval(aiStatsInterval);
+            aiStatsInterval = null;
+        }
+        
+        // update button
+        const easyBtn = document.getElementById('easyBtn');
+        const mediumBtn = document.getElementById('mediumBtn');
+        const hardBtn = document.getElementById('hardBtn');
+        
+        if (easyBtn) {
+            easyBtn.className = `ai-difficulty-btn ${gameOptions.aiDifficulty === 'easy' ? 'active' : ''}`;
+        }
+        if (mediumBtn) {
+            mediumBtn.className = `ai-difficulty-btn ${gameOptions.aiDifficulty === 'medium' ? 'active' : ''}`;
+        }
+        if (hardBtn) {
+            hardBtn.className = `ai-difficulty-btn ${gameOptions.aiDifficulty === 'hard' ? 'active' : ''}`;
+        }
+        
+        // reinitialize AI with
+        if (isAIMode) {
+            console.log('🔄 Restarting game with difficulty:', gameOptions.aiDifficulty);
+            initializeAIGame();
+        }
+        
+        startGame();
+    }
+
     // Setup button handlers for AI difficulty selection
     const easyBtn = document.getElementById('easyBtn');
     const mediumBtn = document.getElementById('mediumBtn');
@@ -189,28 +251,22 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     // AI difficulty buttons
     if (easyBtn) {
         easyBtn.addEventListener('click', () => {
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('difficulty', 'easy');
-            window.history.pushState({}, '', currentUrl);
-            window.location.reload();
+            gameOptions.aiDifficulty = 'easy';
+            restartGame();
         });
     }
 
     if (mediumBtn) {
         mediumBtn.addEventListener('click', () => {
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('difficulty', 'medium');
-            window.history.pushState({}, '', currentUrl);
-            window.location.reload();
+            gameOptions.aiDifficulty = 'medium';
+            restartGame();
         });
     }
 
     if (hardBtn) {
         hardBtn.addEventListener('click', () => {
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('difficulty', 'hard');
-            window.history.pushState({}, '', currentUrl);
-            window.location.reload();
+            gameOptions.aiDifficulty = 'hard';
+            restartGame();
         });
     }
 
