@@ -56,7 +56,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                <div class="mb-3 flex items-center justify-between">
                    <span class="font-semibold">${player1Alias}</span>
                    <span class="text-xl font-bold" id="scoreDisplay">0 - 0</span>
-                   <span class="font-semibold">${player2Alias}</span>
+                   <span class="font-semibold" id="player2Name">${player2Alias}</span>
                </div>
 
                <p class="text-gray-600 text-sm mb-3 text-center">
@@ -73,7 +73,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                ` : ''}
 
                <div class="flex justify-center">
-                   <canvas id="pongCanvas" class="bg-black border-2 border-white"></canvas>
+                   <canvas id="pongCanvas" style="background: #3D2817; border: 4px solid #8B4513; border-radius: 8px;"></canvas>
                </div>
            </section>
         </div>
@@ -94,7 +94,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     // Game constants
     const PADDLE_WIDTH = 10;
     const PADDLE_HEIGHT = 100;
-    const BALL_RADIUS = 7;
+    const BALL_RADIUS = 15; 
     const PADDLE_SPEED = 6;
     const WINNING_SCORE = 11; // First to 11 points wins
     const INITIAL_BALL_SPEED = 3;
@@ -130,6 +130,10 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         score: 0,
     };
 
+    // pumpkin image for the ball
+    const pumpkinImage = new Image();
+    pumpkinImage.src = '/assets/pumpkin.png';
+    
     const ball = {
         x: canvas.width / 2,
         y: canvas.height / 2,
@@ -152,7 +156,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     // AI status indicators and visual feedback
     let aiStatus = {
         isActive: false,
-        difficulty: 'medium',
+        difficulty: (gameOptions.aiDifficulty || 'medium') as 'easy' | 'medium' | 'hard',
         lastMove: 'none' as 'up' | 'down' | 'none',
         lastMoveTime: 0,
         reactionTime: 0,
@@ -252,6 +256,8 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     if (easyBtn) {
         easyBtn.addEventListener('click', () => {
             gameOptions.aiDifficulty = 'easy';
+            aiStatus.difficulty = 'easy'; 
+            updatePlayer2Name();
             restartGame();
         });
     }
@@ -259,6 +265,8 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     if (mediumBtn) {
         mediumBtn.addEventListener('click', () => {
             gameOptions.aiDifficulty = 'medium';
+            aiStatus.difficulty = 'medium';
+            updatePlayer2Name(); 
             restartGame();
         });
     }
@@ -266,6 +274,8 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     if (hardBtn) {
         hardBtn.addEventListener('click', () => {
             gameOptions.aiDifficulty = 'hard';
+            aiStatus.difficulty = 'hard'; 
+            updatePlayer2Name();
             restartGame();
         });
     }
@@ -286,6 +296,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             
             aiSocket.onopen = () => {
                 console.log('AI WebSocket connected');
+                console.log('🎮 Sending join_game with difficulty:', gameOptions.aiDifficulty || 'medium');
                 // Join AI game
                 aiSocket!.send(JSON.stringify({
                     event: 'join_game',
@@ -679,6 +690,13 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         }
     }
 
+    function updatePlayer2Name() {
+        const player2NameDisplay = document.getElementById('player2Name');
+        if (player2NameDisplay && isAIMode) {
+            player2NameDisplay.textContent = `AI (${aiStatus.difficulty})`;
+        }
+    }
+
     function resetBall() {
         const lastDx = ball.dx;
         // Stop the ball and center it
@@ -982,45 +1000,62 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     }
 
     function draw() {
-        // Clear canvas
-        ctx!.fillStyle = 'black';
+        // Clear canvas with dark brown autumn background
+        ctx!.fillStyle = '#3D2817'; // Dark brown color
         ctx!.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw paddles
-        ctx!.fillStyle = 'white';
+        // Draw paddles with autumn colors
+        // Player 1 - Orange paddle (like autumn leaves)
+        ctx!.fillStyle = '#D2691E'; // Chocolate/orange
         ctx!.fillRect(player1.x, player1.y, player1.width, player1.height);
+        
+        // Player 2 - Dark orange/burnt orange paddle
+        ctx!.fillStyle = '#CC5500'; // Burnt orange
         ctx!.fillRect(player2.x, player2.y, player2.width, player2.height);
 
-        // Draw ball
-        ctx!.beginPath();
-        ctx!.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-        ctx!.fillStyle = 'white';
-        ctx!.fill();
-        ctx!.closePath();
+        // Draw ball as pumpkin image
+        if (pumpkinImage.complete) {
+            ctx!.drawImage(
+                pumpkinImage,
+                ball.x - ball.radius,
+                ball.y - ball.radius,
+                ball.radius * 2,
+                ball.radius * 2
+            );
+        } else {
+            // Fallback: Draw orange circle if image not loaded
+            ctx!.beginPath();
+            ctx!.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx!.fillStyle = '#FF6B35'; // Pumpkin orange
+            ctx!.fill();
+            ctx!.closePath();
+        }
 
-        // Draw net
+        // Draw net with autumn beige color
         ctx!.beginPath();
         ctx!.setLineDash([10, 15]);
         ctx!.moveTo(canvas.width / 2, 0);
         ctx!.lineTo(canvas.width / 2, canvas.height);
-        ctx!.strokeStyle = 'white';
+        ctx!.strokeStyle = '#D4A574'; // Autumn beige
         ctx!.lineWidth = 2;
         ctx!.stroke();
         ctx!.closePath();
         ctx!.setLineDash([]); // Reset line dash
 
-        // Draw scores
+        // Draw scores with autumn gold color
         ctx!.font = '45px sans-serif';
+        ctx!.fillStyle = '#FFD700'; // Gold color
         ctx!.fillText(player1.score.toString(), canvas.width / 4, 50);
         ctx!.fillText(player2.score.toString(), (canvas.width / 4) * 3, 50);
-    }
 
         // Draw player names and game mode info
         ctx!.font = '20px sans-serif';
         ctx!.textAlign = 'center';
-        ctx!.fillStyle = 'white';
+        ctx!.fillStyle = '#FFD700'; // Autumn gold
         ctx!.fillText(player1Alias, canvas.width / 4, canvas.height - 20);
-        ctx!.fillText(player2Alias, (canvas.width / 4) * 3, canvas.height - 20);
+        // Dynamically show current AI difficulty
+        const player2DisplayName = isAIMode ? `AI (${aiStatus.difficulty})` : player2Alias;
+        ctx!.fillText(player2DisplayName, (canvas.width / 4) * 3, canvas.height - 20);
         
         // Enhanced AI status indicators
         if (isAIMode && ctx) {
@@ -1030,14 +1065,14 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             
             ctx.font = '12px Arial';
             ctx.textAlign = 'left';
-            ctx.fillStyle = '#00ff00';
+            ctx.fillStyle = '#FF8C00'; // Dark orange for autumn theme
             ctx.fillText(`AI: ${aiStatus.difficulty.toUpperCase()}`, aiX, aiY - 10);
             
             // AI status badge
-            const badgeColor = aiStatus.isActive ? '#00ff00' : '#ff0000';
+            const badgeColor = aiStatus.isActive ? '#FF6B35' : '#8B4513'; // Autumn colors
             ctx.fillStyle = badgeColor;
             ctx.fillRect(aiX, aiY - 5, 8, 8);
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#FFD700'; // Gold text
             ctx.font = '10px Arial';
             ctx.fillText(aiStatus.isActive ? 'ON' : 'OFF', aiX + 12, aiY + 2);
             
@@ -1047,19 +1082,19 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
             const barHeight = 6;
             
             // Accuracy bar background
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillStyle = 'rgba(139, 69, 19, 0.5)'; // Brown background
             ctx.fillRect(aiX, barY, barWidth, barHeight);
             
-            // Accuracy bar fill
+            // Accuracy bar fill with autumn colors
             const accuracyWidth = (aiStatus.accuracy * barWidth);
-            const accuracyColor = aiStatus.accuracy > 0.8 ? '#00ff00' : 
-                                aiStatus.accuracy > 0.5 ? '#ffff00' : '#ff4444';
+            const accuracyColor = aiStatus.accuracy > 0.8 ? '#FFD700' :  // Gold for high accuracy
+                                aiStatus.accuracy > 0.5 ? '#FF8C00' : '#CC5500'; // Orange gradients
             ctx.fillStyle = accuracyColor;
             ctx.fillRect(aiX, barY, accuracyWidth, barHeight);
             
             // Accuracy label
             ctx.font = '8px Arial';
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#FFD700'; // Gold text
             ctx.fillText(`Accuracy: ${Math.round(aiStatus.accuracy * 100)}%`, aiX, barY - 2);
             
             // Animated thinking indicator
@@ -1067,20 +1102,20 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 const thinkTime = Date.now() - aiStatus.thinkingStartTime;
                 const pulse = Math.sin(thinkTime / 200) * 0.5 + 0.5;
                 
-                // Pulsing thought bubble
-                ctx.fillStyle = `rgba(255, 255, 0, ${pulse * 0.8})`;
+                // Pulsing thought bubble with autumn colors
+                ctx.fillStyle = `rgba(255, 140, 0, ${pulse * 0.8})`; // Orange pulse
                 ctx.beginPath();
                 ctx.arc(aiX + 40, aiY - 30, 15 + (pulse * 5), 0, Math.PI * 2);
                 ctx.fill();
                 
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = '#3D2817'; // Dark brown
                 ctx.font = '8px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText('?', aiX + 40, aiY - 26);
                 
                 // Ball trajectory prediction line with animation
                 if (ball.dx !== 0 && ball.dy !== 0) {
-                    ctx.strokeStyle = `rgba(0, 255, 0, ${pulse * 0.5})`;
+                    ctx.strokeStyle = `rgba(255, 107, 53, ${pulse * 0.5})`; // Orange trajectory
                     ctx.lineWidth = 1;
                     ctx.setLineDash([5, 5]);
                     ctx.beginPath();
@@ -1118,8 +1153,8 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 const moveOpacity = Math.max(0, 1 - (moveAge / 1000));
                 
                 const moveColor = aiStatus.lastMove === 'up' ? 
-                    `rgba(0, 150, 255, ${moveOpacity})` : 
-                    `rgba(255, 150, 0, ${moveOpacity})`;
+                    `rgba(255, 140, 0, ${moveOpacity})` :  // Dark orange
+                    `rgba(255, 107, 53, ${moveOpacity})`; // Pumpkin orange
                 
                 // Animated arrow indicator
                 const arrowY = aiStatus.lastMove === 'up' ? aiY - 25 : aiY + player2.height + 15;
@@ -1144,6 +1179,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                 ctx.fill();
             }
         }
+    }
 
     let animationFrameId: number;
     
