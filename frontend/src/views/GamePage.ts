@@ -32,7 +32,6 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         <div class="text-center flex flex-col items-center gap-4">
            <header class="w-full max-w-3xl">
                <h1 class="text-3xl font-bold mb-1 text-center">${translate('Ping Pong', 'Ping Pong', 'Ping Pong')}</h1>
-               <p class="text-gray-600 text-sm text-center">${translate('Get ready to play!', 'Mach dich bereit zum Spielen!', 'Préparez-vous à jouer!')}</p>
            </header>
 
            ${isAIMode ? `
@@ -59,21 +58,34 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                    <span class="font-semibold" id="player2Name">${player2Alias}</span>
                </div>
 
-               <p class="text-gray-600 text-sm mb-3 text-center">
-                   ${isAIMode ?
-                       translate('W/S keys to control your paddle', 'W/S Tasten um dein Paddle zu steuern', 'Touches W/S pour contrôler votre raquette') :
-                       translate('Player 1: W/S keys | Player 2: Arrow Up/Down keys', 'Spieler 1: W/S Tasten | Spieler 2: Pfeiltasten Hoch/Runter', 'Joueur 1 : Touches W/S | Joueur 2 : Touches Haut/Bas')
-                   }
-               </p>
-
                ${isAIMode ? `
                <div class="text-sm text-gray-600 mb-2 text-center">
                    <span id="aiStatsDisplay">AI Performance: Loading...</span>
                </div>
                ` : ''}
 
-               <div class="flex justify-center">
+               <div class="flex justify-center" style="position: relative;">
                    <canvas id="pongCanvas" style="background: #3D2817; border: 4px solid #8B4513; border-radius: 8px;"></canvas>
+                   
+                   <!-- Pre-game Popup -->
+                   <div id="preGamePopup" class="game-popup-overlay">
+                       <div class="game-popup-content">
+                           <h2 class="game-popup-title">${translate('Get ready to play!', 'Mach dich bereit zum Spielen!', 'Préparez-vous à jouer!')}</h2>
+                           <div class="game-popup-score">
+                               <span class="font-semibold">${player1Alias}</span>
+                               <span class="text-xl font-bold">0 - 0</span>
+                               <span class="font-semibold" id="popupPlayer2Name">${player2Alias}</span>
+                           </div>
+                           <div class="game-popup-instructions">
+                               ${isAIMode ?
+                                   `<p>${translate('W/S keys to control your paddle', 'W/S Tasten um dein Paddle zu steuern', 'Touches W/S pour contrôler votre raquette')}</p>` :
+                                   `<p>${translate('Player 1: W/S keys', 'Spieler 1: W/S Tasten', 'Joueur 1 : Touches W/S')}</p>
+                                    <p>${translate('Player 2: Arrow Up/Down keys', 'Spieler 2: Pfeiltasten Hoch/Runter', 'Joueur 2 : Touches Haut/Bas')}</p>`
+                               }
+                           </div>
+                           <button id="startGameBtn" class="game-popup-button">${translate('Start Game', 'Spiel starten', 'Commencer le jeu')}</button>
+                       </div>
+                   </div>
                </div>
            </section>
         </div>
@@ -236,6 +248,11 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         }
         if (hardBtn) {
             hardBtn.className = `ai-difficulty-btn ${gameOptions.aiDifficulty === 'hard' ? 'active' : ''}`;
+        }
+        
+        const popupPlayer2Name = document.getElementById('popupPlayer2Name');
+        if (popupPlayer2Name && isAIMode) {
+            popupPlayer2Name.textContent = `AI (${gameOptions.aiDifficulty || 'medium'})`;
         }
         
         // reinitialize AI with
@@ -714,14 +731,73 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     }
 
     function startGame() {
-        // For AI games, start immediately. For PvP, add small delay
-        const delay = isAIMode ? 100 : 1000;
-        setTimeout(() => {
-            // Start the ball in a random direction
-            ball.dx = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
-            ball.dy = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
-            console.log(`🎾 Ball started with velocity (${ball.dx}, ${ball.dy})`);
-        }, delay);
+        // Show pre-game popup
+        showPreGamePopup();
+    }
+
+    function showPreGamePopup() {
+        const popup = document.getElementById('preGamePopup');
+        const startBtn = document.getElementById('startGameBtn');
+        
+        if (!popup || !startBtn) return;
+        
+        popup.classList.add('show');
+        
+        startBtn.onclick = () => {
+            // Hide the popup immediately
+            popup.classList.remove('show');
+            
+            // Show countdown on canvas
+            showCanvasCountdown();
+        };
+    }
+    
+    function showCanvasCountdown() {
+        const canvasContainer = canvas.parentElement;
+        if (!canvasContainer) return;
+        
+        // Create countdown overlay element
+        const countdownElement = document.createElement('div');
+        countdownElement.className = 'canvas-countdown';
+        countdownElement.style.position = 'absolute';
+        countdownElement.style.top = '50%';
+        countdownElement.style.left = '50%';
+        countdownElement.style.transform = 'translate(-50%, -50%)';
+        
+        // Position it relative to canvas
+        const canvasRect = canvas.getBoundingClientRect();
+        canvasContainer.style.position = 'relative';
+        canvasContainer.appendChild(countdownElement);
+        
+        let countdown = 3;
+        countdownElement.textContent = countdown.toString();
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                countdownElement.textContent = countdown.toString();
+                // Re-trigger animation
+                countdownElement.style.animation = 'none';
+                setTimeout(() => {
+                    countdownElement.style.animation = 'countdownPulse 1s ease-in-out';
+                }, 10);
+            } else {
+                countdownElement.textContent = translate('GO!', 'LOS!', 'GO!');
+                countdownElement.style.animation = 'none';
+                setTimeout(() => {
+                    countdownElement.style.animation = 'countdownPulse 1s ease-in-out';
+                }, 10);
+                clearInterval(countdownInterval);
+                
+                setTimeout(() => {
+                    countdownElement.remove();
+                    // Start the ball in a random direction
+                    ball.dx = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
+                    ball.dy = (Math.random() > 0.5 ? 1 : -1) * INITIAL_BALL_SPEED;
+                    console.log(`🎾 Ball started with velocity (${ball.dx}, ${ball.dy})`);
+                }, 1000);
+            }
+        }, 1000);
     }
 
     // Function to validate current game state with server

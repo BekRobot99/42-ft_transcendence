@@ -10,8 +10,26 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     container.innerHTML = `
         <div class="text-center flex flex-col items-center">
            <h1 class="text-3xl font-bold mb-2">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
-            <p class="text-gray-600 mb-4">${translate('Player 1: A/D keys | Player 2: Left/Right Arrow keys', 'Spieler 1: A/D Tasten | Spieler 2: Pfeiltasten Links/Rechts', 'Joueur 1 : Touches A/D | Joueur 2 : Touches Gauche/Droite')}</p>
-            <canvas id="pongCanvas3D" class="bg-black border-2 border-white"></canvas>
+            <div style="position: relative; display: inline-block;">
+                <canvas id="pongCanvas3D" class="bg-black border-2 border-white"></canvas>
+                
+                <!-- Pre-game Popup -->
+                <div id="preGamePopup3D" class="game-popup-overlay">
+                    <div class="game-popup-content">
+                        <h2 class="game-popup-title">${translate('Get ready to play!', 'Mach dich bereit zum Spielen!', 'Préparez-vous à jouer!')}</h2>
+                        <div class="game-popup-score">
+                            <span class="font-semibold">${player1Alias}</span>
+                            <span class="text-xl font-bold">0 - 0</span>
+                            <span class="font-semibold">${player2Alias}</span>
+                        </div>
+                        <div class="game-popup-instructions">
+                            <p>${translate('Player 1: A/D keys', 'Spieler 1: A/D Tasten', 'Joueur 1 : Touches A/D')}</p>
+                            <p>${translate('Player 2: Left/Right Arrow keys', 'Spieler 2: Pfeiltasten Links/Rechts', 'Joueur 2 : Touches Gauche/Droite')}</p>
+                        </div>
+                        <button id="startGameBtn3D" class="game-popup-button">${translate('Start Game', 'Spiel starten', 'Commencer le jeu')}</button>
+                    </div>
+                </div>
+            </div>
         </div>
     `;
 
@@ -139,9 +157,64 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     }
     
     function startGame() {
-        setTimeout(() => {
-            const direction = Math.random() > 0.5 ? 1 : -1;
-            resetBall(direction);
+        showPreGamePopup();
+    }
+    
+    function showPreGamePopup() {
+        const popup = document.getElementById('preGamePopup3D');
+        const startBtn = document.getElementById('startGameBtn3D');
+        
+        if (!popup || !startBtn) return;
+        
+        popup.classList.add('show');
+        
+        startBtn.onclick = () => {
+            // hide popup
+            popup.classList.remove('show');
+            showCanvasCountdown();
+        };
+    }
+    
+    function showCanvasCountdown() {
+        const canvasContainer = canvas.parentElement;
+        if (!canvasContainer) return;
+        
+        // countdown element
+        const countdownElement = document.createElement('div');
+        countdownElement.className = 'canvas-countdown';
+        countdownElement.style.position = 'absolute';
+        countdownElement.style.top = '50%';
+        countdownElement.style.left = '50%';
+        countdownElement.style.transform = 'translate(-50%, -50%)';
+        
+        canvasContainer.style.position = 'relative';
+        canvasContainer.appendChild(countdownElement);
+        
+        let countdown = 3;
+        countdownElement.textContent = countdown.toString();
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                countdownElement.textContent = countdown.toString();
+                countdownElement.style.animation = 'none';
+                setTimeout(() => {
+                    countdownElement.style.animation = 'countdownPulse 1s ease-in-out';
+                }, 10);
+            } else {
+                countdownElement.textContent = translate('GO!', 'LOS!', 'GO!');
+                countdownElement.style.animation = 'none';
+                setTimeout(() => {
+                    countdownElement.style.animation = 'countdownPulse 1s ease-in-out';
+                }, 10);
+                clearInterval(countdownInterval);
+                
+                setTimeout(() => {
+                    countdownElement.remove();
+                    const direction = Math.random() > 0.5 ? 1 : -1;
+                    resetBall(direction);
+                }, 1000);
+            }
         }, 1000);
     }
 
