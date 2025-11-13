@@ -248,24 +248,6 @@ class App {
                     cancelAnimationFrame(pumpkinAnimationId);
                     pumpkin.parentNode?.removeChild(pumpkin);
                 }
-                
-                // game nav bar
-                const gameNav = document.createElement('div');
-                gameNav.className = 'top-game-nav';
-                
-                const gameNavLeft = document.createElement('div');
-                gameNavLeft.className = 'top-game-nav-left';
-                
-                const backButton = document.createElement('button');
-                backButton.className = 'autumn-button-nav';
-                backButton.textContent = '← ' + translate('Back to Game Mode', 'Zurück zum Spielmodus', 'Retour au mode de jeu');
-                backButton.addEventListener('click', () => {
-                    this.navigateTo('/game');
-                });
-                gameNavLeft.appendChild(backButton);
-                
-                gameNav.appendChild(gameNavLeft);
-                document.body.insertBefore(gameNav, document.body.firstChild);
 
                 if (gameType === '2d') {
                     const options: any = { mode: mode };
@@ -360,7 +342,6 @@ class App {
             
             tournamentButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                document.body.removeChild(topNav);
                 this.navigateTo('/tournament');
             });
 
@@ -521,7 +502,6 @@ class App {
             
             centerTournamentButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                document.body.removeChild(topNav);
                 this.navigateTo('/tournament');
             });
 

@@ -26,6 +26,10 @@ export function renderNavigationBar(app: any): void {
     // Create and add buttons to left side
     const navLinks = [
         {
+            text: translate('Game Mode', 'Spielmodus', 'Mode de jeu'),
+            onClick: (e: Event) => app.navigateTo('/game', e)
+        },
+        {
             text: translate('Chat', 'Chat', 'Chat'),
             onClick: (e: Event) => app.navigateTo('/chat', e)
         },
