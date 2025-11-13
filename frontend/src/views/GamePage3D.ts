@@ -4,23 +4,31 @@ import { translate } from "../languageService.js";
 declare const BABYLON: any;
 
 export function renderGamePage3D(container: HTMLElement, tournamentOptions: { player1Name: string, player2Name: string, onGameEnd: (result: { winnerName: string, score1: number, score2: number }) => void }): () => void {
-    const player1Alias = tournamentOptions.player1Name;
-    const player2Alias = tournamentOptions.player2Name;
-
     container.innerHTML = `
         <div class="text-center flex flex-col items-center">
-           <h1 class="text-3xl font-bold mb-2">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
-            <div style="position: relative; display: inline-block;">
-                <canvas id="pongCanvas3D" class="bg-black border-2 border-white"></canvas>
-                
+            <h1 class="text-3xl font-bold mb-2">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
+            <!-- Top bar OUTSIDE the game window, with frame -->
+            <div id="game3DTopBar" style="position: relative; width: 800px; height: 44px; margin-bottom: 2px; z-index: 10; pointer-events: none; font-family: 'sans-serif'; border: 2px solid #8B4513; border-radius: 8px; background: #2a1a10; box-shadow: 0 2px 8px rgba(61,40,23,0.12);">
+                <div style="position: absolute; left: 0; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-end;">
+                    <span id="player1Label3D" style="color: #FFD700; font-size: 20px; font-weight: bold; margin-right: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 1</span>
+                </div>
+                <div style="position: absolute; left: 200px; top: 0; width: 400px; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <span id="scoreLabel3D" style="color: #FFD700; font-size: 28px; font-weight: bold; margin: 0 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">0 : 0</span>
+                </div>
+                <div style="position: absolute; left: 600px; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-start;">
+                    <span id="player2Label3D" style="color: #FFD700; font-size: 20px; font-weight: bold; margin-left: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 2</span>
+                </div>
+            </div>
+            <div style="position: relative; display: inline-block; width: 800px; height: 600px;">
+                <canvas id="pongCanvas3D" style="background: #3D2817; border: 4px solid #8B4513; border-radius: 8px;"></canvas>
                 <!-- Pre-game Popup -->
                 <div id="preGamePopup3D" class="game-popup-overlay">
                     <div class="game-popup-content">
                         <h2 class="game-popup-title">${translate('Get ready to play!', 'Mach dich bereit zum Spielen!', 'Préparez-vous à jouer!')}</h2>
                         <div class="game-popup-score">
-                            <span class="font-semibold">${player1Alias}</span>
-                            <span class="text-xl font-bold">0 - 0</span>
-                            <span class="font-semibold">${player2Alias}</span>
+                            <span class="font-semibold">Player 1</span>
+                            <span class="text-xl font-bold">0 : 0</span>
+                            <span class="font-semibold">Player 2</span>
                         </div>
                         <div class="game-popup-instructions">
                             <p>${translate('Player 1: A/D keys', 'Spieler 1: A/D Tasten', 'Joueur 1 : Touches A/D')}</p>
@@ -45,6 +53,9 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);
 
+    // same like 2d
+    scene.clearColor = new BABYLON.Color4(0.239, 0.157, 0.090, 1.0); // #3D2817
+
     // Camera
     const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 20, new BABYLON.Vector3(0, 0, 0), scene);
     camera.attachControl(canvas, true);
@@ -52,9 +63,14 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     camera.lowerRadiusLimit = 15;
     camera.upperRadiusLimit = 50;
     
-    // Lighting
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 0.7;
+    light.intensity = 1.0;
+    light.diffuse = new BABYLON.Color3(1, 0.9, 0.7); // Warm light
+    light.groundColor = new BABYLON.Color3(0.4, 0.3, 0.2); // Brown ground reflection
+    
+    const pointLight = new BABYLON.PointLight("pointLight", new BABYLON.Vector3(0, 8, 0), scene);
+    pointLight.intensity = 0.5;
+    pointLight.diffuse = new BABYLON.Color3(1, 0.85, 0.6); // Soft warm glow
 
     // Game constants
     const TABLE_WIDTH = 10;
@@ -73,37 +89,125 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     let player2Score = 0;
     let gameRunning = false;
 
-    // Game Table
+    // Game Table 
     const table = BABYLON.MeshBuilder.CreateBox("table", { width: TABLE_WIDTH, height: 0.2, depth: TABLE_DEPTH }, scene);
     table.position.y = -PADDLE_HEIGHT;
     const tableMaterial = new BABYLON.StandardMaterial("tableMat", scene);
-    tableMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.5, 0.9);
+    tableMaterial.diffuseColor = new BABYLON.Color3(100/255, 75/255, 47/255);
+    tableMaterial.specularColor = new BABYLON.Color3(0.3, 0.2, 0.1); 
     table.material = tableMaterial;
 
-    // Center line
+    // Center line 
     const centerLine = BABYLON.MeshBuilder.CreateLines("centerLine", {
         points: [new BABYLON.Vector3(-TABLE_WIDTH / 2, -PADDLE_HEIGHT + 0.11, 0), new BABYLON.Vector3(TABLE_WIDTH / 2, -PADDLE_HEIGHT + 0.11, 0)],
     }, scene);
-    centerLine.color = BABYLON.Color3.White();
+    centerLine.color = new BABYLON.Color3(0.95, 0.8, 0.6);
 
     // Paddles
     const paddle1 = BABYLON.MeshBuilder.CreateBox("paddle1", { width: PADDLE_WIDTH, height: PADDLE_HEIGHT, depth: PADDLE_DEPTH }, scene);
     paddle1.position.z = -TABLE_DEPTH / 2 + 1;
     const paddle1Material = new BABYLON.StandardMaterial("p1Mat", scene);
-    paddle1Material.diffuseColor = new BABYLON.Color3(1, 0, 0);
+    paddle1Material.diffuseColor = new BABYLON.Color3(168/255, 97/255, 50/255);
+    paddle1Material.specularColor = new BABYLON.Color3(0.3, 0.2, 0.1); 
+    paddle1Material.emissiveColor = new BABYLON.Color3(0.08, 0.04, 0.02);
     paddle1.material = paddle1Material;
 
     const paddle2 = BABYLON.MeshBuilder.CreateBox("paddle2", { width: PADDLE_WIDTH, height: PADDLE_HEIGHT, depth: PADDLE_DEPTH }, scene);
     paddle2.position.z = TABLE_DEPTH / 2 - 1;
     const paddle2Material = new BABYLON.StandardMaterial("p2Mat", scene);
-    paddle2Material.diffuseColor = new BABYLON.Color3(0, 0, 1);
+    paddle2Material.diffuseColor = new BABYLON.Color3(129/255, 64/255, 28/255);
+    paddle2Material.specularColor = new BABYLON.Color3(0.25, 0.15, 0.08); 
+    paddle2Material.emissiveColor = new BABYLON.Color3(0.05, 0.03, 0.02);
     paddle2.material = paddle2Material;
 
-    // Ball
-    const ball = BABYLON.MeshBuilder.CreateSphere("ball", { diameter: BALL_RADIUS * 2 }, scene);
+    // pumpkin ball
+    const ball = BABYLON.MeshBuilder.CreateSphere("ball", { 
+        diameter: BALL_RADIUS * 2, 
+        segments: 32,
+        diameterY: BALL_RADIUS * 1.6  // flattened
+    }, scene);
+    
+    // pumpkin lines
+    const positions = ball.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+    if (positions) {
+        for (let i = 0; i < positions.length; i += 3) {
+            const x = positions[i];
+            const y = positions[i + 1];
+            const z = positions[i + 2];
+            
+            // around the pumpkin
+            const angle = Math.atan2(z, x);
+            const ridgeEffect = Math.cos(angle * 8) * 0.08;
+            const distance = Math.sqrt(x * x + z * z);
+            if (distance > 0) {
+                positions[i] += (x / distance) * ridgeEffect;
+                positions[i + 2] += (z / distance) * ridgeEffect;
+            }
+        }
+        ball.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+    }
+    
     const ballMaterial = new BABYLON.StandardMaterial("ballMat", scene);
-    ballMaterial.diffuseColor = BABYLON.Color3.White();
+    
+    const pumpkinTexture = new BABYLON.DynamicTexture("pumpkinTexture", 512, scene);
+    const ctx = pumpkinTexture.getContext();
+    
+    const gradient = ctx.createRadialGradient(256, 256, 50, 256, 256, 300);
+    gradient.addColorStop(0, '#d37e47');
+    gradient.addColorStop(0.7, '#c5733f');
+    gradient.addColorStop(1, '#b76838');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 512);
+    
+    ctx.strokeStyle = '#a85f32';
+    ctx.lineWidth = 12;
+    for (let i = 0; i < 8; i++) {
+        const x = (i * 512) / 8 + 32;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.bezierCurveTo(x - 15, 128, x + 15, 384, x, 512);
+        ctx.stroke();
+    }
+    
+    ctx.fillStyle = 'rgba(183, 104, 56, 0.3)';
+    for (let i = 0; i < 30; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const size = Math.random() * 20 + 10;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    pumpkinTexture.update();
+    
+    ballMaterial.diffuseTexture = pumpkinTexture;
+    ballMaterial.diffuseColor = new BABYLON.Color3(211/255, 126/255, 71/255);
+    ballMaterial.specularColor = new BABYLON.Color3(0.15, 0.08, 0.04);
+    ballMaterial.specularPower = 10;
+    ballMaterial.emissiveColor = new BABYLON.Color3(0, 0, 0);
+    ballMaterial.backFaceCulling = false;
+    
     ball.material = ballMaterial;
+    
+    // pumpkin stem
+    const stem = BABYLON.MeshBuilder.CreateCylinder("stem", {
+        height: BALL_RADIUS * 0.5,
+        diameterTop: BALL_RADIUS * 0.15,
+        diameterBottom: BALL_RADIUS * 0.25,
+        tessellation: 8
+    }, scene);
+    
+    // top of pumpkin
+    stem.position.y = BALL_RADIUS * 0.9;
+    stem.parent = ball;
+    
+    const stemMaterial = new BABYLON.StandardMaterial("stemMat", scene);
+    stemMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.25, 0.15);
+    stemMaterial.specularColor = new BABYLON.Color3(0.2, 0.12, 0.08);
+    stemMaterial.emissiveColor = new BABYLON.Color3(0.05, 0.03, 0.02);
+    stem.material = stemMaterial;
+    
     let ballVelocity = new BABYLON.Vector3(0, 0, 0);
 
     // Keyboard state
@@ -113,34 +217,12 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     window.addEventListener('keydown', keyDownHandler);
     window.addEventListener('keyup', keyUpHandler);
 
-    // GUI for scores
-    const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-    // Player 1 Score (Red, Bottom Paddle)
-    const player1ScoreText = new BABYLON.GUI.TextBlock();
-    player1ScoreText.text = `${player1Alias}: ${player1Score}`;
-    player1ScoreText.color = "red";
-    player1ScoreText.fontSize = 24;
-    player1ScoreText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-    player1ScoreText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    player1ScoreText.left = "20px";
-    player1ScoreText.top = "-20px";
-    advancedTexture.addControl(player1ScoreText);
-
-    // Player 2 Score (Blue, Top Paddle)
-    const player2ScoreText = new BABYLON.GUI.TextBlock();
-    player2ScoreText.text = `${player2Alias}: ${player2Score}`;
-    player2ScoreText.color = "cyan"; // Brighter blue for visibility
-    player2ScoreText.fontSize = 24;
-    player2ScoreText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-    player2ScoreText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-    player2ScoreText.left = "20px";
-    player2ScoreText.top = "20px";
-    advancedTexture.addControl(player2ScoreText);
-
+    // Remove Babylon GUI score display, use HTML overlay instead
     function updateScoreText() {
-        player1ScoreText.text = `${player1Alias}: ${player1Score}`;
-        player2ScoreText.text = `${player2Alias}: ${player2Score}`;
+        const scoreLabel = document.getElementById('scoreLabel3D');
+        if (scoreLabel) {
+            scoreLabel.textContent = `${player1Score} : ${player2Score}`;
+        }
     }
 
     function resetBall(direction: number) {
@@ -220,9 +302,9 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
 
     function checkWinCondition() {
         if (player1Score >= WINNING_SCORE) {
-            endGame(player1Alias);
+        endGame('Player 1');
         } else if (player2Score >= WINNING_SCORE) {
-            endGame(player2Alias);
+        endGame('Player 2');
         }
     }
 
@@ -252,6 +334,12 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
 
         // Ball movement
         ball.position.addInPlace(ballVelocity);
+        
+        // pumpkin rotation
+        if (ballVelocity.length() > 0) {
+            ball.rotation.x += ballVelocity.z * 0.5;
+            ball.rotation.z -= ballVelocity.x * 0.5;
+        }
 
         // Wall collisions (left/right)
         if (ball.position.x >= TABLE_WIDTH / 2 - BALL_RADIUS || ball.position.x <= -TABLE_WIDTH / 2 + BALL_RADIUS) {

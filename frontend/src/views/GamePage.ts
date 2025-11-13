@@ -51,29 +51,29 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
            </div>
            ` : ''}
 
+           <!-- Top bar OUTSIDE the game window, with frame -->
+           <div id="game2DTopBar" style="position: relative; width: 800px; height: 44px; margin-bottom: 2px; z-index: 10; pointer-events: none; font-family: 'sans-serif'; border: 2px solid #8B4513; border-radius: 8px; background: #2a1a10; box-shadow: 0 2px 8px rgba(61,40,23,0.12);">
+               <div style="position: absolute; left: 0; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-end;">
+                   <span id="player1Label2D" style="color: #FFD700; font-size: 20px; font-weight: bold; margin-right: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">${player1Alias}</span>
+               </div>
+               <div style="position: absolute; left: 200px; top: 0; width: 400px; height: 100%; display: flex; align-items: center; justify-content: center;">
+                   <span id="scoreLabel2D" style="color: #FFD700; font-size: 28px; font-weight: bold; margin: 0 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">0 : 0</span>
+               </div>
+               <div style="position: absolute; left: 600px; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-start;">
+                   <span id="player2Label2D" style="color: #FFD700; font-size: 20px; font-weight: bold; margin-left: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">${player2Alias}</span>
+               </div>
+           </div>
+
            <section class="w-full max-w-3xl">
-               <div class="mb-3 flex items-center justify-between">
-                   <span class="font-semibold">${player1Alias}</span>
-                   <span class="text-xl font-bold" id="scoreDisplay">0 - 0</span>
-                   <span class="font-semibold" id="player2Name">${player2Alias}</span>
-               </div>
-
-               ${isAIMode ? `
-               <div class="text-sm text-gray-600 mb-2 text-center">
-                   <span id="aiStatsDisplay">AI Performance: Loading...</span>
-               </div>
-               ` : ''}
-
-               <div class="flex justify-center" style="position: relative;">
+               <div style="position: relative; display: flex; justify-content: center; width: 800px;">
                    <canvas id="pongCanvas" style="background: #3D2817; border: 4px solid #8B4513; border-radius: 8px;"></canvas>
-                   
                    <!-- Pre-game Popup -->
                    <div id="preGamePopup" class="game-popup-overlay">
                        <div class="game-popup-content">
                            <h2 class="game-popup-title">${translate('Get ready to play!', 'Mach dich bereit zum Spielen!', 'Préparez-vous à jouer!')}</h2>
                            <div class="game-popup-score">
                                <span class="font-semibold">${player1Alias}</span>
-                               <span class="text-xl font-bold">0 - 0</span>
+                               <span class="text-xl font-bold">0 : 0</span>
                                <span class="font-semibold" id="popupPlayer2Name">${player2Alias}</span>
                            </div>
                            <div class="game-popup-instructions">
@@ -702,8 +702,12 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
 
     function updateScoreDisplay() {
         const scoreDisplay = document.getElementById('scoreDisplay');
+        const scoreLabel2D = document.getElementById('scoreLabel2D');
+        if (scoreLabel2D) {
+            scoreLabel2D.textContent = `${player1.score} : ${player2.score}`;
+        }
         if (scoreDisplay) {
-            scoreDisplay.textContent = `${player1.score} - ${player2.score}`;
+            scoreDisplay.textContent = `${player1.score} : ${player2.score}`;
         }
     }
 
@@ -1118,20 +1122,9 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         ctx!.closePath();
         ctx!.setLineDash([]); // Reset line dash
 
-        // Draw scores with autumn gold color
-        ctx!.font = '45px sans-serif';
-        ctx!.fillStyle = '#FFD700'; // Gold color
-        ctx!.fillText(player1.score.toString(), canvas.width / 4, 50);
-        ctx!.fillText(player2.score.toString(), (canvas.width / 4) * 3, 50);
-
-        // Draw player names and game mode info
-        ctx!.font = '20px sans-serif';
-        ctx!.textAlign = 'center';
-        ctx!.fillStyle = '#FFD700'; // Autumn gold
-        ctx!.fillText(player1Alias, canvas.width / 4, canvas.height - 20);
-        // Dynamically show current AI difficulty
-        const player2DisplayName = isAIMode ? `AI (${aiStatus.difficulty})` : player2Alias;
-        ctx!.fillText(player2DisplayName, (canvas.width / 4) * 3, canvas.height - 20);
+    // ...existing code...
+    // Draw scores with autumn gold color (now handled by top bar)
+    // ...existing code...
         
         // Enhanced AI status indicators
         if (isAIMode && ctx) {
