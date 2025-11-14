@@ -121,7 +121,7 @@ function renderCreationForm() {
 
 function renderLobby() {
     const lobbyContainer = document.createElement('div');
-    lobbyContainer.className = 'autumn-glass w-full max-w-md mx-auto';
+    lobbyContainer.className = 'autumn-glass tournament-lobby-container';
     const participants = tournamentState.participants;
     const requiredPlayers = tournamentState.number_of_players;
     const canStart = participants.length === requiredPlayers;
@@ -147,7 +147,7 @@ function renderLobby() {
         form.id = 'add-participant-form';
         form.className = 'lobby-form';
         form.innerHTML = `
-            <input type="text" name="alias" placeholder="${translate('Enter player alias', 'Spieler-Alias eingeben', 'Entrez l\'alias du joueur')}" required minlength="3" maxlength="16" class="autumn-input" style="flex:1">
+            <input type="text" name="alias" placeholder="${translate('Enter player alias', 'Spieler-Alias eingeben', 'Entrez l\'alias du joueur')}" required minlength="3" maxlength="16" class="autumn-input">
             <button type="submit" class="tournament-button-full">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</button>
         `;
         actionsContainer.appendChild(form);
