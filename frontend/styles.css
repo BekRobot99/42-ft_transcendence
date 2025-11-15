@@ -73,6 +73,21 @@ body.autumn-background::before {
     background: transparent;
 }
 
+/* Full width for tournament bracket */
+#page-content.tournament-active {
+    max-width: 100%;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* containers */
 .autumn-container {
     position: relative;
@@ -804,12 +819,143 @@ body.autumn-background::before {
     box-sizing: border-box;
 }
 
+/* tournament bracket */
+.tournament-bracket-container {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    overflow-x: auto;
+    background: none;
+    padding: 2rem 0;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.tournament-bracket-round {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    flex: 1;
+    gap: 2.5rem;
+    padding: 0 1rem;
+}
+
+.tournament-bracket-round-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #92400e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px #fff8;
+}
+
+.tournament-bracket-match {
+    background: #fef3c7;
+    border: 2px solid #d97706;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0px #ba6317;
+    min-width: 180px;
+    min-height: 80px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    transition: box-shadow 0.2s;
+}
+
+.tournament-bracket-match .winner {
+    color: #d97706;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 2px #fff8;
+}
+
+.tournament-bracket-match .loser {
+    color: #b0b0b0;
+    font-weight: normal;
+}
+
+.tournament-bracket-match .vs {
+    color: #92400e;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0.2rem 0;
+}
+
+.tournament-bracket-champion {
+    background: #ffe066;
+    border: 2px solid #d97706;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0px #ba6317;
+    min-width: 180px;
+    min-height: 80px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #92400e;
+    text-shadow: 1px 1px 2px #fff8;
+    position: relative;
+}
+
+.tournament-bracket-connector {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    width: 40px;
+    height: 2px;
+    background: #d97706;
+    z-index: 1;
+}
+
+@media (max-width: 900px) {
+    .tournament-bracket-container {
+        flex-direction: column;
+        width: 100vw;
+        overflow-x: auto;
+        padding: 1rem 0;
+    }
+    .tournament-bracket-round {
+        flex-direction: row;
+        min-width: unset;
+        gap: 1.5rem;
+        padding: 0.5rem 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .tournament-bracket-container {
+        padding: 0.5rem 0;
+    }
+    .tournament-bracket-match, .tournament-bracket-champion {
+        min-width: 120px;
+        min-height: 60px;
+        padding: 0.5rem 0.7rem;
+        font-size: 0.95rem;
+    }
+    .tournament-bracket-round-title {
+        font-size: 1rem;
+        margin-bottom: 0.7rem;
+    }
+}
 .tournament-lobby-container .autumn-title,
 .tournament-lobby-container .autumn-subtitle {
     flex-shrink: 0;
     overflow-wrap: break-word;
     word-break: break-word;
-    white-space: normal; /* for long names */
+    white-space: normal;
 }
 
 .tournament-lobby-container #lobby-actions,
@@ -906,6 +1052,142 @@ body.autumn-background::before {
 
 .lobby-form .autumn-input {
     width: 100%;
+}
+
+/* --- Tournament Bracket Full-Width Layout --- */
+.tournament-bracket-wrapper {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem 2rem;
+}
+
+.tournament-bracket-wrapper .autumn-title {
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    color: #92400e;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+.tournament-bracket-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.tournament-bracket-container.split-first-round {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    max-width: 1800px;
+}
+
+.tournament-bracket-round.split-top {
+    order: -2;
+}
+
+.tournament-bracket-round.split-bottom {
+    order: -1;
+}
+
+.tournament-bracket-round:not(.split-top):not(.split-bottom) {
+    order: 0;
+}
+
+.tournament-bracket-round {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 250px;
+    gap: 2rem;
+}
+
+.tournament-bracket-round-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #92400e;
+    margin-bottom: 1rem;
+    text-align: center;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.tournament-bracket-match {
+    background: rgba(254, 243, 199, 0.95);
+    border: 3px solid #d97706;
+    border-radius: 16px;
+    box-shadow: 4px 4px 0px #ba6317;
+    min-width: 220px;
+    min-height: 100px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.tournament-bracket-match:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px #ba6317;
+}
+
+.tournament-bracket-match .winner {
+    color: #d97706;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.tournament-bracket-match .loser {
+    color: #9ca3af;
+    font-weight: normal;
+    font-size: 1rem;
+}
+
+.tournament-bracket-match .vs {
+    color: #92400e;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0.2rem 0;
+}
+
+.tournament-bracket-champion {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border: 3px solid #d97706;
+    border-radius: 16px;
+    box-shadow: 6px 6px 0px #ba6317;
+    min-width: 250px;
+    min-height: 120px;
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #92400e;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+    position: relative;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 @media (max-width: 640px) {

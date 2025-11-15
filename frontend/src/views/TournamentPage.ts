@@ -43,15 +43,17 @@ function render() {
     }
     appContainer.innerHTML = '';
 
-    const header = document.createElement('div');
-    header.className = 'w-full max-w-4xl mx-auto text-center';
-    appContainer.appendChild(header);
-
+    // full-width
+    const pageContent = document.getElementById('page-content');
+    
     if (!tournamentState) {
+        pageContent?.classList.remove('tournament-active');
         renderCreationForm();
     } else if (tournamentState.status === 'pending') {
+        pageContent?.classList.remove('tournament-active');
         renderLobby();
     } else {
+        pageContent?.classList.add('tournament-active');
         renderBracket();
     }
 }
@@ -197,54 +199,113 @@ function renderLobby() {
 }
 
 function renderBracket() {
-    const bracketContainer = document.createElement('div');
-    bracketContainer.className = 'w-full max-w-4xl mx-auto';
-    bracketContainer.innerHTML = `<h2 class="text-3xl font-bold mb-6 text-center">${tournamentState.name}</h2>`;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tournament-bracket-wrapper';
 
+    // title
+    const title = document.createElement('h2');
+    title.className = 'autumn-title';
+    title.textContent = tournamentState.name;
+    wrapper.appendChild(title);
+
+    // bracket container
+    const bracketContainer = document.createElement('div');
+    bracketContainer.className = 'tournament-bracket-container';
+
+    // rounds
     const rounds: { [key: number]: any[] } = {};
     tournamentState.matches.forEach((match: any) => {
-        if (!rounds[match.round]) rounds[match.round] = [];
-        (rounds[match.round] ?? []).push(match);
-    });
-
-    const bracketGrid = document.createElement('div');
-    bracketGrid.className = 'flex justify-center space-x-8';
-
-    Object.keys(rounds).sort().forEach(roundNumber => {
-        const roundEl = document.createElement('div');
-        roundEl.className = 'flex flex-col justify-around space-y-8';
-        roundEl.innerHTML = `<h3 class="text-xl font-semibold text-center mb-4">${translate('Round', 'Runde', 'Manche')} ${roundNumber}</h3>`;
-
-        const matches = rounds[parseInt(roundNumber)];
-        if (matches) {
-            matches.forEach((match: any) => {
-                const matchEl = document.createElement('div');
-                matchEl.className = 'p-4 border-2 border-black rounded-lg bg-gray-100 shadow-[4px_4px_0px_#000000]';
-                 const player1 = match.player1_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2 - 1)}</i>`;
-            const player2 = match.player2_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2)}</i>`;
-                
-                let content = `<div class="font-bold ${match.winner_id === match.player1_id ? 'text-green-600' : ''}">${player1}</div><div class="text-gray-500 my-1">vs</div><div class="font-bold ${match.winner_id === match.player2_id ? 'text-green-600' : ''}">${player2}</div>`;
-
-                 if (match.status === 'pending' && match.player1_id && match.player2_id && me && me.id === tournamentState.creator_id) {
-                     content += `<button data-match-id="${match.id}" class="play-match-btn autumn-button-small" style="margin-top:8px">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</button>`;
-                } else if (match.status === 'completed') {
-                    content += `<p class="text-sm text-center mt-2 text-green-700">${translate('Winner', 'Sieger', 'Gagnant')}: ${match.winner_alias}</p>`;
-                }
-                matchEl.innerHTML = content;
-                roundEl.appendChild(matchEl);
-            });
+        if (!rounds[match.round]) {
+            rounds[match.round] = [];
         }
-        bracketGrid.appendChild(roundEl);
+        rounds[match.round]!.push(match);
     });
 
-    bracketContainer.appendChild(bracketGrid);
+    const roundKeys = Object.keys(rounds).sort((a, b) => Number(a) - Number(b));
+    const isLargeTournament = rounds[1] && rounds[1].length >= 8;
 
-    if (tournamentState.status === 'completed') {
-        const winner = tournamentState.matches.find((m: any) => m.round === Object.keys(rounds).length)?.winner_alias;
-        bracketContainer.innerHTML += `<p class="text-4xl font-bold text-center mt-8 text-yellow-500">🏆 ${translate('Winner', 'Sieger', 'Gagnant')}: ${winner} 🏆</p>`;
+    if (isLargeTournament) {
+        bracketContainer.classList.add('split-first-round');
     }
 
-    appContainer?.appendChild(bracketContainer);
+    // vertical rounds
+    roundKeys.forEach((roundNumber, index) => {
+        const rNum = parseInt(roundNumber);
+        const matches = rounds[rNum];
+        
+        if (!matches) return;
+        
+        if (isLargeTournament && rNum === 1) {
+            const midpoint = Math.ceil(matches.length / 2);
+            
+            const roundElTop = document.createElement('div');
+            roundElTop.className = 'tournament-bracket-round split-top';
+            const roundTitleTop = document.createElement('div');
+            roundTitleTop.className = 'tournament-bracket-round-title';
+            roundTitleTop.textContent = `${translate('Round', 'Runde', 'Manche')} ${roundNumber}`;
+            roundElTop.appendChild(roundTitleTop);
+
+            matches.slice(0, midpoint).forEach((match: any) => {
+                roundElTop.appendChild(createMatchElement(match));
+            });
+            bracketContainer.appendChild(roundElTop);
+
+            const roundElBottom = document.createElement('div');
+            roundElBottom.className = 'tournament-bracket-round split-bottom';
+            const roundTitleBottom = document.createElement('div');
+            roundTitleBottom.className = 'tournament-bracket-round-title';
+            roundTitleBottom.textContent = `${translate('Round', 'Runde', 'Manche')} ${roundNumber}`;
+            roundElBottom.appendChild(roundTitleBottom);
+
+            matches.slice(midpoint).forEach((match: any) => {
+                roundElBottom.appendChild(createMatchElement(match));
+            });
+            bracketContainer.appendChild(roundElBottom);
+        } else {
+            const roundEl = document.createElement('div');
+            roundEl.className = 'tournament-bracket-round';
+            const roundTitle = document.createElement('div');
+            roundTitle.className = 'tournament-bracket-round-title';
+            roundTitle.textContent = `${translate('Round', 'Runde', 'Manche')} ${roundNumber}`;
+            roundEl.appendChild(roundTitle);
+
+            if (matches) {
+                matches.forEach((match: any) => {
+                    roundEl.appendChild(createMatchElement(match));
+                });
+            }
+            bracketContainer.appendChild(roundEl);
+        }
+    });
+
+    function createMatchElement(match: any): HTMLElement {
+        const matchEl = document.createElement('div');
+        matchEl.className = 'tournament-bracket-match';
+        const player1 = match.player1_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2 - 1)}</i>`;
+        const player2 = match.player2_alias || `<i>${translate('Winner of', 'Sieger von', 'Gagnant de')} R${match.round - 1} M${Math.ceil(match.match_in_round * 2)}</i>`;
+
+        let content = `<div class="${match.winner_id === match.player1_id ? 'winner' : 'loser'}">${player1}</div><div class="vs">vs</div><div class="${match.winner_id === match.player2_id ? 'winner' : 'loser'}">${player2}</div>`;
+
+        if (match.status === 'pending' && match.player1_id && match.player2_id && me && me.id === tournamentState.creator_id) {
+            content += `<button data-match-id="${match.id}" class="play-match-btn autumn-button-small" style="margin-top:8px">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</button>`;
+        } else if (match.status === 'completed') {
+            content += `<div class="winner" style="margin-top:8px">${translate('Winner', 'Sieger', 'Gagnant')}: ${match.winner_alias}</div>`;
+        }
+        matchEl.innerHTML = content;
+        return matchEl;
+    }
+
+    // champion box
+    if (tournamentState.status === 'completed') {
+        const winner = tournamentState.matches.find((m: any) => m.round === Object.keys(rounds).length)?.winner_alias;
+        const championEl = document.createElement('div');
+        championEl.className = 'tournament-bracket-champion';
+        championEl.innerHTML = `🏆 ${translate('Winner', 'Sieger', 'Gagnant')}: ${winner} 🏆`;
+        bracketContainer.appendChild(championEl);
+    }
+
+    wrapper.appendChild(bracketContainer);
+    appContainer?.appendChild(wrapper);
 
     document.querySelectorAll('.play-match-btn').forEach(button => {
         button.addEventListener('click', (e) => {
