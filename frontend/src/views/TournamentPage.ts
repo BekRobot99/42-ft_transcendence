@@ -300,8 +300,33 @@ function renderBracket() {
         const winner = tournamentState.matches.find((m: any) => m.round === Object.keys(rounds).length)?.winner_alias;
         const championEl = document.createElement('div');
         championEl.className = 'tournament-bracket-champion';
-        championEl.innerHTML = `🏆 ${translate('Winner', 'Sieger', 'Gagnant')}: ${winner} 🏆`;
-        bracketContainer.appendChild(championEl);
+        championEl.innerHTML = `${translate('Winner', 'Sieger', 'Gagnant')}: ${winner}`;
+        
+        // hide title and bracket container
+        const title = wrapper.querySelector('.autumn-title');
+        if (title) (title as HTMLElement).style.display = 'none';
+        bracketContainer.style.opacity = '0';
+        bracketContainer.style.pointerEvents = 'none';
+        
+        wrapper.appendChild(championEl);
+        
+        // leaves falling from navigation bar
+        const fallLeaves = () => {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf-falling';
+            
+            leaf.style.left = `${Math.random() * 100}%`;
+            leaf.style.animationDuration = `${5 + Math.random() * 4}s`;
+            leaf.style.animationDelay = `${Math.random() * 2}s`;
+            
+            document.body.appendChild(leaf);
+        };
+        
+        // initial leaves and keep adding more
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => fallLeaves(), i * 200);
+        }
+        setInterval(fallLeaves, 400);
     }
 
     wrapper.appendChild(bracketContainer);
