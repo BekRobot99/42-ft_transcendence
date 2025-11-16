@@ -172,6 +172,7 @@ export default async function tournamentRoutes(fastify: FastifyInstance) {
             const matches = await dbAll(`
                 SELECT 
                     m.id, m.round, m.match_in_round, m.status,
+                    m.player1_score, m.player2_score,
                     p1.alias as player1_alias, p1.id as player1_id,
                     p2.alias as player2_alias, p2.id as player2_id,
                     w.alias as winner_alias, w.id as winner_id

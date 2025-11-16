@@ -287,9 +287,9 @@ function renderBracket() {
         let content = `<div class="${match.winner_id === match.player1_id ? 'winner' : 'loser'}">${player1}</div><div class="vs">vs</div><div class="${match.winner_id === match.player2_id ? 'winner' : 'loser'}">${player2}</div>`;
 
         if (match.status === 'pending' && match.player1_id && match.player2_id && me && me.id === tournamentState.creator_id) {
-            content += `<button data-match-id="${match.id}" class="play-match-btn autumn-button-small" style="margin-top:8px">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</button>`;
+            content += `<button data-match-id="${match.id}" class="play-match-btn autumn-button-light" style="margin-top:8px">${translate('Play Match', 'Spiel spielen', 'Jouer le match')}</button>`;
         } else if (match.status === 'completed') {
-            content += `<div class="winner" style="margin-top:8px">${translate('Winner', 'Sieger', 'Gagnant')}: ${match.winner_alias}</div>`;
+            content += `<div style="margin-top:8px; color:#92400e; font-weight:600;">${match.player1_score} - ${match.player2_score}</div>`;
         }
         matchEl.innerHTML = content;
         return matchEl;
