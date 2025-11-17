@@ -331,8 +331,8 @@ export class ChatPage {
         // Update header
         (this.chatHeader.querySelector('.chat-user-info') as HTMLElement).style.display = 'flex';
         this.chatHeader.querySelector('.chat-username')!.textContent = username;
-        this.chatHeader.querySelector('.profile-avatar')!.textContent = username.charAt(0).toUpperCase();
-        this.chatHeader.querySelector('.online-status')!.textContent = translate('Click to view profile', 'Profil anzeigen', 'Voir le profil');
+        this.chatHeader.querySelector('.chat-avatar')!.textContent = username.charAt(0).toUpperCase();
+        this.chatHeader.querySelector('.chat-online-status')!.textContent = translate('Click to view profile', 'Profil anzeigen', 'Voir le profil');
         (this.chatHeader.querySelector('.invite-game-btn') as HTMLElement).style.display = 'flex';
         (this.chatHeader.querySelector('.delete-conversation-btn') as HTMLElement).style.display = 'block';
         (this.chatHeader.querySelector('.block-user-btn') as HTMLElement).style.display = 'block';
@@ -369,8 +369,8 @@ export class ChatPage {
         // Hide header user info
         (this.chatHeader.querySelector('.chat-user-info') as HTMLElement).style.display = 'none';
         this.chatHeader.querySelector('.chat-username')!.textContent = '';
-        this.chatHeader.querySelector('.online-status')!.textContent = '';
-        this.chatHeader.querySelector('.profile-avatar')!.textContent = '?';
+        this.chatHeader.querySelector('.chat-online-status')!.textContent = '';
+        this.chatHeader.querySelector('.chat-avatar')!.textContent = '?';
         (this.chatHeader.querySelector('.invite-game-btn') as HTMLElement).style.display = 'none';
         (this.chatHeader.querySelector('.delete-conversation-btn') as HTMLElement).style.display = 'none';
         (this.chatHeader.querySelector('.block-user-btn') as HTMLElement).style.display = 'none';
