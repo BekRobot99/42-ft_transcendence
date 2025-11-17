@@ -158,13 +158,15 @@ export class ChatService extends EventEmitter {
                         console.error('Error sending message:', err.message);
                         reject(err);
                     } else {
+                        const now = new Date().toISOString();
                         const newMessage: ChatMessage = {
                             id: this.lastID,
                             sender_id: senderId,
                             receiver_id: receiverId,
                             message: message,
                             message_type: messageType,
-                            is_read: false
+                            is_read: false,
+                            created_at: now
                         };
                         resolve(newMessage);
                     }
