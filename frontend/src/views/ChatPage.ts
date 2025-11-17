@@ -282,7 +282,10 @@ export class ChatPage {
 
         if (this.conversations.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'p-4 text-center text-gray-500';
+            empty.style.padding = '1rem';
+            empty.style.textAlign = 'center';
+            empty.style.color = '#78716c';
+            empty.style.fontFamily = 'Georgia, serif';
             empty.textContent = translate('No conversations yet', 'Noch keine Gespräche', 'Pas encore de conversations');
             this.conversationList.appendChild(empty);
             return;
@@ -296,28 +299,28 @@ export class ChatPage {
 
     private createConversationItem(conv: Conversation): HTMLElement {
         const item = document.createElement('div');
-        item.className = 'conversation-item p-4 border-b border-gray-200 hover:bg-gray-50 cursor-pointer flex items-center';
+        item.className = 'conversation-item';
         item.dataset.userId = conv.user_id.toString();
 
         const onlineIndicator = conv.is_online 
-            ? '<div class="w-3 h-3 bg-green-500 rounded-full absolute bottom-0 right-0 border-2 border-white"></div>'
+            ? '<div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid white;"></div>'
             : '';
 
         item.innerHTML = `
-            <div class="relative mr-3">
-                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
+            <div style="position: relative; margin-right: 0.75rem;">
+                <div class="chat-avatar">
                     ${conv.username.charAt(0).toUpperCase()}
                 </div>
                 ${onlineIndicator}
             </div>
-            <div class="flex-1 min-w-0">
-                <div class="flex justify-between items-baseline">
-                    <h4 class="font-semibold text-gray-800 truncate">${conv.username}</h4>
-                    <span class="text-xs text-gray-500">${this.formatTime(conv.last_message_time)}</span>
+            <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <h4 style="font-family: Georgia, serif; font-weight: 600; color: var(--autumn-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${conv.username}</h4>
+                    <span style="font-size: 0.75rem; color: #78716c;">${this.formatTime(conv.last_message_time)}</span>
                 </div>
-                <p class="text-sm text-gray-600 truncate">${conv.last_message || ''}</p>
+                <p style="font-size: 0.875rem; color: #78716c; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${conv.last_message || ''}</p>
             </div>
-            ${conv.unread_count > 0 ? `<div class="ml-2 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">${conv.unread_count}</div>` : ''}
+            ${conv.unread_count > 0 ? `<div style="margin-left: 0.5rem; width: 24px; height: 24px; background: var(--autumn-primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">${conv.unread_count}</div>` : ''}
         `;
 
         item.addEventListener('click', () => this.openConversation(conv.user_id, conv.username));
@@ -418,7 +421,8 @@ export class ChatPage {
         const isSent = msg.sender_id === this.currentUserId;
         
         const messageEl = document.createElement('div');
-        messageEl.className = `flex ${isSent ? 'justify-end' : 'justify-start'}`;
+        messageEl.style.display = 'flex';
+        messageEl.style.justifyContent = isSent ? 'flex-end' : 'flex-start';
 
         const bubble = document.createElement('div');
         
@@ -472,16 +476,16 @@ export class ChatPage {
                 });
             }
         } else {
-            bubble.className = `max-w-xs md:max-w-md px-4 py-2 rounded-lg ${
+            bubble.className = `chat-message ${
                 isSent 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-white text-gray-800 border border-gray-200'
+                    ? 'sent' 
+                    : 'received'
             }`;
 
             bubble.innerHTML = `
                 <p class="break-words">${this.escapeHtml(msg.message)}</p>
-                <span class="text-xs ${isSent ? 'text-blue-100' : 'text-gray-500'} mt-1 block">
-                    ${this.formatTime(msg.created_at || '')}
+                <span class="chat-message-time">
+                    ${this.formatTime(msg.created_at || new Date().toISOString())}
                 </span>
             `;
         }
@@ -495,10 +499,28 @@ export class ChatPage {
         
         if (!text || !this.currentConversationUserId) return;
 
+        // add message
+        const optimisticMessage: ChatMessage = {
+            id: Date.now(),
+            sender_id: this.currentUserId!,
+            receiver_id: this.currentConversationUserId,
+            message: text,
+            message_type: 'text',
+            is_read: false,
+            created_at: new Date().toISOString()
+        };
+
+        this.messages.push(optimisticMessage);
+        const messageEl = this.createMessageElement(optimisticMessage);
+        this.messageWindow.appendChild(messageEl);
+        this.messageWindow.scrollTop = this.messageWindow.scrollHeight;
+        
+        this.messageInput.value = '';
+
         const success = ChatClient.sendMessage(this.currentConversationUserId, text);
-        if (success) {
-            this.messageInput.value = '';
-        } else {
+        if (!success) {
+            this.messages.pop();
+            this.messageWindow.removeChild(messageEl);
             alert(translate(
                 'Failed to send message. Please check your message and try again.',
                 'Nachricht konnte nicht gesendet werden. Bitte überprüfen Sie Ihre Nachricht und versuchen Sie es erneut.',
@@ -509,17 +531,17 @@ export class ChatPage {
 
     private handleNewMessage(message: ChatMessage): void {
         // Add to messages if in current conversation
-        if (message.sender_id === this.currentConversationUserId || 
-            message.receiver_id === this.currentConversationUserId ||
-            message.sender_id === this.currentUserId) {
+        const isInCurrentConversation = 
+            (message.sender_id === this.currentConversationUserId && message.receiver_id === this.currentUserId) ||
+            (message.sender_id === this.currentUserId && message.receiver_id === this.currentConversationUserId);
             
+        if (isInCurrentConversation) {
             this.messages.push(message);
             const messageEl = this.createMessageElement(message);
             this.messageWindow.appendChild(messageEl);
             this.messageWindow.scrollTop = this.messageWindow.scrollHeight;
         }
 
-        // Reload conversations to update last message
         this.loadConversations();
     }
 
