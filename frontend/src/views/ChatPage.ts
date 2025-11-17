@@ -26,7 +26,7 @@ export class ChatPage {
     constructor(currentUserId: number) {
         this.currentUserId = currentUserId;
         this.container = document.createElement('div');
-        this.container.className = 'chat-page-container flex flex-col md:flex-row h-screen bg-gray-100';
+        this.container.className = 'chat-page-wrapper';
         
         this.buildChatInterface();
         this.setupEventListeners();
@@ -36,34 +36,33 @@ export class ChatPage {
     private buildChatInterface(): void {
         // Sidebar with conversations
         const sidebar = document.createElement('div');
-        sidebar.className = 'chat-sidebar w-full md:w-80 bg-white border-r border-gray-200 flex flex-col max-h-screen md:h-screen';
+        sidebar.className = 'chat-sidebar';
 
         // Sidebar Header
         const sidebarHeader = document.createElement('div');
-        sidebarHeader.className = 'p-4 border-b border-gray-200';
+        sidebarHeader.className = 'chat-sidebar-header';
         sidebarHeader.innerHTML = `
-            <h2 class="text-xl font-bold text-gray-800">${translate('Messages', 'Nachrichten', 'Messages')}</h2>
+            <h2 class="chat-sidebar-title">${translate('Chats', 'Chats', 'Discussions')}</h2>
         `;
 
         // Search Users
         const searchContainer = document.createElement('div');
-        searchContainer.className = 'p-3 border-b border-gray-200';
+        searchContainer.className = 'chat-search-container';
         
         this.searchInput = document.createElement('input');
         this.searchInput.type = 'text';
         this.searchInput.placeholder = translate('Search users...', 'Benutzer suchen...', 'Rechercher des utilisateurs...');
-        this.searchInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500';
+        this.searchInput.className = 'chat-search-input';
         
         this.searchResults = document.createElement('div');
-        this.searchResults.className = 'absolute z-10 w-72 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto';
+        this.searchResults.className = 'chat-search-results';
         
         searchContainer.appendChild(this.searchInput);
-        searchContainer.style.position = 'relative';
         searchContainer.appendChild(this.searchResults);
 
         // Conversation List
         this.conversationList = document.createElement('div');
-        this.conversationList.className = 'flex-1 overflow-y-auto';
+        this.conversationList.className = 'chat-conversation-list';
 
         sidebar.appendChild(sidebarHeader);
         sidebar.appendChild(searchContainer);
@@ -71,30 +70,30 @@ export class ChatPage {
 
         // Main Chat Area
         const mainArea = document.createElement('div');
-        mainArea.className = 'chat-main flex-1 flex flex-col bg-gray-50 min-h-0';
+        mainArea.className = 'chat-main-area';
 
         // Chat Header
         this.chatHeader = document.createElement('div');
-        this.chatHeader.className = 'chat-header p-4 bg-white border-b border-gray-200 flex items-center justify-between';
+        this.chatHeader.className = 'chat-main-header';
         this.chatHeader.innerHTML = `
-            <div class="flex items-center cursor-pointer hover:bg-gray-50 rounded p-2 -ml-2 view-profile-btn">
-                <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-white font-bold profile-avatar">
+            <div class="chat-user-info view-profile-btn" style="display: none;">
+                <div class="chat-avatar">
                     ?
                 </div>
-                <div>
-                    <h3 class="font-semibold text-gray-800 username-text">${translate('Select a conversation', 'Wählen Sie eine Konversation', 'Sélectionner une conversation')}</h3>
-                    <p class="text-sm text-gray-500 online-status"></p>
+                <div class="chat-user-details">
+                    <h3 class="chat-username"></h3>
+                    <p class="chat-online-status"></p>
                 </div>
             </div>
-            <div class="chat-actions flex gap-2">
-                <button class="invite-game-btn hidden px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center gap-1">
-                    <span>🎮</span>
+            <div class="chat-actions">
+                <button class="invite-game-btn autumn-button-small" style="display: none;">
+                    <img src="/assets/leaf.png" alt="" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle;" />
                     ${translate('Invite to Play', 'Zum Spielen einladen', 'Inviter à jouer')}
                 </button>
-                <button class="delete-conversation-btn hidden px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600">
+                <button class="delete-conversation-btn autumn-button-small" style="display: none;">
                     ${translate('Delete', 'Löschen', 'Supprimer')}
                 </button>
-                <button class="block-user-btn hidden px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
+                <button class="block-user-btn autumn-button-small" style="display: none;">
                     ${translate('Block', 'Blockieren', 'Bloquer')}
                 </button>
             </div>
@@ -102,47 +101,47 @@ export class ChatPage {
 
         // Empty State
         this.emptyState = document.createElement('div');
-        this.emptyState.className = 'flex-1 flex items-center justify-center text-gray-400';
+        this.emptyState.className = 'chat-empty-state';
         this.emptyState.innerHTML = `
-            <div class="text-center">
-                <svg class="w-24 h-24 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                </svg>
-                <p class="text-xl">${translate('Select a conversation to start chatting', 'Wählen Sie eine Konversation zum Chatten', 'Sélectionnez une conversation pour commencer')}</p>
+            <div class="chat-empty-content">
+                <img src="/assets/leaf.png" alt="" class="chat-empty-icon" style="width: 120px; height: 120px; opacity: 0.6;" />
+                <p class="chat-empty-text">${translate('Select a conversation to start chatting', 'Wählen Sie eine Konversation zum Chatten', 'Sélectionnez une conversation pour commencer')}</p>
             </div>
         `;
 
         // Message Window
         this.messageWindow = document.createElement('div');
-        this.messageWindow.className = 'message-window flex-1 overflow-y-auto p-4 space-y-3 hidden';
+        this.messageWindow.className = 'chat-message-window';
+        this.messageWindow.style.display = 'none';
 
         // Typing Indicator
         this.typingIndicator = document.createElement('div');
-        this.typingIndicator.className = 'typing-indicator hidden px-4 py-2 text-sm text-gray-500 italic flex items-center gap-2';
+        this.typingIndicator.className = 'chat-typing-indicator';
+        this.typingIndicator.style.display = 'none';
         this.typingIndicator.innerHTML = `
-            <div class="flex gap-1">
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
             </div>
             <span>${translate('Typing...', 'Tippt...', 'En train d\'écrire...')}</span>
         `;
 
         // Message Input Area
         const inputArea = document.createElement('div');
-        inputArea.className = 'message-input-area p-4 bg-white border-t border-gray-200';
+        inputArea.className = 'chat-input-area';
         
         const inputContainer = document.createElement('div');
-        inputContainer.className = 'flex gap-2';
+        inputContainer.className = 'chat-input-container';
         
         this.messageInput = document.createElement('input');
         this.messageInput.type = 'text';
         this.messageInput.placeholder = translate('Type a message...', 'Nachricht eingeben...', 'Tapez un message...');
-        this.messageInput.className = 'flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500';
+        this.messageInput.className = 'chat-message-input';
         this.messageInput.disabled = true;
         
         this.sendButton = document.createElement('button');
-        this.sendButton.className = 'px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed';
+        this.sendButton.className = 'chat-send-button autumn-button-light';
         this.sendButton.textContent = translate('Send', 'Senden', 'Envoyer');
         this.sendButton.disabled = true;
         
@@ -168,7 +167,7 @@ export class ChatPage {
             const query = this.searchInput.value.trim();
             
             if (query.length < 2) {
-                this.searchResults.classList.add('hidden');
+                this.searchResults.style.display = 'none';
                 return;
             }
 
@@ -209,9 +208,9 @@ export class ChatPage {
         ChatClient.onTyping((userId, isTyping) => {
             if (userId === this.currentConversationUserId) {
                 if (isTyping) {
-                    this.typingIndicator.classList.remove('hidden');
+                    this.typingIndicator.style.display = 'flex';
                 } else {
-                    this.typingIndicator.classList.add('hidden');
+                    this.typingIndicator.style.display = 'none';
                 }
             }
         });
@@ -330,16 +329,17 @@ export class ChatPage {
         this.currentConversationUserId = userId;
         
         // Update header
-        this.chatHeader.querySelector('.username-text')!.textContent = username;
+        (this.chatHeader.querySelector('.chat-user-info') as HTMLElement).style.display = 'flex';
+        this.chatHeader.querySelector('.chat-username')!.textContent = username;
         this.chatHeader.querySelector('.profile-avatar')!.textContent = username.charAt(0).toUpperCase();
         this.chatHeader.querySelector('.online-status')!.textContent = translate('Click to view profile', 'Profil anzeigen', 'Voir le profil');
-        this.chatHeader.querySelector('.invite-game-btn')?.classList.remove('hidden');
-        this.chatHeader.querySelector('.delete-conversation-btn')?.classList.remove('hidden');
-        this.chatHeader.querySelector('.block-user-btn')?.classList.remove('hidden');
+        (this.chatHeader.querySelector('.invite-game-btn') as HTMLElement).style.display = 'flex';
+        (this.chatHeader.querySelector('.delete-conversation-btn') as HTMLElement).style.display = 'block';
+        (this.chatHeader.querySelector('.block-user-btn') as HTMLElement).style.display = 'block';
         
         // Show message window, hide empty state
-        this.emptyState.classList.add('hidden');
-        this.messageWindow.classList.remove('hidden');
+        this.emptyState.style.display = 'none';
+        this.messageWindow.style.display = 'flex';
         
         // Enable input
         this.messageInput.disabled = false;
@@ -354,23 +354,26 @@ export class ChatPage {
 
         // Highlight active conversation
         this.conversationList.querySelectorAll('.conversation-item').forEach(item => {
-            item.classList.remove('bg-blue-50');
+            item.classList.remove('active');
         });
-        this.conversationList.querySelector(`[data-user-id="${userId}"]`)?.classList.add('bg-blue-50');
+        this.conversationList.querySelector(`[data-user-id="${userId}"]`)?.classList.add('active');
     }
 
     private closeConversation(): void {
         this.currentConversationUserId = null;
-        this.messageWindow.classList.add('hidden');
-        this.emptyState.classList.remove('hidden');
+        this.messageWindow.style.display = 'none';
+        this.emptyState.style.display = 'flex';
         this.messageInput.disabled = true;
         this.sendButton.disabled = true;
-        this.chatHeader.querySelector('.username-text')!.textContent = translate('Select a conversation', 'Wählen Sie eine Konversation', 'Sélectionner une conversation');
+        
+        // Hide header user info
+        (this.chatHeader.querySelector('.chat-user-info') as HTMLElement).style.display = 'none';
+        this.chatHeader.querySelector('.chat-username')!.textContent = '';
         this.chatHeader.querySelector('.online-status')!.textContent = '';
         this.chatHeader.querySelector('.profile-avatar')!.textContent = '?';
-        this.chatHeader.querySelector('.invite-game-btn')?.classList.add('hidden');
-        this.chatHeader.querySelector('.delete-conversation-btn')?.classList.add('hidden');
-        this.chatHeader.querySelector('.block-user-btn')?.classList.add('hidden');
+        (this.chatHeader.querySelector('.invite-game-btn') as HTMLElement).style.display = 'none';
+        (this.chatHeader.querySelector('.delete-conversation-btn') as HTMLElement).style.display = 'none';
+        (this.chatHeader.querySelector('.block-user-btn') as HTMLElement).style.display = 'none';
     }
 
     private async loadMessages(userId: number, offset: number = 0): Promise<void> {
@@ -440,7 +443,7 @@ export class ChatPage {
             const inviteData = this.parseGameInvite(msg.message);
             bubble.innerHTML = `
                 <div class="flex items-center gap-2 mb-2">
-                    <span class="text-2xl">🎮</span>
+                    <img src="/assets/leaf.png" alt="" style="width: 32px; height: 32px; filter: brightness(0) invert(1);" />
                     <p class="font-bold">Game Invitation</p>
                 </div>
                 <p class="text-sm mb-3">${inviteData.message}</p>
@@ -539,34 +542,36 @@ export class ChatPage {
         this.searchResults.innerHTML = '';
 
         if (users.length === 0) {
-            this.searchResults.innerHTML = '<div class="p-3 text-gray-500 text-sm">No users found</div>';
-            this.searchResults.classList.remove('hidden');
+            this.searchResults.innerHTML = '<div style="padding: 1rem; color: #78716c; font-size: 0.9rem; font-family: Georgia, serif;">No users found</div>';
+            this.searchResults.style.display = 'block';
             return;
         }
 
         users.forEach(user => {
             const item = document.createElement('div');
-            item.className = 'p-3 hover:bg-gray-50 cursor-pointer flex items-center border-b border-gray-100 last:border-0';
+            item.className = 'conversation-item';
+            item.style.borderLeft = 'none';
+            item.style.borderBottom = '1px solid rgba(217, 119, 6, 0.2)';
             item.innerHTML = `
-                <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center text-white font-bold">
+                <div class="chat-avatar" style="width: 40px; height: 40px; font-size: 1rem;">
                     ${user.username.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                    <div class="font-semibold text-gray-800">${user.username}</div>
-                    ${user.is_online ? '<span class="text-xs text-green-500">● Online</span>' : '<span class="text-xs text-gray-400">Offline</span>'}
+                    <div style="font-family: Georgia, serif; font-weight: 600; color: #92400e;">${user.username}</div>
+                    ${user.is_online ? '<span style="font-size: 0.8rem; color: #22c55e;">● Online</span>' : '<span style="font-size: 0.8rem; color: #9ca3af;">Offline</span>'}
                 </div>
             `;
 
             item.addEventListener('click', () => {
                 this.openConversation(user.id, user.username);
-                this.searchResults.classList.add('hidden');
+                this.searchResults.style.display = 'none';
                 this.searchInput.value = '';
             });
 
             this.searchResults.appendChild(item);
         });
 
-        this.searchResults.classList.remove('hidden');
+        this.searchResults.style.display = 'block';
     }
 
     private updateUserOnlineStatus(userId: number, isOnline: boolean): void {
