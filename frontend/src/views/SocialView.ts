@@ -3,37 +3,50 @@ import { translate } from "../languageService.js";
 // Helper to create a profile card
 function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElement {
     const card = document.createElement('div');
-    card.className = 'flex items-center justify-between bg-gray-100 p-3 rounded-lg shadow-sm';
+    card.className = 'flex items-center justify-between autumn-glass p-4 rounded-xl transition-all duration-300 hover:transform hover:translateY(-1px)';
     card.dataset.userId = user.id;
+    card.style.background = 'rgba(255, 255, 255, 0.15)';
+    card.style.backdropFilter = 'blur(12px)';
+    card.style.border = '1px solid rgba(255, 255, 255, 0.2)';
 
     const profileInfo = document.createElement('div');
     profileInfo.className = 'flex items-center gap-3';
 
-    const profileAvatar = document.createElement('img');
-    profileAvatar.src = user.avatar_path || '/assets/default-avatar.jpg';
-    profileAvatar.alt = `${user.username}'s avatar`;
-    profileAvatar.className = 'w-10 h-10 rounded-full object-cover';
-    profileAvatar.onerror = () => { profileAvatar.src = '/assets/default-avatar.jpg'; };
+    const avatarContainer = document.createElement('div');
+    avatarContainer.className = 'relative';
+    avatarContainer.style.width = '48px';
+    avatarContainer.style.height = '48px';
+
+    const profileAvatar = document.createElement('div');
+    profileAvatar.className = 'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg';
+    profileAvatar.style.background = 'linear-gradient(135deg, var(--autumn-primary), var(--autumn-secondary))';
+    profileAvatar.style.boxShadow = '0 4px 12px rgba(217, 119, 6, 0.3)';
+    profileAvatar.textContent = (user.display_name || user.username).charAt(0).toUpperCase();
+
+    const statusIndicator = document.createElement('div');
+    statusIndicator.className = 'absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white';
+    statusIndicator.style.background = user.isOnline ? '#22c55e' : '#78716c';
+    statusIndicator.title = user.isOnline ? translate('Online', 'Online', 'En ligne') : translate('Offline', 'Offline', 'Hors ligne');
+
+    avatarContainer.appendChild(profileAvatar);
+    avatarContainer.appendChild(statusIndicator);
 
     const profileNameBox = document.createElement('div');
-    const profileDisplayName = document.createElement('span');
-    profileDisplayName.className = 'font-semibold text-gray-800';
+    const profileDisplayName = document.createElement('div');
+    profileDisplayName.className = 'font-semibold';
+    profileDisplayName.style.color = 'var(--autumn-dark)';
+    profileDisplayName.style.fontFamily = 'Georgia, serif';
     profileDisplayName.textContent = user.display_name || user.username;
-    
-    const statusIndicator = document.createElement('span');
-    statusIndicator.className = `status-indicator inline-block w-3 h-3 rounded-full ml-2 ${user.isOnline ? 'bg-green-500' : 'bg-gray-400'}`;
-    statusIndicator.title = user.isOnline ? translate('Online', 'Online', 'En ligne') : translate('Offline', 'Offline', 'Hors ligne');
-    profileDisplayName.appendChild(statusIndicator);
 
-    const profileUsername = document.createElement('span');
-    profileUsername.className = 'text-sm text-gray-500';
+    const profileUsername = document.createElement('div');
+    profileUsername.className = 'text-sm';
+    profileUsername.style.color = '#78716c';
     profileUsername.textContent = `@${user.username}`;
     
     profileNameBox.appendChild(profileDisplayName);
-    profileNameBox.appendChild(document.createElement('br'));
     profileNameBox.appendChild(profileUsername);
 
-    profileInfo.appendChild(profileAvatar);
+    profileInfo.appendChild(avatarContainer);
     profileInfo.appendChild(profileNameBox);
 
     const profileLink = document.createElement('a');
@@ -41,6 +54,7 @@ function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElem
     profileLink.setAttribute('data-link', '');
     profileLink.className = 'flex-grow';
     profileLink.appendChild(profileInfo);
+    
     const buttonGroup = document.createElement('div');
     buttonGroup.className = 'flex gap-2';
     buttons.forEach(btn => buttonGroup.appendChild(btn));
@@ -56,34 +70,55 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
     container.innerHTML = ''; // Clear previous content
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000] space-y-8';
+    wrapper.className = 'autumn-container';
+    wrapper.style.maxWidth = '900px';
+    wrapper.style.width = 'calc(100% - 2rem)';
 
     const pageTitle = document.createElement('h2');
-    pageTitle.className = 'text-2xl font-bold mb-6 text-center';
+    pageTitle.className = 'autumn-title';
+    pageTitle.style.marginBottom = '2rem';
     pageTitle.textContent = translate('Friends', 'Freunde', 'Amis');
 
     // --- Add Friend Section ---
     const addFriendSection = document.createElement('div');
-    addFriendSection.className = 'border-b pb-6';
+    addFriendSection.className = 'autumn-glass';
+    addFriendSection.style.marginBottom = '1.5rem';
+    addFriendSection.style.padding = '1.5rem';
+
+    const addFriendTitle = document.createElement('h3');
+    addFriendTitle.style.color = 'var(--autumn-secondary)';
+    addFriendTitle.style.fontFamily = 'Georgia, serif';
+    addFriendTitle.style.fontWeight = '600';
+    addFriendTitle.style.marginBottom = '1rem';
+    addFriendTitle.textContent = translate('Add Friend', 'Freund hinzufügen', 'Ajouter un ami');
+
     const addFriendForm = document.createElement('form');
-    addFriendForm.className = 'flex gap-2';
+    addFriendForm.style.display = 'flex';
+    addFriendForm.style.flexDirection = 'column';
+    addFriendForm.style.alignItems = 'center';
+    addFriendForm.style.gap = '1rem';
+
     const friendUsernameInput = document.createElement('input');
     friendUsernameInput.type = 'text';
-    friendUsernameInput.placeholder = translate('Enter username to add', 'Benutzernamen zum Hinzufügen eingeben', 'Entrez le nom d\'utilisateur à ajouter');
-    friendUsernameInput.className = 'flex-grow px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+    friendUsernameInput.className = 'autumn-input';
+    friendUsernameInput.style.width = '100%';
+    friendUsernameInput.style.maxWidth = '400px';
+    friendUsernameInput.style.margin = '0';
+    friendUsernameInput.placeholder = translate('Enter username to add', 'Benutzernamen eingeben', 'Entrez le nom d\'utilisateur');
+
     const sendRequestButton = document.createElement('button');
     sendRequestButton.type = 'submit';
-    sendRequestButton.className = 'relative inline-block px-4 py-2 font-medium group';
-    sendRequestButton.innerHTML = `
-        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-        <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
-        <span class="relative text-white">${translate('Send Request', 'Anfrage senden', 'Envoyer la demande')}</span>
-    `;
+    sendRequestButton.className = 'autumn-button-small';
+    sendRequestButton.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer');
+
     const addFriendFeedback = document.createElement('p');
-    addFriendFeedback.className = 'text-sm mt-2';
+    addFriendFeedback.style.fontSize = '0.875rem';
+    addFriendFeedback.style.marginTop = '0.5rem';
+    addFriendFeedback.style.fontFamily = 'Georgia, serif';
 
     addFriendForm.appendChild(friendUsernameInput);
     addFriendForm.appendChild(sendRequestButton);
+    addFriendSection.appendChild(addFriendTitle);
     addFriendSection.appendChild(addFriendForm);
     addFriendSection.appendChild(addFriendFeedback);
 
@@ -93,9 +128,9 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
         if (!username) return;
 
         sendRequestButton.disabled = true;
-        sendRequestButton.querySelector('span.relative')!.textContent = translate('Sending...', 'Senden...', 'Envoi...');
+        sendRequestButton.textContent = translate('Sending...', 'Senden...', 'Envoi...');
         addFriendFeedback.textContent = '';
-        addFriendFeedback.className = 'text-sm mt-2';
+        addFriendFeedback.style.color = '';
 
         try {
             const res = await fetch('/api/friends/request', {
@@ -108,15 +143,15 @@ export async function renderSocialView(container: HTMLElement): Promise<void> {
             if (!res.ok) throw new Error(data.message);
             
             addFriendFeedback.textContent = data.message;
-            addFriendFeedback.classList.add('text-green-600');
+            addFriendFeedback.style.color = 'var(--autumn-secondary)';
             friendUsernameInput.value = '';
             renderSocialView(container); // Re-render to show new outgoing request
         } catch (error: any) {
             addFriendFeedback.textContent = error.message;
-            addFriendFeedback.classList.add('text-red-600');
+            addFriendFeedback.style.color = '#dc2626';
         } finally {
             sendRequestButton.disabled = false;
-            sendRequestButton.querySelector('span.relative')!.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer la demande');
+            sendRequestButton.textContent = translate('Send Request', 'Anfrage senden', 'Envoyer');
         }
     });
 
@@ -160,22 +195,30 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
         return; // Don't render anything if no requests
     }
 
+    const requestsWrapper = document.createElement('div');
+    requestsWrapper.className = 'autumn-glass';
+    requestsWrapper.style.padding = '1.5rem';
+    requestsWrapper.style.marginBottom = '1.5rem';
+
     // Incoming
     if (incoming.length > 0) {
         const incomingTitle = document.createElement('h3');
-        incomingTitle.className = 'text-xl font-semibold mb-4';
+        incomingTitle.style.color = 'var(--autumn-secondary)';
+        incomingTitle.style.fontFamily = 'Georgia, serif';
+        incomingTitle.style.fontWeight = '600';
+        incomingTitle.style.marginBottom = '1rem';
         incomingTitle.textContent = translate('Incoming Requests', 'Eingehende Anfragen', 'Demandes entrantes');
+        
         const incomingList = document.createElement('div');
-        incomingList.className = 'space-y-3';
+        incomingList.style.display = 'flex';
+        incomingList.style.flexDirection = 'column';
+        incomingList.style.gap = '0.75rem';
 
         incoming.forEach(req => {
             const acceptButton = document.createElement('button');
-            acceptButton.className = 'relative inline-block px-3 py-1 font-medium group';
-            acceptButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-green-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-green-600 border-2 border-green-800 group-hover:bg-green-800"></span>
-                <span class="relative text-white text-sm">${translate('Accept', 'Akzeptieren', 'Accepter')}</span>
-            `;
+            acceptButton.className = 'autumn-button-small';
+            acceptButton.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+            acceptButton.innerHTML = `${translate('Accept', 'Akzeptieren', 'Accepter')}`;
             acceptButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
                     method: 'PUT',
@@ -187,12 +230,9 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
             };
 
             const declineButton = document.createElement('button');
-             declineButton.className = 'relative inline-block px-3 py-1 font-medium group';
-            declineButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
-                <span class="relative text-white text-sm">${translate('Decline', 'Ablehnen', 'Refuser')}</span>
-            `;
+            declineButton.className = 'autumn-button-small';
+            declineButton.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            declineButton.innerHTML = `${translate('Decline', 'Ablehnen', 'Refuser')}`;
             declineButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
                     method: 'PUT',
@@ -205,26 +245,30 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
 
             incomingList.appendChild(createProfileCard(req, acceptButton, declineButton));
         });
-        container.appendChild(incomingTitle);
-        container.appendChild(incomingList);
+        requestsWrapper.appendChild(incomingTitle);
+        requestsWrapper.appendChild(incomingList);
     }
 
     // Outgoing
     if (outgoing.length > 0) {
         const outgoingTitle = document.createElement('h3');
-        outgoingTitle.className = 'text-xl font-semibold mt-6 mb-4';
+        outgoingTitle.style.color = 'var(--autumn-secondary)';
+        outgoingTitle.style.fontFamily = 'Georgia, serif';
+        outgoingTitle.style.fontWeight = '600';
+        outgoingTitle.style.marginTop = incoming.length > 0 ? '1.5rem' : '0';
+        outgoingTitle.style.marginBottom = '1rem';
         outgoingTitle.textContent = translate('Outgoing Requests', 'Ausgehende Anfragen', 'Demandes sortantes');
+        
         const outgoingList = document.createElement('div');
-        outgoingList.className = 'space-y-3';
+        outgoingList.style.display = 'flex';
+        outgoingList.style.flexDirection = 'column';
+        outgoingList.style.gap = '0.75rem';
 
         outgoing.forEach(req => {
             const cancelButton = document.createElement('button');
-               cancelButton.className = 'relative inline-block px-3 py-1 font-medium group';
-            cancelButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-gray-600 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-gray-400 border-2 border-gray-600 group-hover:bg-gray-600"></span>
-                <span class="relative text-white text-sm">${translate('Cancel', 'Abbrechen', 'Annuler')}</span>
-            `;
+            cancelButton.className = 'autumn-button-small';
+            cancelButton.style.background = 'linear-gradient(135deg, #78716c, #57534e)';
+            cancelButton.innerHTML = `${translate('Cancel', 'Abbrechen', 'Annuler')}`;
             cancelButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
                     method: 'PUT',
@@ -236,34 +280,52 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
             };
             outgoingList.appendChild(createProfileCard(req, cancelButton));
         });
-        container.appendChild(outgoingTitle);
-        container.appendChild(outgoingList);
+        requestsWrapper.appendChild(outgoingTitle);
+        requestsWrapper.appendChild(outgoingList);
     }
+
+    container.appendChild(requestsWrapper);
 }
 
 // Render Friends List
 function renderFriendList(container: HTMLElement, friends: any[], rerenderCallback: () => void) {
     container.innerHTML = '';
-    const title = document.createElement('h3');
-    title.className = 'text-xl font-semibold mt-6 mb-4';
-    title.textContent = translate('Your Friends', 'Deine Freunde', 'Tes amis');
-    container.appendChild(title);
+    
+    const friendsWrapper = document.createElement('div');
+    friendsWrapper.className = 'autumn-glass';
+    friendsWrapper.style.padding = '1.5rem';
 
-    const list = document.createElement('div');
-    list.className = 'space-y-3';
+    const title = document.createElement('h3');
+    title.style.color = 'var(--autumn-secondary)';
+    title.style.fontFamily = 'Georgia, serif';
+    title.style.fontWeight = '600';
+    title.style.marginBottom = '1rem';
+    title.textContent = `${translate('Your Friends', 'Deine Freunde', 'Tes amis')} (${friends.length})`;
 
     if (friends.length === 0) {
-        list.textContent = translate('You have no friends yet. Add one above!', 'Du hast noch keine Freunde. Füge oben einen hinzu!', 'Vous n\'avez pas encore d\'amis. Ajoutez-en un ci-dessus !');
-        list.className = 'text-gray-500';
+        const emptyMessage = document.createElement('div');
+        emptyMessage.style.textAlign = 'center';
+        emptyMessage.style.padding = '2rem';
+        emptyMessage.style.color = '#78716c';
+        emptyMessage.style.fontFamily = 'Georgia, serif';
+        emptyMessage.style.fontStyle = 'italic';
+        emptyMessage.innerHTML = `
+            <img src="/assets/leaf.png" alt="" style="width: 64px; height: 64px; opacity: 0.5; display: block; margin: 0 auto 1rem;" />
+            ${translate('You have no friends yet. Add one above!', 'Du hast noch keine Freunde. Füge oben einen hinzu!', 'Vous n\'avez pas encore d\'amis. Ajoutez-en un ci-dessus !')}
+        `;
+        friendsWrapper.appendChild(title);
+        friendsWrapper.appendChild(emptyMessage);
     } else {
+        const list = document.createElement('div');
+        list.style.display = 'flex';
+        list.style.flexDirection = 'column';
+        list.style.gap = '0.75rem';
+
         friends.forEach(friend => {
             const removeButton = document.createElement('button');
-            removeButton.className = 'relative inline-block px-3 py-1 font-medium group';
-            removeButton.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-0.5 translate-y-0.5 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
-                <span class="relative text-white text-sm">${translate('Remove', 'Entfernen', 'Supprimer')}</span>
-            `;
+            removeButton.className = 'autumn-button-small';
+            removeButton.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            removeButton.innerHTML = `${translate('Remove', 'Entfernen', 'Supprimer')}`;
             removeButton.onclick = async () => {
                 if (confirm(translate(`Are you sure you want to remove ${friend.username}?`, `Bist du sicher, dass du ${friend.username} entfernen möchtest?`, `Êtes-vous sûr de vouloir supprimer ${friend.username} ?`))) {
                     await fetch(`/api/friends/${friend.id}`, {
@@ -275,6 +337,9 @@ function renderFriendList(container: HTMLElement, friends: any[], rerenderCallba
             };
             list.appendChild(createProfileCard(friend, removeButton));
         });
+        friendsWrapper.appendChild(title);
+        friendsWrapper.appendChild(list);
     }
-    container.appendChild(list);
+    
+    container.appendChild(friendsWrapper);
 }
