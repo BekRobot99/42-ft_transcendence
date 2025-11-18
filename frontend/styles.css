@@ -88,6 +88,20 @@ body.autumn-background::before {
     justify-content: center;
 }
 
+/* settings page horizontal layout */
+#page-content.settings-horizontal {
+    max-width: 100%;
+    width: 100vw;
+    height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
 /* containers */
 .autumn-container {
     position: relative;

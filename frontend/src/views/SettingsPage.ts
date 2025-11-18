@@ -2,6 +2,11 @@ import { translate } from "../languageService.js";
 
 export async function renderSettingsPage(container: HTMLElement): Promise<void> {
     container.innerHTML = '';
+    const settingsPageContainer = document.getElementById('page-content');
+    if (settingsPageContainer) {
+        settingsPageContainer.classList.add('settings-horizontal');
+    }
+
     // Fetch current user info
     let user;
     try {
@@ -10,88 +15,112 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         const data = await res.json();
         user = data.user;
     } catch {
-       container.innerHTML = `<p class="text-red-600">${translate('Failed to load user info.', 'Benutzerinformationen konnten nicht geladen werden.', 'Échec du chargement des informations utilisateur.')}</p>`;
+        const errorWrapper = document.createElement('div');
+        errorWrapper.className = 'autumn-container';
+        errorWrapper.innerHTML = `<p style="color: #dc2626; font-family: Georgia, serif;">${translate('Failed to load user info.', 'Benutzerinformationen konnten nicht geladen werden.', 'Échec du chargement des informations utilisateur.')}</p>`;
+        container.appendChild(errorWrapper);
         return;
     }
 
     const settingsWrapper = document.createElement('div');
-    settingsWrapper.className = 'bg-white rounded-lg p-8 border-2 border-black shadow-[8px_8px_0px_#000000]';
+    settingsWrapper.className = 'autumn-container';
+    settingsWrapper.style.maxWidth = '600px';
 
     const settingsTitle = document.createElement('h2');
-    settingsTitle.className = 'text-2xl font-bold mb-6';
+    settingsTitle.className = 'autumn-title';
+    settingsTitle.style.marginBottom = '2rem';
     settingsTitle.textContent = translate('Settings', 'Einstellungen', 'Paramètres');
 
     // --- Avatar Section ---
     const avatarSection = document.createElement('div');
-    avatarSection.className = 'mb-6 text-center';
+    avatarSection.className = 'autumn-glass';
+    avatarSection.style.padding = '1.5rem';
+    avatarSection.style.marginBottom = '1.5rem';
+    avatarSection.style.textAlign = 'center';
 
-    const avatarPreview = document.createElement('img');
+    const avatarTitle = document.createElement('h3');
+    avatarTitle.style.color = 'var(--autumn-secondary)';
+    avatarTitle.style.fontFamily = 'Georgia, serif';
+    avatarTitle.style.fontWeight = '600';
+    avatarTitle.style.marginBottom = '1rem';
+    avatarTitle.textContent = translate('Profile Picture', 'Profilbild', 'Photo de profil');
+
+    // fixed size container
+    const avatarContainer = document.createElement('div');
+    avatarContainer.style.width = '120px';
+    avatarContainer.style.height = '120px';
+    avatarContainer.style.margin = '0 auto 1rem';
+    avatarContainer.style.position = 'relative';
+
+    const avatarPreview = document.createElement('div');
     avatarPreview.id = 'avatar-preview';
-    avatarPreview.className = 'w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-gray-200';
-    avatarPreview.src = user.avatar_path ? `${user.avatar_path}?t=${new Date().getTime()}` : '/assets/default-avatar.jpg';
-    avatarPreview.alt = 'User Avatar';
-    avatarPreview.onerror = () => { avatarPreview.src = '/assets/default-avatar.jpg'; };
+    avatarPreview.style.width = '120px';
+    avatarPreview.style.height = '120px';
+    avatarPreview.style.borderRadius = '50%';
+    avatarPreview.style.background = 'linear-gradient(135deg, var(--autumn-primary), var(--autumn-secondary))';
+    avatarPreview.style.display = 'flex';
+    avatarPreview.style.alignItems = 'center';
+    avatarPreview.style.justifyContent = 'center';
+    avatarPreview.style.fontSize = '3rem';
+    avatarPreview.style.fontWeight = 'bold';
+    avatarPreview.style.color = 'white';
+    avatarPreview.style.fontFamily = 'Georgia, serif';
+    avatarPreview.style.boxShadow = '0 8px 24px rgba(217, 119, 6, 0.3)';
+    avatarPreview.textContent = (user.display_name || user.username).charAt(0).toUpperCase();
+
+    avatarContainer.appendChild(avatarPreview);
 
     const avatarButtonsContainer = document.createElement('div');
-    avatarButtonsContainer.className = 'flex justify-center items-center gap-4 mt-2';
+    avatarButtonsContainer.style.display = 'flex';
+    avatarButtonsContainer.style.justifyContent = 'center';
+    avatarButtonsContainer.style.gap = '0.75rem';
+    avatarButtonsContainer.style.flexWrap = 'wrap';
 
     const avatarUploadLabel = document.createElement('label');
     avatarUploadLabel.htmlFor = 'avatar-input';
-    avatarUploadLabel.className = 'cursor-pointer relative inline-block px-4 py-2 font-medium group';
-    avatarUploadLabel.innerHTML = `
-        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-black group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-        <span class="absolute inset-0 w-full h-full bg-white border-2 border-black group-hover:bg-black"></span>
-        <span class="relative text-black group-hover:text-white">${translate('Change Avatar', 'Avatar ändern', 'Changer d\'avatar')}</span>
-    `;
-
+    avatarUploadLabel.className = 'autumn-button-small';
+    avatarUploadLabel.style.cursor = 'pointer';
+    avatarUploadLabel.textContent = translate('Change Avatar', 'Ändern', 'Changer');
 
     const avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file';
     avatarFileInput.id = 'avatar-input';
     avatarFileInput.accept = 'image/png, image/jpeg';
-    avatarFileInput.className = 'hidden';
+    avatarFileInput.style.display = 'none';
 
     const deleteAvatarBtn = document.createElement('button');
     deleteAvatarBtn.id = 'delete-avatar-btn';
-    deleteAvatarBtn.className = 'relative inline-block px-4 py-2 font-medium group';
-    deleteAvatarBtn.innerHTML = `
-        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-        <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
-        <span class="relative text-white">${translate('Delete', 'Löschen', 'Supprimer')}</span>
-    `;
-    if (!user.avatar_path) {
-        deleteAvatarBtn.classList.add('hidden');
-    }
+    deleteAvatarBtn.className = 'autumn-button-small';
+    deleteAvatarBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+    deleteAvatarBtn.textContent = translate('Delete', 'Löschen', 'Supprimer');
+    deleteAvatarBtn.style.display = user.avatar_path ? 'inline-flex' : 'none';
 
     const avatarErrorMsg = document.createElement('p');
-    avatarErrorMsg.className = 'text-red-600 text-sm mt-2 hidden';
+    avatarErrorMsg.style.color = '#dc2626';
+    avatarErrorMsg.style.fontSize = '0.875rem';
+    avatarErrorMsg.style.marginTop = '0.5rem';
+    avatarErrorMsg.style.fontFamily = 'Georgia, serif';
+    avatarErrorMsg.style.display = 'none';
 
-    avatarSection.appendChild(avatarPreview);
-    const avatarForm = document.createElement('form');
-    avatarForm.appendChild(avatarUploadLabel);
-    avatarForm.appendChild(avatarFileInput);
-
-    avatarButtonsContainer.appendChild(avatarForm);
+    avatarSection.appendChild(avatarTitle);
+    avatarSection.appendChild(avatarContainer);
+    avatarButtonsContainer.appendChild(avatarUploadLabel);
+    avatarButtonsContainer.appendChild(avatarFileInput);
     avatarButtonsContainer.appendChild(deleteAvatarBtn);
-
     avatarSection.appendChild(avatarButtonsContainer);
     avatarSection.appendChild(avatarErrorMsg);
 
     avatarFileInput.addEventListener('change', async () => {
-        avatarErrorMsg.classList.add('hidden');
+        avatarErrorMsg.style.display = 'none';
         const file = avatarFileInput.files?.[0];
         if (!file) return;
 
         if (file.size > 5 * 1024 * 1024) { // 5MB
             avatarErrorMsg.textContent = translate('File is too large (max 5MB).', 'Datei ist zu groß (max. 5MB).', 'Le fichier est trop volumineux (max 5 Mo).');
-            avatarErrorMsg.classList.remove('hidden');
+            avatarErrorMsg.style.display = 'block';
             avatarFileInput.value = '';
             return;
         }
-
-        const reader = new FileReader();
-        reader.onload = (e) => { avatarPreview.src = e.target?.result as string; };
-        reader.readAsDataURL(file);
 
         const formData = new FormData();
         formData.append('avatar', file);
@@ -105,13 +134,12 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Upload failed');
 
-            avatarPreview.src = `${data.avatarUrl}?t=${new Date().getTime()}`;
+            avatarPreview.textContent = (user.display_name || user.username).charAt(0).toUpperCase();
             user.avatar_path = data.avatarUrl;
-            deleteAvatarBtn.classList.remove('hidden'); // Show delete button
+            deleteAvatarBtn.style.display = 'inline-flex';
         } catch (error: any) {
             avatarErrorMsg.textContent = error.message;
-            avatarErrorMsg.classList.remove('hidden');
-            avatarPreview.src = user.avatar_path ? `${user.avatar_path}?t=${new Date().getTime()}` : '/assets/default-avatar.jpg';
+            avatarErrorMsg.style.display = 'block';
         } finally {
             avatarFileInput.value = '';
         }
@@ -121,7 +149,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         if (!confirm(translate('Are you sure you want to delete your avatar?', 'Sind Sie sicher, dass Sie Ihren Avatar löschen möchten?', 'Êtes-vous sûr de vouloir supprimer votre avatar ?'))) {
             return;
         }
-        avatarErrorMsg.classList.add('hidden');
+        avatarErrorMsg.style.display = 'none';
         try {
             const res = await fetch('/api/me/avatar', {
                 method: 'DELETE',
@@ -131,221 +159,79 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             if (!res.ok) {
                 throw new Error(data.message || 'Failed to delete avatar.');
             }
-            avatarPreview.src = '/assets/default-avatar.jpg';
+            avatarPreview.textContent = (user.display_name || user.username).charAt(0).toUpperCase();
             user.avatar_path = null;
-            deleteAvatarBtn.classList.add('hidden');
+            deleteAvatarBtn.style.display = 'none';
         } catch (error: any) {
             avatarErrorMsg.textContent = error.message;
-            avatarErrorMsg.classList.remove('hidden');
+            avatarErrorMsg.style.display = 'block';
         }
     });
 
     // Form for user profile data
+    const profileForm = document.createElement('div');
+    profileForm.className = 'autumn-glass';
+    profileForm.style.padding = '1.5rem';
+    profileForm.style.marginBottom = '1.5rem';
+
+    const profileTitle = document.createElement('h3');
+    profileTitle.style.color = 'var(--autumn-secondary)';
+    profileTitle.style.fontFamily = 'Georgia, serif';
+    profileTitle.style.fontWeight = '600';
+    profileTitle.style.marginBottom = '1rem';
+    profileTitle.textContent = translate('Profile Information', 'Profilinformationen', 'Informations de profil');
+
     const form = document.createElement('form');
 
     // Username
     const usernameGroup = document.createElement('div');
-    usernameGroup.className = 'mb-4';
+    usernameGroup.style.marginBottom = '1rem';
     const usernameLabel = document.createElement('label');
-    usernameLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+    usernameLabel.className = 'autumn-label';
     usernameLabel.textContent = translate('Username', 'Benutzername', 'Nom d\'utilisateur');
     const usernameField = document.createElement('input');
     usernameField.type = 'text';
     usernameField.value = user.username;
     usernameField.maxLength = 16;
-    usernameField.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+    usernameField.className = 'autumn-input';
     usernameField.autocomplete = 'off';
     usernameGroup.appendChild(usernameLabel);
     usernameGroup.appendChild(usernameField);
 
     // Display name
     const displayNameGroup = document.createElement('div');
-    displayNameGroup.className = 'mb-4';
+    displayNameGroup.style.marginBottom = '1rem';
     const displayNameLabel = document.createElement('label');
-    displayNameLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
+    displayNameLabel.className = 'autumn-label';
     displayNameLabel.textContent = translate('Display Name', 'Anzeigename', 'Nom d\'affichage');
     const displayNameInput = document.createElement('input');
     displayNameInput.type = 'text';
     displayNameInput.value = user.display_name || '';
     displayNameInput.maxLength = 32;
-    displayNameInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+    displayNameInput.className = 'autumn-input';
     displayNameInput.autocomplete = 'off';
     displayNameGroup.appendChild(displayNameLabel);
     displayNameGroup.appendChild(displayNameInput);
 
-    // 2FA Section
-    const twofaGroup = document.createElement('div');
-    twofaGroup.className = 'mb-4 border-t pt-4 mt-4';
-
-    const twofaTitle = document.createElement('h3');
-    twofaTitle.className = 'text-lg font-semibold mb-2';
-    twofaTitle.textContent = translate('Two-Factor Authentication (2FA)', 'Zwei-Faktor-Authentifizierung (2FA)', 'Authentification à deux facteurs (2FA)');
-
-    const twofaStatus = document.createElement('p');
-    twofaStatus.className = 'mb-2';
-    twofaStatus.textContent = user.twofa_enabled ? translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.') : translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
-
-    const twofaButton = document.createElement('button');
-    twofaButton.type = 'button';
-    twofaButton.className = 'relative inline-block px-4 py-2 font-medium group mb-2';
-    const twofaButtonText = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA') : translate('Enable 2FA', '2FA aktivieren', 'Activer la 2FA');
-    const twofaButtonColor = user.twofa_enabled ? 'bg-red-600' : 'bg-gray-800';
-    const twofaButtonHoverColor = user.twofa_enabled ? 'group-hover:bg-red-800' : 'group-hover:bg-gray-900';
-    const twofaButtonShadowColor = user.twofa_enabled ? 'bg-red-800' : 'bg-black';
-    const twofaButtonBorderColor = user.twofa_enabled ? 'border-red-800' : 'border-black';
-
-    twofaButton.innerHTML = `
-        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 ${twofaButtonShadowColor} group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-        <span class="absolute inset-0 w-full h-full ${twofaButtonColor} border-2 ${twofaButtonBorderColor} ${twofaButtonHoverColor}"></span>
-        <span class="relative text-white">${twofaButtonText}</span>
-    `;
-
-    const twofaContainer = document.createElement('div'); // For QR code and input
-
-    twofaButton.addEventListener('click', async () => {
-        twofaContainer.innerHTML = '';
-        if (!user.twofa_enabled) {
-            // Enable flow: get QR code
-            const res = await fetch('/api/2fa/setup', { method: 'POST', credentials: 'include' });
-            const data = await res.json();
-            if (!res.ok) {
-                twofaContainer.innerHTML = `<p class="text-red-600">${data.message || 'Failed to start 2FA setup.'}</p>`;
-                return;
-            }
-            // Show QR code and input
-            const qrImg = document.createElement('img');
-            qrImg.src = data.qr;
-            qrImg.alt = '2FA QR Code';
-            qrImg.className = 'mx-auto mb-2';
-            const secretText = document.createElement('p');
-            secretText.className = 'text-xs text-gray-500 mb-2 break-all';
-            secretText.textContent = `${translate('Secret', 'Secret', 'Secret')}: ${data.secret}`;
-            const codeInput = document.createElement('input');
-            codeInput.type = 'text';
-             codeInput.placeholder = translate('Enter 6-digit code', '6-stelligen Code eingeben', 'Entrez le code à 6 chiffres');
-            codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2';
-            codeInput.maxLength = 6;
-            const verifyBtn = document.createElement('button');
-            verifyBtn.type = 'button';
-               verifyBtn.className = 'w-full relative inline-block px-4 py-2 font-medium group mb-2';
-            verifyBtn.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
-                <span class="relative text-white">${translate('Verify & Enable', 'Verifizieren & Aktivieren', 'Vérifier et activer')}</span>
-            `;
-            const msg = document.createElement('p');
-            msg.className = 'text-sm mt-2';
-
-            verifyBtn.addEventListener('click', async () => {
-                msg.textContent = '';
-                verifyBtn.disabled = true;
-                const code = codeInput.value.trim();
-                if (!/^\d{6}$/.test(code)) {
-                     msg.textContent = translate('Enter a valid 6-digit code.', 'Geben Sie einen gültigen 6-stelligen Code ein.', 'Entrez un code valide à 6 chiffres.');
-                    msg.className = 'text-red-600 text-sm mt-2';
-                    verifyBtn.disabled = false;
-                    return;
-                }
-                const res2 = await fetch('/api/2fa/enable', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code }),
-                });
-                const data2 = await res2.json();
-                if (res2.ok) {
-                     msg.textContent = translate('2FA enabled!', '2FA aktiviert!', '2FA activée !');
-                    msg.className = 'text-green-600 text-sm mt-2';
-                   twofaStatus.textContent = translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.');
-                    twofaButton.textContent = translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA');
-                    user.twofa_enabled = 1;
-                    setTimeout(() => { twofaContainer.innerHTML = ''; }, 1500);
-                } else {
-                    msg.textContent = data2.message || 'Failed to enable 2FA.';
-                    msg.className = 'text-red-600 text-sm mt-2';
-                }
-                verifyBtn.disabled = false;
-            });
-
-            twofaContainer.appendChild(qrImg);
-            twofaContainer.appendChild(secretText);
-            twofaContainer.appendChild(codeInput);
-            twofaContainer.appendChild(verifyBtn);
-            twofaContainer.appendChild(msg);
-        } else {
-            // Disable flow
-            const codeInput = document.createElement('input');
-            codeInput.type = 'text';
-            codeInput.placeholder = translate('Enter 2FA code to disable', '2FA-Code zum Deaktivieren eingeben', 'Entrez le code 2FA pour désactiver');
-            codeInput.className = 'w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm mb-2 mt-4';
-            codeInput.maxLength = 6;
-            const disableBtn = document.createElement('button');
-            disableBtn.type = 'button';
-            disableBtn.className = 'w-full relative inline-block px-4 py-2 font-medium group mb-2';
-            disableBtn.innerHTML = `
-                <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-red-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-                <span class="absolute inset-0 w-full h-full bg-red-600 border-2 border-red-800 group-hover:bg-red-800"></span>
-                <span class="relative text-white">${translate('Disable 2FA', '2FA deaktivieren', 'Désactiver la 2FA')}</span>
-            `;
-            const msg = document.createElement('p');
-            msg.className = 'text-sm mt-2';
-
-            disableBtn.addEventListener('click', async () => {
-                msg.textContent = '';
-                disableBtn.disabled = true;
-                const code = codeInput.value.trim();
-                if (!/^\d{6}$/.test(code)) {
-                     msg.textContent = translate('Enter a valid 6-digit code.', 'Geben Sie einen gültigen 6-stelligen Code ein.', 'Entrez un code valide à 6 chiffres.');
-                    msg.className = 'text-red-600 text-sm mt-2';
-                    disableBtn.disabled = false;
-                    return;
-                }
-                const res2 = await fetch('/api/2fa/disable', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code }),
-                });
-                const data2 = await res2.json();
-                if (res2.ok) {
-                    msg.textContent = translate('2FA disabled!', '2FA deaktiviert!', '2FA désactivée !');
-                    msg.className = 'text-green-600 text-sm mt-2';
-                    twofaStatus.textContent = translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
-                    twofaButton.textContent = translate('Enable 2FA', '2FA aktivieren', 'Activer la 2FA');
-                    user.twofa_enabled = 0;
-                    setTimeout(() => { twofaContainer.innerHTML = ''; }, 1500);
-                } else {
-                    msg.textContent = data2.message || 'Failed to disable 2FA.';
-                    msg.className = 'text-red-600 text-sm mt-2';
-                }
-                disableBtn.disabled = false;
-            });
-
-            twofaContainer.appendChild(codeInput);
-            twofaContainer.appendChild(disableBtn);
-            twofaContainer.appendChild(msg);
-        }
-    });
-
-    twofaGroup.appendChild(twofaTitle);
-    twofaGroup.appendChild(twofaStatus);
-    twofaGroup.appendChild(twofaButton);
-    twofaGroup.appendChild(twofaContainer);
-
-    // Error and success messages
+    // error and success messages
     const errorMsg = document.createElement('p');
-    errorMsg.className = 'text-red-600 text-sm hidden mb-2';
+    errorMsg.style.color = '#dc2626';
+    errorMsg.style.fontSize = '0.875rem';
+    errorMsg.style.fontFamily = 'Georgia, serif';
+    errorMsg.style.marginBottom = '0.5rem';
+    errorMsg.style.display = 'none';
     const successMsg = document.createElement('p');
-    successMsg.className = 'text-green-600 text-sm hidden mb-2';
+    successMsg.style.color = 'var(--autumn-secondary)';
+    successMsg.style.fontSize = '0.875rem';
+    successMsg.style.fontFamily = 'Georgia, serif';
+    successMsg.style.marginBottom = '0.5rem';
+    successMsg.style.display = 'none';
 
-    // Save button
+    // save button
     const saveProfileBtn = document.createElement('button');
-    saveProfileBtn.className = 'w-full relative inline-block px-4 py-3 font-medium group';
-    saveProfileBtn.innerHTML = `
-        <span class="absolute inset-0 w-full h-full transition duration-200 ease-out transform translate-x-1 translate-y-1 bg-blue-800 group-hover:-translate-x-0 group-hover:-translate-y-0"></span>
-        <span class="absolute inset-0 w-full h-full bg-blue-600 border-2 border-blue-800 group-hover:bg-blue-800"></span>
-        <span class="relative text-white">${translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications')}</span>
-    `;
+    saveProfileBtn.className = 'autumn-button-light';
+    saveProfileBtn.style.width = '100%';
+    saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
 
     form.appendChild(usernameGroup);
     form.appendChild(displayNameGroup);
@@ -353,29 +239,118 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     form.appendChild(successMsg);
     form.appendChild(saveProfileBtn);
 
+    profileForm.appendChild(profileTitle);
+    profileForm.appendChild(form);
+
+    // 2FA Section
+    const twofaGroup = document.createElement('div');
+    twofaGroup.className = 'autumn-glass';
+    twofaGroup.style.padding = '1.5rem';
+
+    const twofaTitle = document.createElement('h3');
+    twofaTitle.style.color = 'var(--autumn-secondary)';
+    twofaTitle.style.fontFamily = 'Georgia, serif';
+    twofaTitle.style.fontWeight = '600';
+    twofaTitle.style.marginBottom = '1rem';
+    twofaTitle.textContent = translate('Two-Factor Authentication', '2FA', 'Authentification 2FA');
+
+    const twofaStatus = document.createElement('p');
+    twofaStatus.style.marginBottom = '1rem';
+    twofaStatus.style.fontFamily = 'Georgia, serif';
+    twofaStatus.textContent = user.twofa_enabled ? translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.') : translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
+
+    const twofaButton = document.createElement('button');
+    twofaButton.type = 'button';
+    twofaButton.className = 'autumn-button-small';
+    twofaButton.style.background = user.twofa_enabled ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #22c55e, #16a34a)';
+    twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver') : translate('Enable 2FA', '2FA aktivieren', 'Activer');
+
+    const twofaContainer = document.createElement('div');
+    twofaContainer.style.marginTop = '1rem';
+
+    // Simplified 2FA toggle logic
+    twofaButton.addEventListener('click', async () => {
+        twofaContainer.innerHTML = '';
+        const codeInput = document.createElement('input');
+        codeInput.type = 'text';
+        codeInput.className = 'autumn-input';
+        codeInput.style.marginBottom = '0.5rem';
+        codeInput.placeholder = translate('Enter 6-digit code', '6-stelliger Code', 'Code à 6 chiffres');
+        codeInput.maxLength = 6;
+
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'autumn-button-small';
+        actionBtn.style.background = user.twofa_enabled ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #22c55e, #16a34a)';
+        actionBtn.textContent = user.twofa_enabled ? translate('Disable', 'Deaktivieren', 'Désactiver') : translate('Enable', 'Aktivieren', 'Activer');
+
+        const msg = document.createElement('p');
+        msg.style.fontSize = '0.875rem';
+        msg.style.fontFamily = 'Georgia, serif';
+        msg.style.marginTop = '0.5rem';
+
+        actionBtn.onclick = async () => {
+            const code = codeInput.value.trim();
+            if (!/^\d{6}$/.test(code)) {
+                msg.textContent = translate('Enter valid 6-digit code', 'Gültigen 6-stelligen Code eingeben', 'Code 6 chiffres valide');
+                msg.style.color = '#dc2626';
+                return;
+            }
+            
+            const endpoint = user.twofa_enabled ? '/api/2fa/disable' : '/api/2fa/enable';
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code }),
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                msg.textContent = user.twofa_enabled ? translate('2FA disabled!', '2FA deaktiviert!', '2FA désactivée !') : translate('2FA enabled!', '2FA aktiviert!', '2FA activée !');
+                msg.style.color = 'var(--autumn-secondary)';
+                user.twofa_enabled = !user.twofa_enabled;
+                twofaStatus.textContent = user.twofa_enabled ? translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.') : translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
+                twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver') : translate('Enable 2FA', '2FA aktivieren', 'Activer');
+                setTimeout(() => { twofaContainer.innerHTML = ''; }, 1500);
+            } else {
+                msg.textContent = data.message || 'Failed';
+                msg.style.color = '#dc2626';
+            }
+        };
+
+        twofaContainer.appendChild(codeInput);
+        twofaContainer.appendChild(actionBtn);
+        twofaContainer.appendChild(msg);
+    });
+
+    twofaGroup.appendChild(twofaTitle);
+    twofaGroup.appendChild(twofaStatus);
+    twofaGroup.appendChild(twofaButton);
+    twofaGroup.appendChild(twofaContainer);
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        errorMsg.classList.add('hidden');
-        successMsg.classList.add('hidden');
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
         saveProfileBtn.disabled = true;
-        saveProfileBtn.querySelector('span.relative')!.textContent = translate('Saving...', 'Speichern...', 'Enregistrement...');
+        saveProfileBtn.textContent = translate('Saving...', 'Speichern...', 'Enregistrement...');
 
         // Validation
         const username = usernameField.value.trim().toLowerCase();
         const displayName = displayNameInput.value.trim();
 
         if (!/^[a-z0-9._-]{3,16}$/.test(username)) {
-            errorMsg.textContent = translate('Username must be 3-16 chars, lowercase, and only a-z, 0-9, ., _, -', 'Benutzername muss 3-16 Zeichen lang sein, Kleinbuchstaben und nur a-z, 0-9, ., _, - enthalten', 'Le nom d\'utilisateur doit comporter de 3 à 16 caractères, être en minuscules et ne contenir que a-z, 0-9, ., _, -');
-            errorMsg.classList.remove('hidden');
+            errorMsg.textContent = translate('Username must be 3-16 chars, lowercase letters/numbers only', 'Benutzername: 3-16 Zeichen, nur Kleinbuchstaben/Zahlen', 'Nom d\'utilisateur: 3-16 caractères, lettres minuscules/chiffres uniquement');
+            errorMsg.style.display = 'block';
             saveProfileBtn.disabled = false;
-            saveProfileBtn.querySelector('span.relative')!.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer');
             return;
         }
-        if (displayName.length < 1 || displayName.length > 32 || /<|>/.test(displayName)) {
-            errorMsg.textContent = translate('Display name must be 1-32 characters and not contain < or >', 'Anzeigename muss 1-32 Zeichen lang sein und darf keine < oder > enthalten', 'Le nom d\'affichage doit comporter de 1 à 32 caractères et ne pas contenir < ou >');
-            errorMsg.classList.remove('hidden');
+        if (displayName.length < 1 || displayName.length > 32) {
+            errorMsg.textContent = translate('Display name must be 1-32 characters', 'Anzeigename muss 1-32 Zeichen lang sein', 'Le nom d\'affichage doit comporter de 1 à 32 caractères');
+            errorMsg.style.display = 'block';
             saveProfileBtn.disabled = false;
-            saveProfileBtn.querySelector('span.relative')!.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer');
             return;
         }
 
@@ -390,23 +365,34 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             const data = await res.json();
             if (res.ok) {
                 successMsg.textContent = translate('Profile updated!', 'Profil aktualisiert!', 'Profil mis à jour !');
-                successMsg.classList.remove('hidden');
+                successMsg.style.display = 'block';
+                // update avatar
+                avatarPreview.textContent = displayName.charAt(0).toUpperCase();
             } else {
                 errorMsg.textContent = data.message || translate('Failed to update profile.', 'Profil konnte nicht aktualisiert werden.', 'Échec de la mise à jour du profil.');
-                errorMsg.classList.remove('hidden');
+                errorMsg.style.display = 'block';
             }
         } catch {
             errorMsg.textContent = translate('Unexpected error. Please try again.', 'Unerwarteter Fehler. Bitte versuchen Sie es erneut.', 'Erreur inattendue. Veuillez réessayer.');
-            errorMsg.classList.remove('hidden');
+            errorMsg.style.display = 'block';
         } finally {
             saveProfileBtn.disabled = false;
-            saveProfileBtn.querySelector('span.relative')!.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer les modifications');
+            saveProfileBtn.textContent = translate('Save Changes', 'Änderungen speichern', 'Enregistrer');
         }
     });
 
+    // 2FA
+    const sideBySideWrapper = document.createElement('div');
+    sideBySideWrapper.style.display = 'grid';
+    sideBySideWrapper.style.gridTemplateColumns = '1fr 1fr';
+    sideBySideWrapper.style.gap = '1.5rem';
+    sideBySideWrapper.style.marginBottom = '1.5rem';
+
+    sideBySideWrapper.appendChild(profileForm);
+    sideBySideWrapper.appendChild(twofaGroup);
+
     settingsWrapper.appendChild(settingsTitle);
     settingsWrapper.appendChild(avatarSection);
-    settingsWrapper.appendChild(form);
-    settingsWrapper.appendChild(twofaGroup);
+    settingsWrapper.appendChild(sideBySideWrapper);
     container.appendChild(settingsWrapper);
 }
