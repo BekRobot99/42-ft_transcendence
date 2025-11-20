@@ -90,8 +90,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const deleteAvatarBtn = document.createElement('button');
     deleteAvatarBtn.id = 'delete-avatar-btn';
-    deleteAvatarBtn.className = 'autumn-button-small';
-    deleteAvatarBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+    deleteAvatarBtn.className = 'autumn-button-small delete';
     deleteAvatarBtn.textContent = translate('Delete', 'Löschen', 'Supprimer');
     deleteAvatarBtn.style.display = user.avatar_path ? 'inline-flex' : 'none';
 
@@ -261,8 +260,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const twofaButton = document.createElement('button');
     twofaButton.type = 'button';
-    twofaButton.className = 'autumn-button-small';
-    twofaButton.style.background = user.twofa_enabled ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #22c55e, #16a34a)';
+    twofaButton.className = 'autumn-button-small twofa';
     twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver') : translate('Enable 2FA', '2FA aktivieren', 'Activer');
 
     const twofaContainer = document.createElement('div');
@@ -279,8 +277,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         codeInput.maxLength = 6;
 
         const actionBtn = document.createElement('button');
-        actionBtn.className = 'autumn-button-small';
-        actionBtn.style.background = user.twofa_enabled ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #22c55e, #16a34a)';
+        actionBtn.className = 'autumn-button-small twofa';
         actionBtn.textContent = user.twofa_enabled ? translate('Disable', 'Deaktivieren', 'Désactiver') : translate('Enable', 'Aktivieren', 'Activer');
 
         const msg = document.createElement('p');

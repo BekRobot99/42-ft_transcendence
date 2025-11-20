@@ -1668,3 +1668,15 @@ body.autumn-background::before {
 .chat-send-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 @media (max-width: 768px) { .chat-sidebar { width: 280px; } .chat-message { max-width: 80%; } }
 
+.autumn-button-small.delete {
+    background: linear-gradient(135deg, #a21d1a 0%, #7c2d12 100%);
+}
+.autumn-button-small.delete:hover {
+    background: linear-gradient(135deg, #7c2d12 0%, #a21d1a 100%);
+}
+.autumn-button-small.twofa {
+    background: linear-gradient(135deg, #b6860d 0%, #ebd26e 100%);
+}
+.autumn-button-small.twofa:hover {
+    background: linear-gradient(135deg, #ebd26e 0%, #b6860d 100%);
+}
