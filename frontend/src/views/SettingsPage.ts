@@ -171,7 +171,6 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     const profileForm = document.createElement('div');
     profileForm.className = 'autumn-glass';
     profileForm.style.padding = '1.5rem';
-    profileForm.style.marginBottom = '1.5rem';
 
     const profileTitle = document.createElement('h3');
     profileTitle.style.color = 'var(--autumn-secondary)';
@@ -260,7 +259,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     const twofaButton = document.createElement('button');
     twofaButton.type = 'button';
-    twofaButton.className = 'autumn-button-small twofa';
+    twofaButton.className = 'autumn-button-light twofa';
     twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver') : translate('Enable 2FA', '2FA aktivieren', 'Activer');
 
     const twofaContainer = document.createElement('div');
@@ -277,7 +276,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         codeInput.maxLength = 6;
 
         const actionBtn = document.createElement('button');
-        actionBtn.className = 'autumn-button-small twofa';
+        actionBtn.className = 'autumn-button-light twofa';
         actionBtn.textContent = user.twofa_enabled ? translate('Disable', 'Deaktivieren', 'Désactiver') : translate('Enable', 'Aktivieren', 'Activer');
 
         const msg = document.createElement('p');
@@ -380,6 +379,7 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
 
     // 2FA
     const sideBySideWrapper = document.createElement('div');
+    sideBySideWrapper.className = 'sideBySideWrapper';
     sideBySideWrapper.style.display = 'grid';
     sideBySideWrapper.style.gridTemplateColumns = '1fr 1fr';
     sideBySideWrapper.style.gap = '1.5rem';

@@ -138,6 +138,26 @@ body.autumn-background::before {
     box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.15);
 }
 
+.sideBySideWrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: stretch;
+    height: auto;
+}
+
+.sideBySideWrapper > .autumn-glass {
+    min-height: 280px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+}
+
 /* letters */
 .autumn-title {
     font-family: 'Georgia', 'Times New Roman', serif;
@@ -1674,9 +1694,15 @@ body.autumn-background::before {
 .autumn-button-small.delete:hover {
     background: linear-gradient(135deg, #7c2d12 0%, #a21d1a 100%);
 }
-.autumn-button-small.twofa {
+/* .autumn-button-small.twofa {
     background: linear-gradient(135deg, #b6860d 0%, #ebd26e 100%);
 }
 .autumn-button-small.twofa:hover {
+    background: linear-gradient(135deg, #ebd26e 0%, #b6860d 100%);
+} */
+.autumn-button-light.twofa {
+    background: linear-gradient(135deg, #b6860d 0%, #ebd26e 100%);
+}
+.autumn-button-light.twofa:hover {
     background: linear-gradient(135deg, #ebd26e 0%, #b6860d 100%);
 }
