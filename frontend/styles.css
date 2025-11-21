@@ -1012,6 +1012,23 @@ body.autumn-background::before {
     position: relative;
 }
 
+/* game title like the tournament one */
+.game-title-with-leaves {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ffffffbe;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    text-shadow:
+        0 1px 0 #ffffff42;
+    display: inline-block;
+    z-index: 10;
+    position: relative;
+}
+
 .tournament-bracket-wrapper .autumn-title::before,
 .tournament-bracket-wrapper .autumn-title::after {
     content: '';
@@ -1027,6 +1044,22 @@ body.autumn-background::before {
     animation: pumpkinFloat 2s ease-in-out infinite;
 }
 
+/* leaf decorations */
+.game-title-with-leaves::before,
+.game-title-with-leaves::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background-image: url('../assets/leaf.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: leafFloat 2s ease-in-out infinite;
+}
+
 .tournament-bracket-wrapper .autumn-title::before {
     left: -80px;
 }
@@ -1035,6 +1068,16 @@ body.autumn-background::before {
     right: -80px;
     transform: translateY(-50%) scaleX(-1);
     animation: pumpkinFloatReverse 2s ease-in-out infinite;
+}
+
+.game-title-with-leaves::before {
+    right: -70px;
+}
+
+.game-title-with-leaves::after {
+    left: -70px;
+    transform: translateY(-50%) scaleX(-1);
+    animation: leafFloatReverse 2s ease-in-out infinite;
 }
 
 @keyframes pumpkinFloat {
@@ -1207,6 +1250,24 @@ body.autumn-background::before {
 }
 
 @keyframes pumpkinFloatReverse {
+    0%, 100% {
+        transform: translateY(-50%) scaleX(-1) translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-50%) scaleX(-1) translateY(-5px) rotate(-5deg);
+    }
+}
+
+@keyframes leafFloat {
+    0%, 100% {
+        transform: translateY(-50%) translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-50%) translateY(-5px) rotate(5deg);
+    }
+}
+
+@keyframes leafFloatReverse {
     0%, 100% {
         transform: translateY(-50%) scaleX(-1) translateY(0) rotate(0deg);
     }
@@ -1555,11 +1616,11 @@ body.autumn-background::before {
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 8rem;
     font-weight: bold;
-    color: #FFD700;
+    color: #ebd26e;
     text-shadow: 
         4px 4px 8px rgba(0, 0, 0, 0.8),
-        0 0 30px rgba(255, 215, 0, 0.8),
-        0 0 50px rgba(255, 215, 0, 0.5);
+        0 0 30px rgba(235, 210, 110, 0.8),
+        0 0 50px rgba(235, 210, 110, 0.5);
     z-index: 1000;
     pointer-events: none;
     animation: countdownPulse 1s ease-in-out;

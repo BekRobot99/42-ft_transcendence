@@ -6,17 +6,17 @@ declare const BABYLON: any;
 export function renderGamePage3D(container: HTMLElement, tournamentOptions: { player1Name: string, player2Name: string, onGameEnd: (result: { winnerName: string, score1: number, score2: number }) => void }): () => void {
     container.innerHTML = `
         <div class="text-center flex flex-col items-center">
-            <h1 class="text-3xl font-bold mb-2">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
+            <h1 class="game-title-with-leaves">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
             <!-- Top bar OUTSIDE the game window, with frame -->
             <div id="game3DTopBar" style="position: relative; width: 800px; height: 44px; margin-bottom: 2px; z-index: 10; pointer-events: none; font-family: 'sans-serif'; border: 2px solid #8B4513; border-radius: 8px; background: #2a1a10; box-shadow: 0 2px 8px rgba(61,40,23,0.12);">
                 <div style="position: absolute; left: 0; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-end;">
-                    <span id="player1Label3D" style="color: #FFD700; font-size: 20px; font-weight: bold; margin-right: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 1</span>
+                    <span id="player1Label3D" style="color: #ebd26e; font-size: 20px; font-weight: bold; margin-right: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 1</span>
                 </div>
                 <div style="position: absolute; left: 200px; top: 0; width: 400px; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    <span id="scoreLabel3D" style="color: #FFD700; font-size: 28px; font-weight: bold; margin: 0 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">0 : 0</span>
+                    <span id="scoreLabel3D" style="color: #ebd26e; font-size: 28px; font-weight: bold; margin: 0 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">0 : 0</span>
                 </div>
                 <div style="position: absolute; left: 600px; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-start;">
-                    <span id="player2Label3D" style="color: #FFD700; font-size: 20px; font-weight: bold; margin-left: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 2</span>
+                    <span id="player2Label3D" style="color: #ebd26e; font-size: 20px; font-weight: bold; margin-left: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 2</span>
                 </div>
             </div>
             <div style="position: relative; display: inline-block; width: 800px; height: 600px;">
