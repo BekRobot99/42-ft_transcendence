@@ -1079,19 +1079,34 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         animationFrameId = requestAnimationFrame(update);
     }
 
+    function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     function draw() {
         // Clear canvas with dark brown autumn background
         ctx!.fillStyle = '#3D2817'; // Dark brown color
         ctx!.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw paddles with autumn colors
         // Player 1 - Orange paddle (like autumn leaves)
         ctx!.fillStyle = '#D2691E'; // Chocolate/orange
-        ctx!.fillRect(player1.x, player1.y, player1.width, player1.height);
-        
+        drawRoundedRect(ctx!, player1.x, player1.y, player1.width, player1.height, 18);
+
         // Player 2 - Dark orange/burnt orange paddle
         ctx!.fillStyle = '#CC5500'; // Burnt orange
-        ctx!.fillRect(player2.x, player2.y, player2.width, player2.height);
+        drawRoundedRect(ctx!, player2.x, player2.y, player2.width, player2.height, 18);
 
         // Draw ball as pumpkin image
         if (pumpkinImage.complete) {
@@ -1122,9 +1137,6 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         ctx!.closePath();
         ctx!.setLineDash([]); // Reset line dash
 
-    // ...existing code...
-    // Draw scores with autumn gold color (now handled by top bar)
-    // ...existing code...
         
         // Enhanced AI status indicators
         if (isAIMode && ctx) {

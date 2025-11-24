@@ -104,16 +104,30 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     centerLine.color = new BABYLON.Color3(0.95, 0.8, 0.6);
 
     // Paddles
-    const paddle1 = BABYLON.MeshBuilder.CreateBox("paddle1", { width: PADDLE_WIDTH, height: PADDLE_HEIGHT, depth: PADDLE_DEPTH }, scene);
+    const paddle1 = BABYLON.MeshBuilder.CreateCylinder("paddle1", { 
+        diameter: PADDLE_WIDTH, 
+        height: PADDLE_DEPTH, 
+        tessellation: 32 
+    }, scene);
+    paddle1.scaling.z = PADDLE_HEIGHT / PADDLE_WIDTH;
+    paddle1.rotation.x = Math.PI / 2;
     paddle1.position.z = -TABLE_DEPTH / 2 + 1;
+    paddle1.position.y = 0;
     const paddle1Material = new BABYLON.StandardMaterial("p1Mat", scene);
     paddle1Material.diffuseColor = new BABYLON.Color3(168/255, 97/255, 50/255);
     paddle1Material.specularColor = new BABYLON.Color3(0.3, 0.2, 0.1); 
     paddle1Material.emissiveColor = new BABYLON.Color3(0.08, 0.04, 0.02);
     paddle1.material = paddle1Material;
 
-    const paddle2 = BABYLON.MeshBuilder.CreateBox("paddle2", { width: PADDLE_WIDTH, height: PADDLE_HEIGHT, depth: PADDLE_DEPTH }, scene);
+    const paddle2 = BABYLON.MeshBuilder.CreateCylinder("paddle2", { 
+        diameter: PADDLE_WIDTH, 
+        height: PADDLE_DEPTH, 
+        tessellation: 32 
+    }, scene);
+    paddle2.scaling.z = PADDLE_HEIGHT / PADDLE_WIDTH;
+    paddle2.rotation.x = Math.PI / 2;
     paddle2.position.z = TABLE_DEPTH / 2 - 1;
+    paddle2.position.y = 0;
     const paddle2Material = new BABYLON.StandardMaterial("p2Mat", scene);
     paddle2Material.diffuseColor = new BABYLON.Color3(129/255, 64/255, 28/255);
     paddle2Material.specularColor = new BABYLON.Color3(0.25, 0.15, 0.08); 
