@@ -57,7 +57,14 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
     scene.clearColor = new BABYLON.Color4(0.239, 0.157, 0.090, 1.0); // #3D2817
 
     // Camera
-    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 3, 20, new BABYLON.Vector3(0, 0, 0), scene);
+    const camera = new BABYLON.ArcRotateCamera(
+        "camera",
+        -Math.PI / 2,         // alpha
+        Math.PI / 3,          // beta
+        24,                   // radius
+        new BABYLON.Vector3(0, 0, 0),
+        scene
+    );
     camera.attachControl(canvas, true);
     camera.inputs.remove(camera.inputs.attached.keyboard); // Prevent camera from being controlled by keyboard
     camera.lowerRadiusLimit = 15;
