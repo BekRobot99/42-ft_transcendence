@@ -5,23 +5,22 @@ declare const BABYLON: any;
 
 export function renderGamePage3D(container: HTMLElement, tournamentOptions: { player1Name: string, player2Name: string, onGameEnd: (result: { winnerName: string, score1: number, score2: number }) => void }): () => void {
     container.innerHTML = `
-        <div class="game-scroll-wrapper" style="max-height: 90vh; overflow-y: auto; padding: 1rem;">
-        <div class="text-center flex flex-col items-center" style="min-width: 350px; max-width: min(900px, 95vw); margin: 0 auto;">
+        <div class="text-center flex flex-col items-center" style="padding: 20px; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <h1 class="game-title-with-leaves">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
             <!-- Top bar OUTSIDE the game window, with frame -->
-            <div id="game3DTopBar" style="position: relative; width: min(800px, 90vw); height: 44px; margin-bottom: 2px; z-index: 10; pointer-events: none; font-family: 'sans-serif'; border: 2px solid #8B4513; border-radius: 8px; background: #2a1a10; box-shadow: 0 2px 8px rgba(61,40,23,0.12);">
-                <div style="position: absolute; left: 0; top: 0; width: 25%; height: 100%; display: flex; align-items: center; justify-content: flex-end;">
-                    <span id="player1Label3D" style="color: #ebd26e; font-size: clamp(14px, 2.5vw, 20px); font-weight: bold; margin-right: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 1</span>
+            <div id="game3DTopBar" style="position: relative; width: 800px; height: 44px; margin-bottom: 2px; z-index: 10; pointer-events: none; font-family: 'sans-serif'; border: 2px solid #8B4513; border-radius: 8px; background: #2a1a10; box-shadow: 0 2px 8px rgba(61,40,23,0.12);">
+                <div style="position: absolute; left: 0; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-end;">
+                    <span id="player1Label3D" style="color: #ebd26e; font-size: 20px; font-weight: bold; margin-right: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 1</span>
                 </div>
-                <div style="position: absolute; left: 25%; top: 0; width: 50%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    <span id="scoreLabel3D" style="color: #ebd26e; font-size: clamp(18px, 3.5vw, 28px); font-weight: bold; margin: 0 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">0 : 0</span>
+                <div style="position: absolute; left: 200px; top: 0; width: 400px; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <span id="scoreLabel3D" style="color: #ebd26e; font-size: 28px; font-weight: bold; margin: 0 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">0 : 0</span>
                 </div>
-                <div style="position: absolute; left: 75%; top: 0; width: 25%; height: 100%; display: flex; align-items: center; justify-content: flex-start;">
-                    <span id="player2Label3D" style="color: #ebd26e; font-size: clamp(14px, 2.5vw, 20px); font-weight: bold; margin-left: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 2</span>
+                <div style="position: absolute; left: 600px; top: 0; width: 200px; height: 100%; display: flex; align-items: center; justify-content: flex-start;">
+                    <span id="player2Label3D" style="color: #ebd26e; font-size: 20px; font-weight: bold; margin-left: 10px; text-shadow: 2px 2px 4px #3D2817; font-family: 'sans-serif';">Player 2</span>
                 </div>
             </div>
-            <div style="position: relative; display: inline-block; width: 100%; max-width: min(800px, 90vw); height: auto;">
-                <canvas id="pongCanvas3D" style="background: #3D2817; border: 4px solid #8B4513; border-radius: 8px; max-width: 100%; height: auto;"></canvas>
+            <div style="position: relative; display: inline-block; width: 800px; height: 600px; max-width: 100%; margin: 0 auto;">
+                <canvas id="pongCanvas3D" style="background: #3D2817; border: 4px solid #8B4513; border-radius: 8px; display: block;"></canvas>
                 <!-- Pre-game Popup -->
                 <div id="preGamePopup3D" class="game-popup-overlay">
                     <div class="game-popup-content">
@@ -40,7 +39,6 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
                 </div>
             </div>
         </div>
-        </div>
     `;
 
     const canvas = document.getElementById('pongCanvas3D') as HTMLCanvasElement;
@@ -49,8 +47,8 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
         return () => {};
     }
     
-    canvas.width = Math.min(800, window.innerWidth * 0.9);
-    canvas.height = Math.min(600, window.innerHeight * 0.6);
+    canvas.width = 800;
+    canvas.height = 600;
 
     const engine = new BABYLON.Engine(canvas, true);
     const scene = new BABYLON.Scene(engine);

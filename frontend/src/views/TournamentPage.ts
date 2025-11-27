@@ -74,12 +74,8 @@ function render() {
 }
 
 function renderCreationForm() {
-    const scrollWrapper = document.createElement('div');
-    scrollWrapper.style.cssText = 'max-height: 90vh; overflow-y: auto; padding: 1rem;';
-    
     const formContainer = document.createElement('div');
     formContainer.className = 'autumn-glass w-full max-w-md mx-auto';
-    formContainer.style.cssText = 'min-width: 300px; max-width: min(500px, 90vw);';
     formContainer.innerHTML = `
         <h2 class="autumn-title">${translate('Create a New Tournament', 'Ein neues Turnier erstellen', 'Créer un nouveau tournoi')}</h2>
         <p class="autumn-subtitle">${translate('Create and invite players to your tournament below.', 'Erstelle und lade Spieler zu deinem Turnier ein.', 'Créez et invitez des joueurs à votre tournoi ci-dessous.')}</p>
@@ -108,8 +104,7 @@ function renderCreationForm() {
             <p id="create-error" class="autumn-error hidden mt-2 text-center"></p>
         </form>
     `;
-    scrollWrapper.appendChild(formContainer);
-    appContainer?.appendChild(scrollWrapper);
+    appContainer?.appendChild(formContainer);
 
     const form = document.getElementById('tournament-create-form') as HTMLFormElement;
     form.addEventListener('submit', async (e) => {
@@ -142,12 +137,8 @@ function renderCreationForm() {
 }
 
 function renderLobby() {
-    const scrollWrapper = document.createElement('div');
-    scrollWrapper.style.cssText = 'max-height: 90vh; overflow-y: auto; padding: 1rem;';
-    
     const lobbyContainer = document.createElement('div');
     lobbyContainer.className = 'autumn-glass tournament-lobby-container';
-    lobbyContainer.style.cssText = 'min-width: 300px; max-width: min(600px, 90vw); margin: 0 auto;';
     const participants = tournamentState.participants;
     const requiredPlayers = tournamentState.number_of_players;
     const canStart = participants.length === requiredPlayers;
@@ -165,8 +156,7 @@ function renderLobby() {
         <div id="lobby-actions"></div>
         <p id="lobby-error" class="autumn-error hidden mt-2 text-center"></p>
     `;
-    scrollWrapper.appendChild(lobbyContainer);
-    appContainer?.appendChild(scrollWrapper);
+    appContainer?.appendChild(lobbyContainer);
 
     const actionsContainer = document.getElementById('lobby-actions')!;
     if (!canStart) {
@@ -224,12 +214,8 @@ function renderLobby() {
 }
 
 function renderBracket() {
-    const scrollWrapper = document.createElement('div');
-    scrollWrapper.style.cssText = 'max-height: 90vh; overflow: auto; padding: 1rem;';
-    
     const wrapper = document.createElement('div');
     wrapper.className = 'tournament-bracket-wrapper';
-    wrapper.style.cssText = 'min-width: 600px;';
 
     // title
     const title = document.createElement('h2');
@@ -240,7 +226,6 @@ function renderBracket() {
     // bracket container
     const bracketContainer = document.createElement('div');
     bracketContainer.className = 'tournament-bracket-container';
-    bracketContainer.style.cssText = 'overflow-x: auto; min-width: 100%;';
 
     // rounds
     const rounds: { [key: number]: any[] } = {};
@@ -367,8 +352,7 @@ function renderBracket() {
     }
 
     wrapper.appendChild(bracketContainer);
-    scrollWrapper.appendChild(wrapper);
-    appContainer?.appendChild(scrollWrapper);
+    appContainer?.appendChild(wrapper);
 
     document.querySelectorAll('.play-match-btn').forEach(button => {
         button.addEventListener('click', (e) => {
