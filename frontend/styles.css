@@ -72,7 +72,7 @@ body.autumn-background::before {
     justify-content: center;
     background: transparent;
     flex-direction: column;
-    padding: 80px 20px 20px 20px;
+    padding: 32px 8px 8px 8px;
     min-height: 100vh;
 }
 
@@ -100,9 +100,9 @@ body.autumn-background::before {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 1rem;
+    padding: 48px 1rem 1rem 1rem;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 /* containers */
@@ -121,7 +121,7 @@ body.autumn-background::before {
     max-width: 450px;
     width: calc(100% - 2rem);
     min-width: 320px;
-    margin: 0 auto;
+    margin: 48px auto 0 auto;
     transition: all 0.3s ease;
 }
 
@@ -879,7 +879,7 @@ body.autumn-background::before {
     max-height: 520px;
     display: flex;
     flex-direction: column;
-    margin: 0 auto;
+    margin: 40px auto 0 auto;
     padding: 1.5rem;
     box-sizing: border-box;
 }

@@ -29,7 +29,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
                          (gameOptions.player2Name || translate('Player 2', 'Spieler 2', 'Joueur 2'));
 
     gameWrapper.innerHTML = `
-        <div class="text-center flex flex-col items-center gap-4" style="padding: 20px; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="text-center flex flex-col items-center gap-4" style="padding: 8px; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
            <header class="w-full max-w-3xl">
                <h1 class="game-title-with-leaves">${translate('Ping Pong', 'Ping Pong', 'Ping Pong')}</h1>
            </header>

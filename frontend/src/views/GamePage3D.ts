@@ -5,7 +5,7 @@ declare const BABYLON: any;
 
 export function renderGamePage3D(container: HTMLElement, tournamentOptions: { player1Name: string, player2Name: string, onGameEnd: (result: { winnerName: string, score1: number, score2: number }) => void }): () => void {
     container.innerHTML = `
-        <div class="text-center flex flex-col items-center" style="padding: 20px; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="text-center flex flex-col items-center" style="padding: 8px; margin: 0 auto; width: 100%; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <h1 class="game-title-with-leaves">${translate('3D Ping Pong', '3D Ping Pong', 'Ping Pong 3D')}</h1>
             <!-- Top bar OUTSIDE the game window, with frame -->
             <div id="game3DTopBar" style="position: relative; width: 800px; height: 44px; margin-bottom: 2px; z-index: 10; pointer-events: none; font-family: 'sans-serif'; border: 2px solid #8B4513; border-radius: 8px; background: #2a1a10; box-shadow: 0 2px 8px rgba(61,40,23,0.12);">
