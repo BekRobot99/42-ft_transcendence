@@ -10,14 +10,10 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     watch: {
-      usePolling: true,
-      interval: 1000,
+      usePolling: false,
+      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/assets/**'],
     },
-    hmr: {
-      host: 'localhost',
-      clientPort: 8080,
-      protocol: 'ws',
-    },
+    hmr: false,
     proxy: {
       '/api': {
         target: 'http://backend:3000',
