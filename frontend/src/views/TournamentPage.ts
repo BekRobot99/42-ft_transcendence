@@ -6,6 +6,17 @@ let tournamentState: any = null;
 let appContainer: HTMLElement | null = null;
 let me: any = null;
 let cleanupGame: (() => void) | null = null;
+let leavesInterval: number | null = null;
+
+// Global cleanup function for leaves
+function cleanupFallingLeaves() {
+    if (leavesInterval) {
+        clearInterval(leavesInterval);
+        leavesInterval = null;
+    }
+    // Remove any existing falling leaves
+    document.querySelectorAll('.leaf-falling').forEach(leaf => leaf.remove());
+}
 
 async function fetchMe() {
     try {
@@ -41,6 +52,10 @@ function render() {
         cleanupGame();
         cleanupGame = null;
     }
+    
+    // Clear any falling leaves when switching views
+    cleanupFallingLeaves();
+    
     appContainer.innerHTML = '';
 
     // full-width
@@ -316,17 +331,24 @@ function renderBracket() {
             leaf.className = 'leaf-falling';
             
             leaf.style.left = `${Math.random() * 100}%`;
-            leaf.style.animationDuration = `${5 + Math.random() * 4}s`;
+            const duration = 5 + Math.random() * 4;
+            leaf.style.animationDuration = `${duration}s`;
             leaf.style.animationDelay = `${Math.random() * 2}s`;
             
             document.body.appendChild(leaf);
+            
+            setTimeout(() => {
+                if (leaf.parentNode) {
+                    leaf.remove();
+                }
+            }, (duration + 2) * 1000);
         };
         
         // initial leaves and keep adding more
         for (let i = 0; i < 30; i++) {
             setTimeout(() => fallLeaves(), i * 200);
         }
-        setInterval(fallLeaves, 400);
+        leavesInterval = setInterval(fallLeaves, 400) as any;
     }
 
     wrapper.appendChild(bracketContainer);
@@ -382,6 +404,31 @@ function playMatch(match: any) {
 
 export async function renderTournamentView(container: HTMLElement): Promise<() => void> {
     appContainer = container;
+    
+    const handleNavigation = () => cleanupFallingLeaves();
+    const handleVisibilityChange = () => {
+        if (document.hidden) {
+            cleanupFallingLeaves();
+        }
+    };
+    
+    const interceptClicks = (e: Event) => {
+        const target = e.target as HTMLElement;
+        if (target.matches('.autumn-button-nav, [data-link], a[href], button[onclick*="navigate"]') || 
+            target.closest('.top-nav-bar, .game-nav-title') ||
+            target.textContent?.includes('Game Mode') || 
+            target.textContent?.includes('Chat') ||
+            target.textContent?.includes('Friends') ||
+            target.textContent?.includes('Settings')) {
+            cleanupFallingLeaves();
+        }
+    };
+    
+    window.addEventListener('beforeunload', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('click', interceptClicks, true);
+    
     await fetchMe();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -396,6 +443,33 @@ export async function renderTournamentView(container: HTMLElement): Promise<() =
 
     const cleanup = () => {
         if (cleanupGame) cleanupGame();
+        
+        // clear falling leaves
+        cleanupFallingLeaves();
+        
+        const handleNavigation = () => cleanupFallingLeaves();
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                cleanupFallingLeaves();
+            }
+        };
+        const interceptClicks = (e: Event) => {
+            const target = e.target as HTMLElement;
+            if (target.matches('.autumn-button-nav, [data-link], a[href], button[onclick*="navigate"]') || 
+                target.closest('.top-nav-bar, .game-nav-title') ||
+                target.textContent?.includes('Game Mode') || 
+                target.textContent?.includes('Chat') ||
+                target.textContent?.includes('Friends') ||
+                target.textContent?.includes('Settings')) {
+                cleanupFallingLeaves();
+            }
+        };
+        
+        window.removeEventListener('beforeunload', handleNavigation);
+        window.removeEventListener('popstate', handleNavigation);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        document.removeEventListener('click', interceptClicks, true);
+        
         appContainer = null;
         tournamentState = null;
         me = null;
