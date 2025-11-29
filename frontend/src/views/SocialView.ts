@@ -16,11 +16,14 @@ function createProfileCard(user: any, ...buttons: HTMLButtonElement[]): HTMLElem
     avatarContainer.className = 'relative';
     avatarContainer.style.width = '48px';
     avatarContainer.style.height = '48px';
+    avatarContainer.style.flexShrink = '0';
 
     const profileAvatar = document.createElement('div');
     profileAvatar.className = 'w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg';
     profileAvatar.style.background = 'linear-gradient(135deg, var(--autumn-primary), var(--autumn-secondary))';
     profileAvatar.style.boxShadow = '0 4px 12px rgba(217, 119, 6, 0.3)';
+    profileAvatar.style.width = '100%';
+    profileAvatar.style.height = '100%';
     profileAvatar.textContent = (user.display_name || user.username).charAt(0).toUpperCase();
 
     const statusIndicator = document.createElement('div');
@@ -217,7 +220,7 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
         incoming.forEach(req => {
             const acceptButton = document.createElement('button');
             acceptButton.className = 'autumn-button-small';
-            acceptButton.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+            acceptButton.style.background = 'linear-gradient(135deg, #ba6317 0%, #92400e 100%)';
             acceptButton.innerHTML = `${translate('Accept', 'Akzeptieren', 'Accepter')}`;
             acceptButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
@@ -231,7 +234,7 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
 
             const declineButton = document.createElement('button');
             declineButton.className = 'autumn-button-small';
-            declineButton.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            declineButton.style.background = 'linear-gradient(135deg, #78716c, #57534e)';
             declineButton.innerHTML = `${translate('Decline', 'Ablehnen', 'Refuser')}`;
             declineButton.onclick = async () => {
                 await fetch(`/api/friends/request/${req.id}`, {
