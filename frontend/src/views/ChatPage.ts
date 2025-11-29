@@ -499,33 +499,16 @@ export class ChatPage {
         
         if (!text || !this.currentConversationUserId) return;
 
-        // add message
-        const optimisticMessage: ChatMessage = {
-            id: Date.now(),
-            sender_id: this.currentUserId!,
-            receiver_id: this.currentConversationUserId,
-            message: text,
-            message_type: 'text',
-            is_read: false,
-            created_at: new Date().toISOString()
-        };
-
-        this.messages.push(optimisticMessage);
-        const messageEl = this.createMessageElement(optimisticMessage);
-        this.messageWindow.appendChild(messageEl);
-        this.messageWindow.scrollTop = this.messageWindow.scrollHeight;
-        
         this.messageInput.value = '';
 
         const success = ChatClient.sendMessage(this.currentConversationUserId, text);
         if (!success) {
-            this.messages.pop();
-            this.messageWindow.removeChild(messageEl);
             alert(translate(
                 'Failed to send message. Please check your message and try again.',
                 'Nachricht konnte nicht gesendet werden. Bitte überprüfen Sie Ihre Nachricht und versuchen Sie es erneut.',
                 'Échec de l\'envoi du message. Veuillez vérifier votre message et réessayer.'
             ));
+            this.messageInput.value = text; // Restore the message
         }
     }
 
@@ -536,10 +519,21 @@ export class ChatPage {
             (message.sender_id === this.currentUserId && message.receiver_id === this.currentConversationUserId);
             
         if (isInCurrentConversation) {
-            this.messages.push(message);
-            const messageEl = this.createMessageElement(message);
-            this.messageWindow.appendChild(messageEl);
-            this.messageWindow.scrollTop = this.messageWindow.scrollHeight;
+            // Check if message already exists to prevent duplicates
+            const existingMessage = this.messages.find(m => 
+                (m.id && m.id === message.id) ||
+                (m.sender_id === message.sender_id && 
+                 m.receiver_id === message.receiver_id && 
+                 m.message === message.message &&
+                 Math.abs(new Date(m.created_at!).getTime() - new Date(message.created_at!).getTime()) < 2000)
+            );
+
+            if (!existingMessage) {
+                this.messages.push(message);
+                const messageEl = this.createMessageElement(message);
+                this.messageWindow.appendChild(messageEl);
+                this.messageWindow.scrollTop = this.messageWindow.scrollHeight;
+            }
         }
 
         this.loadConversations();
