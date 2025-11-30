@@ -442,28 +442,42 @@ export class ChatPage {
         }
         // Special styling for game invites
         else if (msg.message_type === 'game_invite') {
-            bubble.className = 'max-w-xs md:max-w-md px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white border-2 border-purple-600';
+            bubble.className = 'max-w-xs md:max-w-md px-6 py-4 rounded-xl border-2';
+            bubble.style.background = 'rgba(255, 255, 255, 0.15)';
+            bubble.style.backdropFilter = 'blur(16px)';
+            (bubble.style as any).webkitBackdropFilter = 'blur(16px)';
+            bubble.style.borderColor = 'rgba(217, 119, 6, 0.3)';
+            bubble.style.color = 'var(--autumn-dark)';
+            bubble.style.boxShadow = '0 8px 32px rgba(217, 119, 6, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1)';
             
             const inviteData = this.parseGameInvite(msg.message);
             bubble.innerHTML = `
-                <div class="flex items-center gap-2 mb-2">
-                    <img src="/assets/leaf.png" alt="" style="width: 32px; height: 32px; filter: brightness(0) invert(1);" />
-                    <p class="font-bold">Game Invitation</p>
+                <div class="text-center mb-4">
+                    <h3 class="font-bold text-lg mb-2" style="color: var(--autumn-secondary); font-family: Georgia, serif;">${translate('Game Invitation', 'Spieleinladung', 'Invitation de jeu')}</h3>
+                    <div class="w-16 h-1 mx-auto rounded-full" style="background: linear-gradient(135deg, var(--autumn-primary), var(--autumn-secondary));"></div>
                 </div>
-                <p class="text-sm mb-3">${inviteData.message}</p>
+                <p class="text-center mb-4 font-medium" style="color: var(--autumn-dark); font-family: Georgia, serif;">${inviteData.message}</p>
                 ${!isSent ? `
-                    <div class="flex gap-2">
-                        <button class="accept-invite-btn flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-semibold" data-invite-id="${msg.id}">
+                    <div class="flex gap-3">
+                        <button class="accept-invite-btn flex-1 px-4 py-2 rounded-lg text-sm font-semibold" data-invite-id="${msg.id}" 
+                                style="background: linear-gradient(135deg, #ba6317 0%, #92400e 100%); color: white; border: none; transition: all 0.3s ease; box-shadow: 0 3px 8px rgba(186, 99, 23, 0.3); font-family: Georgia, serif;"
+                                onmouseover="this.style.background='linear-gradient(135deg, #d97706 0%, #ba6317 100%)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(186, 99, 23, 0.4)';"
+                                onmouseout="this.style.background='linear-gradient(135deg, #ba6317 0%, #92400e 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 8px rgba(186, 99, 23, 0.3)';">
                             ${translate('Accept', 'Akzeptieren', 'Accepter')}
                         </button>
-                        <button class="decline-invite-btn flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold" data-invite-id="${msg.id}">
+                        <button class="decline-invite-btn flex-1 px-4 py-2 rounded-lg text-sm font-semibold" data-invite-id="${msg.id}"
+                                style="background: linear-gradient(135deg, #78716c, #57534e); color: white; border: none; transition: all 0.3s ease; box-shadow: 0 3px 8px rgba(120, 113, 108, 0.3); font-family: Georgia, serif;"
+                                onmouseover="this.style.background='linear-gradient(135deg, #8b7355, #6b5b47)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(120, 113, 108, 0.4)';"
+                                onmouseout="this.style.background='linear-gradient(135deg, #78716c, #57534e)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 8px rgba(120, 113, 108, 0.3)';">
                             ${translate('Decline', 'Ablehnen', 'Refuser')}
                         </button>
                     </div>
-                ` : '<p class="text-xs text-purple-100 italic">Invitation sent</p>'}
-                <span class="text-xs text-purple-100 mt-2 block">
-                    ${this.formatTime(msg.created_at || '')}
-                </span>
+                ` : `<p class="text-center text-sm italic" style="color: var(--autumn-secondary); opacity: 0.8;">${translate("Invitation sent", "Einladung gesendet", "Invitation envoyée")}</p>`}
+                <div class="text-center mt-4">
+                    <span class="text-xs" style="color: var(--autumn-secondary); opacity: 0.7;">
+                        ${this.formatTime(msg.created_at || '')}
+                    </span>
+                </div>
             `;
             
             // Add event listeners for invite buttons
