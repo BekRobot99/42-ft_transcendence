@@ -661,9 +661,11 @@ async function handleGameMessage(connection: any, userId: number, message: GameS
                     timestamp: Date.now()
                 }));
                 
-                // Check for game end conditions
+                // Check for game end conditions ONLY in tournament mode
+                // Standard AI matches continue indefinitely
                 const winningScore = 11; // Standard Pong winning score (first to 11)
-                if (room.gameState.score.player1 >= winningScore || room.gameState.score.player2 >= winningScore) {
+                if (room.gameType === 'tournament' && 
+                    (room.gameState.score.player1 >= winningScore || room.gameState.score.player2 >= winningScore)) {
                     const winner = room.gameState.score.player1 >= winningScore ? 'human' : 'ai';
                     
                     room.gameState.gameActive = false;

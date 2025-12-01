@@ -13,8 +13,6 @@
  * - Automated performance tuning recommendations
  * - Performance benchmarking and comparison
  * 
- * @author ft_transcendence AI Development Team
- * @version 2.0.0
  */
 
 import { EventEmitter } from 'events';

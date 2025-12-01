@@ -1,12 +1,10 @@
 /**
- * @fileoverview TypeScript definitions for Performance Monitoring System
- * @version 2.0.0
- * @author ft_transcendence AI Development Team
+ * TypeScript definitions for Performance Monitoring System
  */
 
 /**
  * Core performance metric interface
- */
+ *
 export interface PerformanceMetric {
   /** Unique identifier for the metric */
   id: string;
