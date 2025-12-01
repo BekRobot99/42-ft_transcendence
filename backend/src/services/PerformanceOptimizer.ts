@@ -4,8 +4,6 @@
  * Advanced performance optimization system including memory management,
  * CPU optimization, database query optimization, and resource management.
  * 
- * @author ft_transcendence Team
- * @version 2.0.0
  */
 
 import { EventEmitter } from 'events';

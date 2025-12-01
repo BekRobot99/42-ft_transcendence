@@ -4,8 +4,6 @@
  * Comprehensive error handling system for ft_transcendence with improved
  * resilience, logging, and recovery mechanisms for production environment.
  * 
- * @author ft_transcendence Team
- * @version 2.0.0
  */
 
 import { EventEmitter } from 'events';

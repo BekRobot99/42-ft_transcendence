@@ -12,8 +12,6 @@
  * - Historical performance data visualization
  * - Performance optimization recommendations
  * 
- * @author ft_transcendence AI Development Team
- * @version 2.0.0
  */
 
 import { EventEmitter } from 'events';
