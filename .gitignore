@@ -107,6 +107,14 @@ temp/
 .cache/
 
 # ==========================================
+# Analysis tools (local use only)
+# ==========================================
+analyze_commits.py
+analyze_code_contribution.py
+commit_statistics.png
+code_contribution_comparison.png
+
+# ==========================================
 # Docker
 # ==========================================
 .dockerignore
