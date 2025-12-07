@@ -164,15 +164,34 @@ function renderLobby() {
         form.id = 'add-participant-form';
         form.className = 'lobby-form';
         form.innerHTML = `
-            <input type="text" name="alias" placeholder="${translate('Enter player alias', 'Spieler-Alias eingeben', 'Entrez l\'alias du joueur')}" required minlength="3" maxlength="16" class="autumn-input">
+            <input type="text" name="alias" placeholder="${translate('Enter unique player name', 'Eindeutigen Spielernamen eingeben', 'Entrez un nom de joueur unique')}" required minlength="3" maxlength="16" class="autumn-input" autocomplete="off">
             <button type="submit" class="tournament-button-full">${translate('Add Player', 'Spieler hinzufügen', 'Ajouter un joueur')}</button>
+            <p class="alias-help-text">${translate('Aliases must be 3-16 characters and unique', 'Aliasse müssen 3-16 Zeichen lang und eindeutig sein', 'Les alias doivent contenir 3 à 16 caractères et être uniques')}</p>
         `;
         actionsContainer.appendChild(form);
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const alias = (form.elements.namedItem('alias') as HTMLInputElement).value;
+            const aliasInput = form.elements.namedItem('alias') as HTMLInputElement;
+            const alias = aliasInput.value.trim();
             const errorEl = document.getElementById('lobby-error')!;
             errorEl.classList.add('hidden');
+
+            if (alias.length < 3) {
+                errorEl.textContent = translate('Alias must be at least 3 characters long', 'Alias muss mindestens 3 Zeichen lang sein', 'L\'alias doit contenir au moins 3 caractères');
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            // Check duplicates
+            const existingAlias = participants.find((p: any) => 
+                p.alias.toLowerCase() === alias.toLowerCase()
+            );
+            if (existingAlias) {
+                errorEl.textContent = translate('This alias is already taken', 'Dieser Alias ist bereits vergeben', 'Cet alias est déjà pris');
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
             try {
                 const res = await fetch(`/api/tournaments/${tournamentState.id}/participants`, {
                     method: 'POST',
@@ -183,6 +202,9 @@ function renderLobby() {
                     const err = await res.json();
                     throw new Error(err.message || 'Failed to add player');
                 }
+                
+                // Clear input on success
+                aliasInput.value = '';
                 await fetchTournament(tournamentState.id);
             } catch (error: any) {
                 errorEl.textContent = error.message;
