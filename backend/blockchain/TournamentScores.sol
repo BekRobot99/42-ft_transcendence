@@ -11,4 +11,7 @@ contract TournamentScores {
         address winner;
         uint256 timestamp;
     }
+
+    mapping(uint256 => ScoreEntry[]) public scoresByTournament;
+    
 }
