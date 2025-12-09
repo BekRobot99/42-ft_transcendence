@@ -8,6 +8,7 @@ import { BallPhysicsEngine, BallState, PaddlePhysics, Vector2D } from './BallPhy
  * Uses event-driven architecture for game state updates and decisions.
  */
 
+// Game state interface passed to AI
 export interface GameState {
   ballX: number;
   ballY: number;
@@ -48,7 +49,7 @@ export class AIPlayer {
   private averageProcessingTime: number = 0;
   private lastProcessingTime: number = 0;
   
-  // Keyboard simulation metrics
+  // Keyboard simulation metrics (to imitate human-like input patterns)
   private keyboardMetrics = {
     totalKeyPresses: 0,
     totalHoldTime: 0,
@@ -102,32 +103,33 @@ export class AIPlayer {
     strategicDepth: 0.8
   };
   
-  // [AI-UPDATE] REQUIREMENT 6: Carefully tuned difficulty levels for balanced gameplay
-  // AI must be able to WIN sometimes but feel HUMAN-LIKE (not perfect tracking)
-  // - Easy: Beatable, makes frequent errors (75% accuracy)
-  // - Medium: Competitive, challenging but fair (88% accuracy)
-  // - Hard: Very difficult, near-perfect but still human-like (96% accuracy)
+  // [AI-UPDATE] REQUIREMENT 6: Difficulty scaling that feels fair and human-like
+  // AI is intentionally imperfect — can make mistakes and lose, regardless of difficulty.
+  // Difficulty affects reaction delay, prediction quality, and movement consistency:
+  // - Easy: Noticeably delayed responses, frequent prediction errors
+  // - Medium: Reasonable tracking, some prediction and movement mistakes
+  // - Hard: Fast and challenging, but still capable of missing or misjudging the ball
   private readonly DIFFICULTIES: Record<string, AIDifficulty> = {
     easy: {
       name: 'easy',
-      reactionTime: 350,     // Slower reaction - allows human to win
-      accuracy: 0.75,        // 75% accuracy - makes mistakes
-      speed: 1.0,           // Human-level speed
-      predictionDepth: 1    // Basic prediction only
+      reactionTime: 350,     // Slow responses — player advantage
+      accuracy: 0.70,        // Often misjudges ball trajectory
+      speed: 1.0,           // Same as player speed
+      predictionDepth: 1    // Basic bounce estimation
     },
     medium: {
       name: 'medium',
-      reactionTime: 200,     // Quick reactions - challenging opponent
-      accuracy: 0.88,        // 88% accuracy - competitive but beatable
-      speed: 1.2,           // 20% faster - noticeable challenge
-      predictionDepth: 2    // Good prediction capability
+      reactionTime: 230,     // Faster but still human-like delays
+      accuracy: 0.88,        // Sometimes misses or over-corrects
+      speed: 1.2,           // Slightly faster reaction movement
+      predictionDepth: 2    // Better prediction but not perfect
     },
     hard: {
       name: 'hard',
-      reactionTime: 80,      // Very fast reactions - difficult opponent
-      accuracy: 0.96,        // 96% accuracy - near perfect (but not 100%)
-      speed: 1.6,           // 60% faster - very challenging
-      predictionDepth: 3    // Full advanced prediction
+      reactionTime: 120,      // Quick reactions, but not instant
+      accuracy: 0.92,        // High skill — still prone to errors
+      speed: 1.35,           // Challenging pace while staying fair
+      predictionDepth: 3    // Best available prediction, still imperfect
     }
   };
 
