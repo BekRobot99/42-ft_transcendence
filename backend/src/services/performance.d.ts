@@ -4,7 +4,7 @@
 
 /**
  * Core performance metric interface
- *
+ */
 export interface PerformanceMetric {
   /** Unique identifier for the metric */
   id: string;
