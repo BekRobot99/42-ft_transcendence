@@ -14,6 +14,17 @@ contract TournamentScores {
 
     mapping(uint256 => ScoreEntry[]) public scoresByTournament;
     
+    event ScoreSaved(
+        uint256 indexed tournamentId,
+        uint256 indexed matchId,
+        address indexed player1,
+        address player2,
+        uint256 score1,
+        uint256 score2,
+        address winner,
+        uint256 timestamp
+    );
+
     function saveScore(
         uint256 tournamentId,
         uint256 matchId,
@@ -22,5 +33,5 @@ contract TournamentScores {
         uint256 score1,
         uint256 score2,
         address winner
-    )
+    );
 }
