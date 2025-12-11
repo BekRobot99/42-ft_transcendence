@@ -898,6 +898,16 @@ body.autumn-background::before {
     flex-shrink: 0;
 }
 
+/* tournament help text */
+.alias-help-text {
+    font-size: 0.75rem;
+    color: var(--autumn-secondary);
+    opacity: 0.8;
+    margin-top: 0.5rem;
+    text-align: center;
+    font-style: italic;
+}
+
 /* participant list for tournament */
 .participant-list {
     list-style: none;

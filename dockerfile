@@ -2,11 +2,14 @@
 FROM node:lts-alpine AS builder
 WORKDIR /app
 
+# Install TypeScript globally
+RUN npm install -g typescript
+
 # Copy package.json and package-lock.json from the frontend directory
 COPY frontend/package.json frontend/package-lock.json* ./
 
-# Install dependencies
-RUN npm install
+# Install all dependencies including devDependencies for TypeScript build
+RUN npm install --include=dev
 
 # Copy the rest of the frontend application code from the frontend directory
 COPY frontend/ ./
