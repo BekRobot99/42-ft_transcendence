@@ -70,4 +70,15 @@ contract TournamentScores {
             entry.timestamp
         );
     }
+
+    function getScores(uint256 tournamentId) external view returns (ScoreEntry[] memory) {
+        ScoreEntry[] storage stored = scoresByTournament[tournamentId];
+        ScoreEntry[] memory result = new ScoreEntry[](stored.length);
+
+        for (uint256 i = 0; i < stored.length; i++) {
+            result[i] = stored[i];
+        }
+
+        return result;
+    }
 }
