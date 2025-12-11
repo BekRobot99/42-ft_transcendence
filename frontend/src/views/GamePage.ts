@@ -25,7 +25,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
     const isAIMode = gameOptions.mode === 'ai';
     console.log('🎮 Game Mode:', gameOptions.mode, '| AI Mode:', isAIMode, '| Difficulty:', gameOptions.aiDifficulty);
     const player1Alias = gameOptions.player1Name || translate('Player 1', 'Spieler 1', 'Joueur 1');
-    const player2Alias = isAIMode ? `AI (${gameOptions.aiDifficulty || 'medium'})` : 
+    const player2Alias = isAIMode ? translate('AI', 'KI', 'IA') : 
                          (gameOptions.player2Name || translate('Player 2', 'Spieler 2', 'Joueur 2'));
 
     gameWrapper.innerHTML = `
@@ -252,7 +252,7 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
         
         const popupPlayer2Name = document.getElementById('popupPlayer2Name');
         if (popupPlayer2Name && isAIMode) {
-            popupPlayer2Name.textContent = `AI (${gameOptions.aiDifficulty || 'medium'})`;
+            popupPlayer2Name.textContent = translate('AI', 'KI', 'IA');
         }
         
         // reinitialize AI with
