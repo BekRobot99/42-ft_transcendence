@@ -56,5 +56,18 @@ contract TournamentScores {
             winner: winner,
             timestamp: block.timestamp
         });
+
+        scoresByTournament[tournamentId].push(entry);
+
+        emit ScoreSaved(
+            tournamentId,
+            matchId,
+            player1,
+            player2,
+            score1,
+            score2,
+            winner,
+            entry.timestamp
+        );
     }
 }
