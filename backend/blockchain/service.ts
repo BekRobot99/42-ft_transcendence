@@ -19,3 +19,25 @@ if (!CONTRACT_ADDRESS) throw new Error('TOURNAMENT_CONTRACT_ADDRESS is required'
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+
+export async function saveScore(args: {
+  tournamentId: bigint;
+  matchId: bigint;
+  player1: string;
+  player2: string;
+  score1: bigint;
+  score2: bigint;
+  winner: string;
+}) {
+  const tx = await contract.saveScore(
+    args.tournamentId,
+    args.matchId,
+    args.player1,
+    args.player2,
+    args.score1,
+    args.score2,
+    args.winner
+  );
+  const receipt = await tx.wait();
+  return receipt;
+}
