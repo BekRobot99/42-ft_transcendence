@@ -1,14 +1,38 @@
 services:
-  frontend:
+  waf:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: backend/security/waf/dockerfile
     ports:
-      - "8080:443"
-      - "8000:80"
-    container_name: ft_transcendence_frontend
+        - "8080:443"
+        - "8000:80"
+    volumes:
+      - waf_logs:/var/log/modsecurity
+    container_name: ft_transcendence_waf
+    depends_on:
+      - frontend
+    networks:
+      - internal
+    restart: unless-stopped
+    
+  frontend:
+    build:
+      context: . # Build context is the root directory for the frontend Dockerfile
+      dockerfile: dockerfile # Specifies the frontend Dockerfile (lowercase)
+    container_name: ft_transcendence_nginx
     depends_on:
       - backend
+    networks:
+      - internal
+    restart: unless-stopped
+
+  vault:
+    image: hashicorp/vault:1.20.4
+    environment:
+      - VAULT_ADDR=http://vault:8200
+      - VAULT_DEV_ROOT_TOKEN_ID=root
+    command: ["server", "-dev", "-dev-root-token-id=root", "-dev-listen-address=0.0.0.0:8200"]
+    container_name: ft_transcendence_vault
     networks:
       - internal
     restart: unless-stopped
@@ -33,6 +57,7 @@ services:
 
 volumes:
   backend_data:
+  waf_logs:
 
 networks:
   internal:
