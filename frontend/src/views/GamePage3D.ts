@@ -233,8 +233,20 @@ export function renderGamePage3D(container: HTMLElement, tournamentOptions: { pl
 
     // Keyboard state
     const keysPressed: { [key: string]: boolean } = {};
-    const keyDownHandler = (e: KeyboardEvent) => { keysPressed[e.key] = true; };
-    const keyUpHandler = (e: KeyboardEvent) => { keysPressed[e.key] = false; };
+    const keyDownHandler = (e: KeyboardEvent) => { 
+        keysPressed[e.key] = true;
+        const gameKeys = ['a', 'A', 'd', 'D', 'ArrowLeft', 'ArrowRight', ' '];
+        if (gameKeys.indexOf(e.key) !== -1) {
+            e.preventDefault();
+        }
+    };
+    const keyUpHandler = (e: KeyboardEvent) => { 
+        keysPressed[e.key] = false;
+        const gameKeys = ['a', 'A', 'd', 'D', 'ArrowLeft', 'ArrowRight', ' '];
+        if (gameKeys.indexOf(e.key) !== -1) {
+            e.preventDefault();
+        }
+    };
     window.addEventListener('keydown', keyDownHandler);
     window.addEventListener('keyup', keyUpHandler);
 

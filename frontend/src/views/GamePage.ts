@@ -187,10 +187,18 @@ export function renderGamePage(gameWrapper: HTMLElement, options?: GameModeOptio
 
     function keyDownHandler(e: KeyboardEvent) {
         keysPressed[e.key] = true;
+        const gameKeys = ['w', 'W', 's', 'S', 'ArrowUp', 'ArrowDown', ' '];
+        if (gameKeys.indexOf(e.key) !== -1) {
+            e.preventDefault();
+        }
     }
 
     function keyUpHandler(e: KeyboardEvent) {
         keysPressed[e.key] = false;
+        const gameKeys = ['w', 'W', 's', 'S', 'ArrowUp', 'ArrowDown', ' '];
+        if (gameKeys.indexOf(e.key) !== -1) {
+            e.preventDefault();
+        }
     }
 
     document.addEventListener('keydown', keyDownHandler);
