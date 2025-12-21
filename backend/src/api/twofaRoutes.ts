@@ -67,4 +67,37 @@ export default async function twofaRoutes(app: FastifyInstance) {
             reply.status(500).send({ message: 'Internal server error.' });
         }
     });
+
+    // 2FA: Disable 2FA after verifying code
+    app.post('/api/2fa/disable', { preHandler: (app as any).authenticate }, async (request: any, reply: FastifyReply) => {
+        const userId = request.user.id;
+        const { code } = request.body as { code: string };
+        if (!code) return reply.status(400).send({ message: '2FA code required.' });
+
+        try {
+            const user = await new Promise<any>((resolve, reject) => {
+                databaseConnection.get('SELECT twofa_secret FROM users WHERE id = ?', [userId], (err, row) => {
+                    if (err) return reject(err);
+                    resolve(row);
+                });
+            });
+            if (!user || !user.twofa_secret) return reply.status(400).send({ message: '2FA not setup.' });
+
+            if (!validateMfaToken(user.twofa_secret, code)) {
+                return reply.status(400).send({ message: 'Invalid 2FA code.' });
+            }
+
+            await new Promise<void>((resolve, reject) => {
+                databaseConnection.run('UPDATE users SET twofa_enabled = 0, twofa_secret = NULL WHERE id = ?', [userId], function (err) {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+
+            reply.send({ message: '2FA disabled.' });
+        } catch (error) {
+            app.log.error(error);
+            reply.status(500).send({ message: 'Internal server error.' });
+        }
+    });
 }

@@ -222,28 +222,44 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
             acceptButton.className = 'autumn-button-small';
             acceptButton.style.background = 'linear-gradient(135deg, #ba6317 0%, #92400e 100%)';
             acceptButton.innerHTML = `${translate('Accept', 'Akzeptieren', 'Accepter')}`;
-            acceptButton.onclick = async () => {
-                await fetch(`/api/friends/request/${req.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ action: 'accept' })
-                });
-                rerenderCallback();
+            acceptButton.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    const res = await fetch(`/api/friends/request/${req.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ action: 'accept' })
+                    });
+                    if (res.ok) {
+                        rerenderCallback();
+                    }
+                } catch (err) {
+                    console.error('Accept failed:', err);
+                }
             };
 
             const declineButton = document.createElement('button');
             declineButton.className = 'autumn-button-small';
             declineButton.style.background = 'linear-gradient(135deg, #78716c, #57534e)';
             declineButton.innerHTML = `${translate('Decline', 'Ablehnen', 'Refuser')}`;
-            declineButton.onclick = async () => {
-                await fetch(`/api/friends/request/${req.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ action: 'decline' })
-                });
-                rerenderCallback();
+            declineButton.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    const res = await fetch(`/api/friends/request/${req.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ action: 'decline' })
+                    });
+                    if (res.ok) {
+                        rerenderCallback();
+                    }
+                } catch (err) {
+                    console.error('Decline failed:', err);
+                }
             };
 
             incomingList.appendChild(createProfileCard(req, acceptButton, declineButton));
@@ -272,14 +288,22 @@ function renderFriendRequests(container: HTMLElement, incoming: any[], outgoing:
             cancelButton.className = 'autumn-button-small';
             cancelButton.style.background = 'linear-gradient(135deg, #78716c, #57534e)';
             cancelButton.innerHTML = `${translate('Cancel', 'Abbrechen', 'Annuler')}`;
-            cancelButton.onclick = async () => {
-                await fetch(`/api/friends/request/${req.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ action: 'decline' })
-                });
-                rerenderCallback();
+            cancelButton.onclick = async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    const res = await fetch(`/api/friends/request/${req.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ action: 'decline' })
+                    });
+                    if (res.ok) {
+                        rerenderCallback();
+                    }
+                } catch (err) {
+                    console.error('Cancel failed:', err);
+                }
             };
             outgoingList.appendChild(createProfileCard(req, cancelButton));
         });

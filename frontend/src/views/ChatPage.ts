@@ -355,11 +355,24 @@ export class ChatPage {
         // Mark as read
         ChatClient.markAsRead(userId);
 
-        // Highlight active conversation
+        // Highlight active conversation and remove unread badge
         this.conversationList.querySelectorAll('.conversation-item').forEach(item => {
             item.classList.remove('active');
         });
-        this.conversationList.querySelector(`[data-user-id="${userId}"]`)?.classList.add('active');
+        const activeItem = this.conversationList.querySelector(`[data-user-id="${userId}"]`);
+        if (activeItem) {
+            activeItem.classList.add('active');
+            // Remove unread badge
+            const badge = activeItem.querySelector('div[style*="border-radius: 50%"]');
+            if (badge) {
+                badge.remove();
+            }
+            // Update local conversation data
+            const conv = this.conversations.find(c => c.user_id === userId);
+            if (conv) {
+                conv.unread_count = 0;
+            }
+        }
     }
 
     private closeConversation(): void {

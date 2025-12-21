@@ -974,7 +974,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
         
         // Send initial dashboard snapshot
         const initialSnapshot = performanceDashboard.getDashboardSnapshot();
-        connection.socket.send(JSON.stringify({
+        connection.send(JSON.stringify({
             type: 'initialSnapshot',
             data: initialSnapshot,
             timestamp: Date.now()
@@ -986,7 +986,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
                 const summary = performanceMonitor.getPerformanceSummary();
                 const healthOverview = performanceDashboard.getSystemHealthOverview();
                 
-                connection.socket.send(JSON.stringify({
+                connection.send(JSON.stringify({
                     type: 'performanceUpdate',
                     data: {
                         summary,
@@ -1003,7 +1003,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
 
         // Listen for performance events
         const onAlert = (alert: any) => {
-            connection.socket.send(JSON.stringify({
+            connection.send(JSON.stringify({
                 type: 'performanceAlert',
                 data: alert,
                 timestamp: Date.now()
@@ -1011,7 +1011,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
         };
 
         const onBottleneck = (bottlenecks: any) => {
-            connection.socket.send(JSON.stringify({
+            connection.send(JSON.stringify({
                 type: 'bottleneckDetected',
                 data: bottlenecks,
                 timestamp: Date.now()
@@ -1019,7 +1019,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
         };
 
         const onRecommendation = (recommendation: any) => {
-            connection.socket.send(JSON.stringify({
+            connection.send(JSON.stringify({
                 type: 'optimizationRecommendation',
                 data: recommendation,
                 timestamp: Date.now()
@@ -1032,7 +1032,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
         performanceDashboard.on('alertNotification', onRecommendation);
 
         // Handle connection close
-        connection.socket.on('close', () => {
+        connection.on('close', () => {
             clearInterval(performanceUpdateInterval);
             performanceMonitor.removeListener('performanceAlert', onAlert);
             performanceDashboard.removeListener('bottleneckNotification', onBottleneck);
@@ -1040,7 +1040,7 @@ export default async function realtimeRoutes(fastify: FastifyInstance) {
             console.log('🔍 Performance monitoring WebSocket connection closed');
         });
 
-        connection.socket.on('error', (error: unknown) => {
+        connection.on('error', (error: unknown) => {
             console.error('Performance monitoring WebSocket error:', error);
             clearInterval(performanceUpdateInterval);
         });

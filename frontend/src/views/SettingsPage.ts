@@ -265,9 +265,68 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
     const twofaContainer = document.createElement('div');
     twofaContainer.style.marginTop = '1rem';
 
-    // Simplified 2FA toggle logic
+    // 2FA toggle logic with QR code
     twofaButton.addEventListener('click', async () => {
         twofaContainer.innerHTML = '';
+        
+        const msg = document.createElement('p');
+        msg.style.fontSize = '0.875rem';
+        msg.style.fontFamily = 'Georgia, serif';
+        msg.style.marginTop = '0.5rem';
+
+        // If enabling 2FA, first get QR code from server
+        if (!user.twofa_enabled) {
+            msg.textContent = translate('Loading QR code...', 'QR-Code wird geladen...', 'Chargement du QR code...');
+            msg.style.color = 'var(--autumn-secondary)';
+            twofaContainer.appendChild(msg);
+
+            try {
+                const setupRes = await fetch('/api/2fa/setup', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const setupData = await setupRes.json();
+                
+                if (!setupRes.ok) {
+                    msg.textContent = setupData.message || 'Failed to setup 2FA';
+                    msg.style.color = '#dc2626';
+                    return;
+                }
+
+                twofaContainer.innerHTML = '';
+
+                // Show QR code image
+                const qrImg = document.createElement('img');
+                qrImg.src = setupData.qr;
+                qrImg.alt = 'QR Code';
+                qrImg.style.display = 'block';
+                qrImg.style.margin = '0 auto 1rem';
+                qrImg.style.maxWidth = '200px';
+                qrImg.style.borderRadius = '8px';
+
+                const instructions = document.createElement('p');
+                instructions.style.fontSize = '0.875rem';
+                instructions.style.fontFamily = 'Georgia, serif';
+                instructions.style.marginBottom = '1rem';
+                instructions.style.textAlign = 'center';
+                instructions.textContent = translate(
+                    'Scan with Google Authenticator, then enter code below',
+                    'Mit Google Authenticator scannen, dann Code eingeben',
+                    'Scanner avec Google Authenticator, puis entrer le code'
+                );
+
+                twofaContainer.appendChild(qrImg);
+                twofaContainer.appendChild(instructions);
+            } catch {
+                msg.textContent = translate('Error loading QR code', 'Fehler beim Laden des QR-Codes', 'Erreur de chargement du QR code');
+                msg.style.color = '#dc2626';
+                return;
+            }
+        }
+
+        // Code input field
         const codeInput = document.createElement('input');
         codeInput.type = 'text';
         codeInput.className = 'autumn-input';
@@ -279,16 +338,16 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
         actionBtn.className = 'autumn-button-light twofa';
         actionBtn.textContent = user.twofa_enabled ? translate('Disable', 'Deaktivieren', 'Désactiver') : translate('Enable', 'Aktivieren', 'Activer');
 
-        const msg = document.createElement('p');
-        msg.style.fontSize = '0.875rem';
-        msg.style.fontFamily = 'Georgia, serif';
-        msg.style.marginTop = '0.5rem';
+        const resultMsg = document.createElement('p');
+        resultMsg.style.fontSize = '0.875rem';
+        resultMsg.style.fontFamily = 'Georgia, serif';
+        resultMsg.style.marginTop = '0.5rem';
 
         actionBtn.onclick = async () => {
             const code = codeInput.value.trim();
             if (!/^\d{6}$/.test(code)) {
-                msg.textContent = translate('Enter valid 6-digit code', 'Gültigen 6-stelligen Code eingeben', 'Code 6 chiffres valide');
-                msg.style.color = '#dc2626';
+                resultMsg.textContent = translate('Enter valid 6-digit code', 'Gültigen 6-stelligen Code eingeben', 'Code 6 chiffres valide');
+                resultMsg.style.color = '#dc2626';
                 return;
             }
             
@@ -302,21 +361,21 @@ export async function renderSettingsPage(container: HTMLElement): Promise<void> 
             const data = await res.json();
             
             if (res.ok) {
-                msg.textContent = user.twofa_enabled ? translate('2FA disabled!', '2FA deaktiviert!', '2FA désactivée !') : translate('2FA enabled!', '2FA aktiviert!', '2FA activée !');
-                msg.style.color = 'var(--autumn-secondary)';
+                resultMsg.textContent = user.twofa_enabled ? translate('2FA disabled!', '2FA deaktiviert!', '2FA désactivée !') : translate('2FA enabled!', '2FA aktiviert!', '2FA activée !');
+                resultMsg.style.color = 'var(--autumn-secondary)';
                 user.twofa_enabled = !user.twofa_enabled;
                 twofaStatus.textContent = user.twofa_enabled ? translate('2FA is enabled.', '2FA ist aktiviert.', 'La 2FA est activée.') : translate('2FA is not enabled.', '2FA ist nicht aktiviert.', 'La 2FA n\'est pas activée.');
                 twofaButton.textContent = user.twofa_enabled ? translate('Disable 2FA', '2FA deaktivieren', 'Désactiver') : translate('Enable 2FA', '2FA aktivieren', 'Activer');
                 setTimeout(() => { twofaContainer.innerHTML = ''; }, 1500);
             } else {
-                msg.textContent = data.message || 'Failed';
-                msg.style.color = '#dc2626';
+                resultMsg.textContent = data.message || 'Failed';
+                resultMsg.style.color = '#dc2626';
             }
         };
 
         twofaContainer.appendChild(codeInput);
         twofaContainer.appendChild(actionBtn);
-        twofaContainer.appendChild(msg);
+        twofaContainer.appendChild(resultMsg);
     });
 
     twofaGroup.appendChild(twofaTitle);
