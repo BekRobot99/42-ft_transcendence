@@ -16,6 +16,7 @@
 *.p12
 *.pfx
 *.cer
+*.crt
 *.crt.key
 id_rsa*
 id_ed25519*

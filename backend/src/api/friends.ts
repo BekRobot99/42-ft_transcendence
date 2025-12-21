@@ -172,8 +172,8 @@ export default async function friendsRoutes(app: FastifyInstance) {
                     return reply.status(404).send({ message: 'Friend request not found.' });
             }
 
-            const isRequester = requestDetails.requester_id === userId;
-            const isAddressee = requestDetails.addressee_id === userId;
+            const isRequester = Number(requestDetails.requester_id) === Number(userId);
+            const isAddressee = Number(requestDetails.addressee_id) === Number(userId);
 
             // The current user must be either the sender or the receiver of the request
             if (!isRequester && !isAddressee) {

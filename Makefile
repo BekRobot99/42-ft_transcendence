@@ -9,7 +9,7 @@ RESET = \033[0m
 
 # Configuration
 COMPOSE_FILE = docker-compose.yml
-DOCKER_COMPOSE := docker-compose
+DOCKER_COMPOSE := docker compose
 
 .DEFAULT_GOAL := help
 
